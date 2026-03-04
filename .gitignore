@@ -1,0 +1,27 @@
+cat <<EOF > .gitignore
+# Binários
+bin/
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go
+vendor/
+go.work.sum
+
+# Bancos de Dados (CRÍTICO para o Digna)
+data/entities/*.db
+data/entities/*.db-journal
+data/entities/*.db-wal
+*.sqlite
+
+# Configurações e Segredos
+.env
+.vscode/
+
+# Logs
+*.log
+docs/sessions/*.log
+EOF

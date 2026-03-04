@@ -1,0 +1,8 @@
+go 1.25.4
+
+use (
+	./modules/core_lume
+	./modules/legal_mock
+	./modules/lifecycle
+	./modules/reporting
+)

@@ -1,0 +1,47 @@
+# 01 ARCHITECTURE - Digna (Providentia Foundation)
+
+**Status:** Architecture Defined (v0.1)  
+**Last Updated:** 2026-03-04
+
+---
+
+## 1. High-Level System Design (Local-First Server-Side)
+
+O Digna utiliza uma arquitetura de **Micro-databases isolados**. Em vez de um banco único, cada entidade possui sua própria instância física, garantindo soberania e escalabilidade.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           CORE ENGINE (LUME)                            │
+│  ┌─────────────┐      ┌─────────────┐      ┌─────────────┐              │
+│  │   Go API    │──────┤ Lifecycle   │──────┤  SQLite Per │              │
+│  │   (REST)    │      │ Manager     │      │   Tenant    │              │
+│  └──────┬──────┘      └──────┬──────┘      └──────┬──────┘              │
+└─────────┼────────────────────┼────────────────────┼─────────────────────┘
+          │                    │                    │
+          ▼                    ▼                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        DATA PERSISTENCE                                 │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐       │
+│  │ /data/ent_A.db   │  │ /data/ent_B.db   │  │ /data/ent_C.db   │       │
+│  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘       │
+└───────────┼─────────────────────┼─────────────────────┼─────────────────┘
+            ▼                     ▼                     ▼
+      ┌───────────┐         ┌───────────┐         ┌───────────┐
+      │ Litestream│         │ Litestream│         │ Litestream│ (Backup S3)
+      └───────────┘         └───────────┘         └───────────┘
+      
+  
+    
+---
+
+## 2. Tecnologias Core
+
+| Camada | Tecnologia | Justificativa |
+| --- | --- | --- |
+| **Backend** | Go (1.22+) | Performance, concorrência e binário estático para Nuvem Serpro. |
+| **Database** | libSQL (SQLite) | Isolamento total por arquivo, baixo custo e portabilidade. |
+| **Sync** | Change Data Capture | Sincronização assíncrona para o Agregador Central da Fundação. |
+| **Arquitetura** | Clean Architecture | Desacoplamento de domínio para facilitar Mocks de formalização. |
+
+```
+
