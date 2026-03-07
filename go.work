@@ -8,4 +8,5 @@ use (
 	./modules/pdv_ui
 	./modules/reporting
 	./modules/sync_engine
+	./modules/ui_web
 )

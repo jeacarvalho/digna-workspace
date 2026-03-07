@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ponto Social - ITG 2002</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            touch-action: manipulation;
+        }
+        .timer-display {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body class="bg-blue-50 min-h-screen">
+    <nav class="bg-blue-600 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <a href="/" class="text-white hover:text-blue-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </a>
+                    <span class="text-xl font-bold">Ponto Social</span>
+                </div>
+                <div class="text-sm opacity-90">
+                    ITG 2002
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-6 max-w-md">
+        <div id="work-result" class="mb-4"></div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-4">
+            <div class="text-center mb-6">
+                <div class="text-sm text-gray-500 mb-2">Tempo de Trabalho</div>
+                <div id="timer" class="timer-display text-5xl font-bold text-blue-600 font-mono">00:00:00</div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Cooperado</label>
+                <select id="member_id" class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-blue-500 focus:outline-none">
+                    <option value="socio_001">Sócio 001</option>
+                    <option value="socio_002">Sócio 002</option>
+                    <option value="socio_003">Sócio 003</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button id="startBtn" onclick="startWork()" 
+                    class="bg-green-500 hover:bg-green-600 text-white text-lg font-bold py-4 px-6 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>INICIAR</span>
+                </button>
+
+                <button id="stopBtn" onclick="stopWork()" disabled
+                    class="bg-red-500 hover:bg-red-600 text-white text-lg font-bold py-4 px-6 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
+                    </svg>
+                    <span>ENCERRAR</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-4">
+            <h3 class="font-bold text-gray-800 mb-2">Registro Manual</h3>
+            <form hx-post="/api/social/record" hx-target="#work-result" class="flex space-x-2">
+                <input type="hidden" name="entity_id" value="cooperativa_demo">
+                <input type="hidden" id="form_member_id" name="member_id" value="socio_001">
+                <input type="number" name="minutes" placeholder="Minutos" min="1" max="720"
+                    class="flex-1 p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-blue-500 focus:outline-none">
+                <button type="submit" 
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow transition">
+                    REGISTRAR
+                </button>
+            </form>
+        </div>
+
+        <div class="mt-6 text-center text-gray-500 text-sm">
+            <p>ITG 2002 - Contabilidade Social</p>
+            <p class="mt-1">As horas são convertidas em capital social</p>
+        </div>
+    </main>
+
+    <script>
+        let startTime = null;
+        let timerInterval = null;
+        let isRunning = false;
+
+        function startWork() {
+            if (isRunning) return;
+            
+            startTime = Date.now();
+            isRunning = true;
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('startBtn').classList.add('opacity-50');
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('stopBtn').classList.remove('opacity-50');
+            
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopWork() {
+            if (!isRunning) return;
+            
+            clearInterval(timerInterval);
+            isRunning = false;
+            
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.ceil(elapsed / 60);
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('startBtn').classList.remove('opacity-50');
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('stopBtn').classList.add('opacity-50');
+            
+            // Send to server
+            const memberId = document.getElementById('member_id').value;
+            
+            fetch('/api/social/record', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `entity_id=cooperativa_demo&member_id=${memberId}&minutes=${minutes}`
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('work-result').innerHTML = html;
+                document.getElementById('timer').textContent = '00:00:00';
+            })
+            .catch(err => {
+                console.error('Error:', err);
+            });
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const hours = Math.floor(elapsed / 3600);
+            const minutes = Math.floor((elapsed % 3600) / 60);
+            const seconds = elapsed % 60;
+            
+            const formatted = 
+                String(hours).padStart(2, '0') + ':' +
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0');
+            
+            document.getElementById('timer').textContent = formatted;
+        }
+
+        // Update member_id in form when changed
+        document.getElementById('member_id').addEventListener('change', function() {
+            document.getElementById('form_member_id').value = this.value;
+        });
+    </script>
+</body>
+</html>
