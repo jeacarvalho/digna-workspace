@@ -8,8 +8,8 @@ last_updated: 2026-03-07
 # Status Atual - Digna
 
 **Última Atualização:** 2026-03-07  
-**Fase Atual:** Sprint 05 (Interface Web) ✅ COMPLETE  
-**Próximo Marco:** Production Release v.1
+**Fase Atual:** Sprint 06 (Gestão de Caixa) ✅ COMPLETE  
+**Próximo Marco:** Phase 3 - Finanças Solidárias
 
 ---
 
@@ -21,7 +21,8 @@ last_updated: 2026-03-07
 | Foundation Setup | Marco 01 | ✅ COMPLETE | 100% |
 | Core Operations | Marco 02 | ✅ COMPLETE | 100% |
 | Reporting & Documents | Marco 03 | ✅ COMPLETE | 100% |
-| API REST & Dashboard | Marco 04 | ⏭️ READY | 0% |
+| UI & Dashboard | Marco 04 | ✅ COMPLETE | 100% |
+| Financial (Phase 3) | Marco 06 | 🟡 EM DESENVOLVIMENTO | 25% |
 | Production Deploy | Marco 05 | 📋 PLANNED | 0% |
 
 ---

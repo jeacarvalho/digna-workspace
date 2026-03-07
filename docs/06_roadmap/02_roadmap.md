@@ -49,14 +49,14 @@ O roadmap segue as 4 fases estratégicas definidas no DVP (Documento de Visão e
 
 ## Phase 3: Financial (Finanças Solidárias)
 
-**Status:** 🔵 PLANEJADO
+**Status:** 🟡 EM DESENVOLVIMENTO
 
 **Objetivo:** Suporte a múltiplas unidades de valor e gestão financeira.
 
 **Entregas:**
 - [ ] Gestão de compras (RF-07)
 - [ ] Gestão de estoque (RF-08)
-- [ ] Gestão de caixa (RF-09)
+- [x] Gestão de caixa (RF-09) ✅
 - [ ] Gestão orçamentária (RF-10)
 - [ ] Moedas sociais
 - [ ] Estoque substantivo (sementes, animais)
