@@ -7,4 +7,5 @@ use (
 	./modules/lifecycle
 	./modules/pdv_ui
 	./modules/reporting
+	./modules/sync_engine
 )

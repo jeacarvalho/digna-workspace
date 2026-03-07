@@ -1,6 +1,6 @@
 # 01 ARCHITECTURE - Digna (Providentia Foundation)
 
-**Status:** Architecture Implemented (v0.3)
+**Status:** Architecture Implemented (v0.4)
 **Last Updated:** 2026-03-07
 
 ---
@@ -186,6 +186,49 @@ legal_facade/
 - Mínimo de 3 decisões registradas no `decisions_log`
 - Alteração de status na tabela `sync_metadata`
 - Geração de identidade com CNPJ mock (00.000.000/0000-00)
+
+---
+
+### 3.6 sync_engine (Sprint 04 ✅)
+**Path:** `modules/sync_engine/`
+**Responsabilidade:** Sincronização offline-first e intercooperação B2B
+
+```
+sync_engine/
+├── internal/
+│   ├── tracker/
+│   │   └── sqlite_delta.go    # Monitor de alterações
+│   ├── exchange/
+│   │   └── intercoop.go       # Marketplace B2B
+│   └── client/
+│       └── provider_sync.go   # Sync seguro
+└── sprint04_test.go           # 9 testes DoD
+```
+
+**Funcionalidades:**
+- **Delta Tracker:** Detecta mudanças desde última sincronização
+- **Chain Digest:** Hash SHA16 da cadeia contábil (auditoria)
+- **Sync Package:** JSON com dados agregados apenas (~400 bytes)
+- **Digital Signature:** Assinatura com EntityID
+- **Marketplace:** Ofertas entre cooperativas ("Temos Mel")
+
+**Privacy First - Campos Incluídos:**
+```json
+{
+  "entity_id": "cooperativa_mel",        // ✅ ID da entidade
+  "total_sales": 7500,                    // ✅ Total vendas
+  "total_work_hours": 12,                 // ✅ Total horas
+  "total_members": 2,                     // ✅ Quantidade sócios
+  "legal_status": "DREAM",                // ✅ Status legal
+  "chain_digest": "d51e6eb4...",          // ✅ Hash auditoria
+  "signature": "f802343d..."               // ✅ Assinatura
+}
+```
+
+**Campos Protegidos (NÃO incluídos):**
+- ❌ member_id (dados pessoais)
+- ❌ entry_details (transações detalhadas)
+- ❌ posting_id (dados internos)
 
 ---
 
