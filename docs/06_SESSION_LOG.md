@@ -149,3 +149,63 @@ Implementação do motor contábil Core Lume e interface PDV. Sistema agora regi
 - Consultas agregadas (balancete, DRE)
 - Visualização de capital social (ITG 2002)
 - API REST com handlers HTTP
+
+---
+
+## Session Log 005 - Sprint 03: Dossiê de Dignidade
+
+**Date:** 2026-03-07
+**Status:** Sprint 03 COMPLETE ✅ | All Tests Passing ✅
+
+### Summary
+Implementação do sistema de documentação institucional e rateio social. O Digna agora gera Atas de Assembleia em Markdown, calcula distribuição proporcional de sobras entre cooperados, e simula a transição de status DREAM para FORMALIZED.
+
+### What Was Implemented
+- ✅ `reporting/internal/surplus/calculator.go` - Motor de rateio baseado em horas
+- ✅ `reporting/pkg/surplus/surplus.go` - API pública para consultas
+- ✅ `legal_facade/internal/document/generator.go` - Gerador de Atas (Markdown)
+- ✅ `legal_facade/internal/document/identity.go` - Cartões de identificação
+- ✅ `legal_facade/internal/document/formalization.go` - Simulador de formalização
+- ✅ `legal_facade/sprint03_test.go` - 8 testes DoD end-to-end
+
+### Technical Decisions
+- **Rateio Proporcional:** Fórmula (Horas / Total) × Excedente em int64
+- **Documentos Markdown:** Templates Go para geração de Atas CADSOL
+- **Formalização Automática:** Trigger após 3 decisões registradas
+- **Hash SHA256:** Auditoria imutável em todos os documentos
+- **Status Tracking:** Campo `status` na tabela `sync_metadata`
+
+### Components Architecture
+```
+PDV UI → Core Lume → SQLite (work_logs, postings)
+                ↓
+         reporting (surplus calculator)
+                ↓
+         legal_facade (document generator)
+                ↓
+         Markdown/PDF (Atas CADSOL)
+```
+
+### Test Results (8/8 PASS)
+```
+✅ Step1_Criar_Socios_com_Horas_Diferentes
+   - socio_001: 600 min | socio_002: 300 min
+✅ Step2_Realizar_Venda_10000 (R$ 100,00)
+✅ Step3_Calcular_Rateio_Social
+   - socio_001: 66.7% = R$ 66.66 | socio_002: 33.3% = R$ 33.33
+✅ Step4_Gerar_3_Decisoes (Estatuto, Conselho, Plano)
+✅ Step5_Verificar_Formalizacao (DREAM → FORMALIZED)
+✅ Step6_Gerar_Ata_Assembleia (Markdown + hash)
+✅ TestRateio_Proporcionalidade (A=50%, B=25%, C=25%)
+```
+
+### DoD Validated
+1. ✅ 2 sócios com horas diferentes + venda de R$ 100,00
+2. ✅ Rateio deu mais crédito para quem trabalhou mais (66.7% vs 33.3%)
+3. ✅ Arquivo `.md` gerado com Ata de Assembleia contendo decisões reais
+
+### Next Steps
+- Sprint 04: API REST & Dashboard Web
+- Handlers HTTP para todas as operações
+- Interface visual para consultas e relatórios
+- Docker container para deploy simplificado

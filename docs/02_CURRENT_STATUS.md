@@ -4,8 +4,8 @@
 # Status Atual - Digna (Providentia Foundation)
 
 **Last Updated:** 2026-03-07
-**Current Phase:** Sprint 02 (Core Lume & PDV UI) ✅ COMPLETE
-**Next Milestone:** Sprint 03 (Reporting & Dashboard)
+**Current Phase:** Sprint 03 (Dossiê de Dignidade) ✅ COMPLETE
+**Next Milestone:** Sprint 04 (API REST & Dashboard)
 
 ---
 
@@ -16,8 +16,9 @@
 | Concepção | Milestone 00 | ✅ COMPLETE | 100% |
 | Foundation Setup | Milestone 01 | ✅ COMPLETE | 100% |
 | Core Operations | Milestone 02 | ✅ COMPLETE | 100% |
-| Reporting | Milestone 03 | ⏭️ READY | 0% |
-| Formalization | Milestone 04 | 📋 PLANNED | 0% |
+| Reporting & Documents | Milestone 03 | ✅ COMPLETE | 100% |
+| API REST & Dashboard | Milestone 04 | ⏭️ READY | 0% |
+| Production Deploy | Milestone 05 | 📋 PLANNED | 0% |
 
 ---
 
@@ -72,6 +73,53 @@
 ✅ TestLedger_MultipleEntities_Isolation (A=5000, B=3000) - PASS
 ```
 
+---
+
+## Sprint 03: Dossiê de Dignidade ✅
+
+### Módulos: `reporting` e `legal_facade`
+
+#### Reporting (Motor de Rateio Social)
+- ✅ **Surplus Calculator**: Algoritmo de rateio baseado em horas trabalhadas
+- ✅ **Proporcionalidade**: Distribuição justa do excedente financeiro
+- ✅ **Fórmula**: (Horas do Sócio / Total de Horas) × Excedente
+- ✅ **API Pública**: `pkg/surplus` para consultas de capital social
+
+#### Legal Facade (Documentação Institucional)
+- ✅ **Assembly Generator**: Atas de Assembleia em Markdown
+- ✅ **Identity Cards**: Cartões de identificação da entidade
+- ✅ **Formalization Simulator**: Transição DREAM → FORMALIZED
+- ✅ **CADSOL Integration**: Hash SHA256 em documentos oficiais
+
+### Componentes Entregues
+- Rateio social automatizado (ITG 2002 + Contabilidade)
+- Documentos institucionais gerados automaticamente
+- Critérios de formalização: 3 decisões registradas
+- Auditoria imutável com hashes criptográficos
+- Valores em centavos (int64) sem perda de precisão
+
+### Test Results Sprint 03
 ```
+✅ Step1_Criar_Socios_com_Horas_Diferentes - PASS
+   socio_001: 600 min | socio_002: 300 min
+✅ Step2_Realizar_Venda_10000 - PASS
+   R$ 100,00 vendido com partidas dobradas
+✅ Step3_Calcular_Rateio_Social - PASS
+   socio_001: 66.7% = R$ 66.66 | socio_002: 33.3% = R$ 33.33
+✅ Step4_Gerar_3_Decisoes - PASS
+   Aprovação Estatuto, Eleição Conselho, Plano Negócios
+✅ Step5_Verificar_Formalizacao - PASS
+   Status: FORMALIZED (transição automática)
+✅ Step6_Gerar_Ata_Assembleia - PASS
+   Markdown com hash de auditoria CADSOL
+✅ TestRateio_Proporcionalidade - PASS
+   3 sócios: A=50%, B=25%, C=25% validado
+```
+
+### Total Test Coverage
+- **Sprint 01**: 6/6 PASS (100%)
+- **Sprint 02**: 8/8 PASS (100%)
+- **Sprint 03**: 8/8 PASS (100%)
+- **Total**: 22/22 PASS (100%)
 
 

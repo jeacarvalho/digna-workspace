@@ -1,6 +1,6 @@
 # 01 ARCHITECTURE - Digna (Providentia Foundation)
 
-**Status:** Architecture Implemented (v0.2)
+**Status:** Architecture Implemented (v0.3)
 **Last Updated:** 2026-03-07
 
 ---
@@ -135,6 +135,60 @@ pdv_ui/
 
 ---
 
+### 3.4 reporting (Sprint 03 ✅)
+**Path:** `modules/reporting/`
+**Responsabilidade:** Cálculos agregados e relatórios institucionais
+
+```
+reporting/
+├── internal/
+│   └── surplus/
+│       └── calculator.go  # Algoritmo de rateio social
+└── pkg/
+    └── surplus/
+        └── surplus.go     # API pública para consultas
+```
+
+**Funcionalidades:**
+- `CalculateSocialSurplus(entityID)` → Distribuição proporcional por horas
+- Rateio: (Horas do Sócio / Total de Horas) × Excedente Financeiro
+- Integração ITG 2002 + Contabilidade (valores em int64)
+
+**Exemplo de Rateio:**
+| Sócio | Horas | % do Total | Valor (R$ 100,00) |
+|-------|-------|------------|-------------------|
+| socio_001 | 600 | 66.7% | R$ 66.66 |
+| socio_002 | 300 | 33.3% | R$ 33.33 |
+
+---
+
+### 3.5 legal_facade (Sprint 03 ✅)
+**Path:** `modules/legal_facade/`
+**Responsabilidade:** Documentação institucional e formalização
+
+```
+legal_facade/
+├── internal/document/
+│   ├── generator.go        # Gerador de Atas (Markdown)
+│   ├── identity.go         # Cartões de identificação
+│   └── formalization.go    # Simulador DREAM→FORMALIZED
+└── pkg/
+    └── document/
+        └── document.go     # API pública
+```
+
+**Documentos Gerados:**
+- **Atas de Assembleia:** Markdown com hash SHA256 de auditoria
+- **Cartões de Identidade:** Dados da entidade + status (DREAM/FORMALIZED)
+- **Simulador de Formalização:** Transição automática após 3 decisões
+
+**Critérios de Formalização:**
+- Mínimo de 3 decisões registradas no `decisions_log`
+- Alteração de status na tabela `sync_metadata`
+- Geração de identidade com CNPJ mock (00.000.000/0000-00)
+
+---
+
 ## 4. Fluxos de Dados (Sequência)
 
 ### 4.1 Ciclo de Vida do Tenant
@@ -249,6 +303,45 @@ Registro imutável de decisões de assembleia com hash criptográfico.
         |                |<-- hash=abc123 -|                 |             |
         |<-- Hash/Docs ---|                 |                 |             |
 
+### 4.7 Cálculo de Rateio Social (Reporting)
+Processamento do excedente financeiro distribuído proporcionalmente às horas de trabalho.
+
+    Usuário/App        PDV UI        Reporting         Lifecycle Mgr    SQLite
+        |                |               |                 |             |
+        |-- Rateio? --->|               |                 |             |
+        |                |-- Calculate()--|                 |             |
+        |                |               |                 |             |
+        |                |               |-- Query Work ----|             |
+        |                |               |   (work_logs)    |             |
+        |                |               |-- Query Sales ---|             |
+        |                |               |   (postings)     |             |
+        |                |               |                 |             |
+        |                |               |-- Calcular()     |            |
+        |                |               |   % = hrs/total  |             |
+        |                |               |   val = % × exc  |             |
+        |                |               |                 |             |
+        |                |<-- Result -----|                 |             |
+        |<-- socio_001:  |               |                 |             |
+            R$ 66.66     |               |                 |             |
+
+### 4.8 Geração de Ata (Legal Facade)
+Transformação de decisões do banco em documento institucional Markdown.
+
+    Usuário/App        PDV UI       Legal Facade        Lifecycle Mgr    SQLite
+        |                |              |                 |             |
+        |-- Gerar Ata -->|              |                 |             |
+        |                |-- Generate()--|                 |             |
+        |                |              |                 |             |
+        |                |              |-- Query Decisions|             |
+        |                |              |  (decisions_log) |             |
+        |                |              |                 |             |
+        |                |              |-- Template()    |             |
+        |                |              |   Markdown fmt  |             |
+        |                |              |   + Hash audit  |             |
+        |                |              |                 |             |
+        |                |<-- MD Doc ----|                 |             |
+        |<-- Ata.md -----|              |                 |             |
+
 ---
 
 ## 5. Camadas de Segregação
@@ -268,6 +361,16 @@ Registro imutável de decisões de assembleia com hash criptográfico.
 - **Faz:** Criar arquivos .db, aplicar PRAGMAs, executar DDL
 - **Exemplo:** `pkg/lifecycle/sqlite.go` - GetConnection()
 
+### 5.4 Reporting Layer
+- **Responsabilidade:** Cálculos agregados, análise de dados, rateios
+- **Faz:** Consultar SQLite, calcular distribuições, gerar métricas
+- **Exemplo:** `pkg/surplus/calculator.go` - CalculateSocialSurplus()
+
+### 5.5 Document Layer (Legal Facade)
+- **Responsabilidade:** Geração de documentos institucionais
+- **Faz:** Templates, formatação Markdown, hash de auditoria
+- **Exemplo:** `pkg/document/generator.go` - GenerateAssemblyMinutes()
+
 ---
 
 ## 6. Stack Tecnológico Atualizado
@@ -278,7 +381,10 @@ Registro imutável de decisões de assembleia com hash criptográfico.
 | **Storage** | SQLite3 | Isolamento por tenant |
 | **Driver** | mattn/go-sqlite3 | CGO bindings |
 | **Migrations** | SQL nativo | DDL versionado |
+| **Templates** | Go html/template | Documentos Markdown |
 | **Hash** | SHA256 | Auditoria CADSOL |
 | **Numerics** | int64 | Centavos e minutos |
+| **Rateio** | Proporcional por tempo | ITG 2002 + Contábil |
+| **Documents** | Markdown | Atas de Assembleia |
 | **Architecture** | Clean Architecture | Separação de concerns |
 | **Workspace** | Go Modules | Multi-module monorepo |

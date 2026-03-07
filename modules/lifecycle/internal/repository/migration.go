@@ -81,13 +81,14 @@ func (m *Migrator) RunMigrations(db *sql.DB) error {
 				id INTEGER PRIMARY KEY CHECK(id = 1),
 				last_sync_at INTEGER,
 				version INTEGER NOT NULL DEFAULT 1,
-				updated_at INTEGER NOT NULL
+				updated_at INTEGER NOT NULL,
+				status TEXT DEFAULT 'DREAM'
 			)`,
 		},
 		{
 			name: "init_sync_metadata",
-			sql: `INSERT OR IGNORE INTO sync_metadata (id, last_sync_at, version, updated_at) 
-				VALUES (1, NULL, 1, strftime('%s', 'now'))`,
+			sql: `INSERT OR IGNORE INTO sync_metadata (id, last_sync_at, version, updated_at, status) 
+				VALUES (1, NULL, 1, strftime('%s', 'now'), 'DREAM')`,
 		},
 		{
 			name: "create_indexes",
