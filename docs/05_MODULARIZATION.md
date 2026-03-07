@@ -15,7 +15,13 @@ Para mitigar a entropia de contexto em agentes de IA, o sistema Digna é dividid
 
 ## 2. Divisão de Módulos
 
+### Módulo 0: `pdv_ui` (Interface de Operação)
+- **Papel:** Interface de venda e compra para o empreendedor.
+- **Output:** Comandos comerciais para o Motor Lume.
+
 ### Módulo 1: Lifecycle Manager (Orquestrador de Tenants)
+- **Papel:** Gerenciamento físico dos bancos SQLite.
+- **Componentes:** `TenantRegistry`, `MigrationEngine`.
 O módulo "físico" do sistema, responsável pela infraestrutura de arquivos.
 * **Responsabilidade:** Gerenciar a criação, abertura, cache de conexões e migrações dos arquivos `.sqlite` individuais.
 * **Componentes Chave:** - `TenantRegistry`: Mapeamento de Entity_ID para o path físico no servidor.
@@ -23,6 +29,8 @@ O módulo "físico" do sistema, responsável pela infraestrutura de arquivos.
 * **Status na v0:** Crítico (Base para todos os outros módulos).
 
 ### Módulo 2: Motor Lume (Core Ledger)
+- **Papel:** Motor de partidas dobradas e validação de integridade.
+- **Componentes:** `JournalService`, `TransactionValidator`.
 O domínio contábil puro, onde reside a inteligência financeira.
 * **Responsabilidade:** Implementar o sistema de partidas dobradas e garantir a integridade das transações.
 * **Componentes Chave:**
@@ -31,6 +39,7 @@ O domínio contábil puro, onde reside a inteligência financeira.
 * **Regra Estrita:** Processamento exclusivo em `int64` (centavos).
 
 ### Módulo 3: Legal Facade (Simulador de Formalização)
+- **Papel:** Simulação de transição de estado e geração de documentos (CNPJ).
 O módulo de transição de estado e geração de documentos jurídicos.
 * **Responsabilidade:** Gerir a metamorfose da entidade do status `DREAM` para `FORMALIZED`.
 * **Componentes Chave:**
@@ -38,6 +47,7 @@ O módulo de transição de estado e geração de documentos jurídicos.
     - `DocumentGenerator`: Motor de templates para exportação de Atas e Estatutos em PDF.
 
 ### Módulo 4: Reporting Engine (Painel de Dignidade)
+- **Papel:** Cálculo de rateio social e dossiê de crédito.
 A camada de inteligência e saída para o usuário final.
 * **Responsabilidade:** Traduzir os dados brutos do Ledger em indicadores sociais e financeiros.
 * **Componentes Chave:**
@@ -61,3 +71,5 @@ A camada de inteligência e saída para o usuário final.
 1. **Isolamento de Sprint:** Cada Módulo deve ter seu próprio `SESSION_LOG` e ser finalizado com testes unitários antes do início do próximo.
 2. **Interface First:** Antes de codificar a lógica interna, o agente deve definir as interfaces no pacote `internal/domain`.
 3. **Validation:** O agente deve validar o Módulo 1 com a criação física de arquivos antes de tentar realizar qualquer lançamento contábil (Módulo 2).
+
+

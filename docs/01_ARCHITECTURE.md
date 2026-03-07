@@ -1,7 +1,7 @@
 # 01 ARCHITECTURE - Digna (Providentia Foundation)
 
-**Status:** Architecture Defined (v0.1)  
-**Last Updated:** 2026-03-04
+**Status:** Architecture Implemented (v0.2)
+**Last Updated:** 2026-03-07
 
 ---
 
@@ -22,7 +22,9 @@ O Digna utiliza uma arquitetura de **Micro-databases isolados**. Em vez de um ba
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        DATA PERSISTENCE                                 │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐       │
-│  │ /data/ent_A.db   │  │ /data/ent_B.db   │  │ /data/ent_C.db   │       │
+│  │ /data/entities/  │  │ /data/entities/  │  │ /data/entities/  │       │
+│  │  ent_A.db        │  │  ent_B.db        │  │  ent_C.db        │       │
+│  │  (WAL mode)      │  │  (WAL mode)      │  │  (WAL mode)      │       │
 │  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘       │
 └───────────┼─────────────────────┼─────────────────────┼─────────────────┘
             ▼                     ▼                     ▼
@@ -39,9 +41,244 @@ O Digna utiliza uma arquitetura de **Micro-databases isolados**. Em vez de um ba
 | Camada | Tecnologia | Justificativa |
 | --- | --- | --- |
 | **Backend** | Go (1.22+) | Performance, concorrência e binário estático para Nuvem Serpro. |
-| **Database** | libSQL (SQLite) | Isolamento total por arquivo, baixo custo e portabilidade. |
+| **Database** | SQLite3 + mattn/go-sqlite3 | Isolamento total por arquivo, WAL mode, foreign keys. |
 | **Sync** | Change Data Capture | Sincronização assíncrona para o Agregador Central da Fundação. |
-| **Arquitetura** | Clean Architecture | Desacoplamento de domínio para facilitar Mocks de formalização. |
+| **Arquitetura** | Clean Architecture | Desacoplamento de domínio (não importa driver SQL). |
+| **Numerics** | int64 (exclusivo) | Valores financeiros e tempo sem erros IEEE 754. |
+
+---
+
+## 3. Módulos Implementados
+
+### 3.1 lifecycle (Sprint 01 ✅)
+**Path:** `modules/lifecycle/`
+**Responsabilidade:** Orquestração de arquivos SQLite por tenant
 
 ```
+lifecycle/
+├── internal/
+│   ├── domain/
+│   │   ├── entity.go        # Entity (DREAM/FORMALIZED)
+│   │   └── interfaces.go    # LifecycleManager, Migrator
+│   ├── manager/
+│   │   └── sqlite_mgr.go    # Pool de conexões + PRAGMAs
+│   └── repository/
+│       └── migration.go     # DDL v0 (6 tabelas)
+└── manager_test.go          # 6 testes de integridade
+```
 
+**Tabelas Criadas (Schema v0):**
+- `accounts` - Plano de contas (hierárquico)
+- `entries` - Lançamentos contábeis
+- `postings` - Partidas dobradas (amount: int64)
+- `work_logs` - ITG 2002 (minutes: int64)
+- `decisions_log` - CADSOL (autogestão)
+- `sync_metadata` - Versão e último sync
+
+**Contas Padrão (Seed):**
+| ID | Código | Nome | Tipo |
+|----|--------|------|------|
+| 1 | 1.1.01 | Caixa e Equivalentes | ASSET |
+| 2 | 3.1.01 | Receita de Vendas | REVENUE |
+| 3 | 1.1.02 | Bancos | ASSET |
+| 4 | 2.1.01 | Fornecedores | LIABILITY |
+
+---
+
+### 3.2 core_lume (Sprint 02 ✅)
+**Path:** `modules/core_lume/`
+**Responsabilidade:** Motor contábil, governança e valoração social
+
+```
+core_lume/
+├── pkg/
+│   ├── ledger/          # API Pública - Journaling & Balanço
+│   │   └── ledger.go    # Transaction, Posting, Service
+│   ├── social/          # API Pública - ITG 2002
+│   │   └── social.go    # WorkRecord, Work Capital
+│   └── governance/      # API Pública - CADSOL
+│       └── governance.go # DecisionRecord, Hash SHA256
+└── internal/            # Implementações internas
+    ├── ledger/
+    ├── social/
+    └── governance/
+```
+
+**Regras de Negócio:**
+- **Integridade Contábil:** Soma(Débitos) = Soma(Créditos) = 0
+- **Atomicidade:** Transações SQLite garantem consistência
+- **ITG 2002:** Tempo de trabalho convertido em capital social
+- **CADSOL:** Decisões imutáveis com hash SHA256
+
+---
+
+### 3.3 pdv_ui (Sprint 02 ✅)
+**Path:** `modules/pdv_ui/`
+**Responsabilidade:** Interface de operações comerciais (fachada)
+
+```
+pdv_ui/
+├── usecase/
+│   └── operation.go     # RecordSale, RecordWork, RecordDecision
+└── pdv_test.go        # Testes integrados end-to-end
+```
+
+**Operações Disponíveis:**
+- `RecordSale(entityID, amount, method)` → Débito Caixa + Crédito Vendas
+- `RecordWork(entityID, memberID, minutes)` → Registro ITG 2002
+- `RecordDecision(entityID, title, content)` → Hash + Log CADSOL
+
+**Princípios:**
+- Clean Architecture: Usecases não conhecem SQL
+- Core Lume como Gatekeeper de integridade
+- Lifecycle Manager como único ponto de I/O
+
+---
+
+## 4. Fluxos de Dados (Sequência)
+
+### 4.1 Ciclo de Vida do Tenant
+O Lifecycle Manager é o único componente com permissão para realizar operações de `OS` (criação de arquivos). O sistema utiliza o padrão 'Lazy Initialization', criando o banco apenas no primeiro acesso ou no cadastro explícito.
+
+Usuário/App          API (Digna)        Lifecycle Mgr       SQLite (Disco)
+    |                   |                   |                   |
+    |-- POST /dream --> |                   |                   |
+    |   {name: "Mel"}   |-- InitTenant(id) -|                   |
+    |                   |                   |-- Criar mel.db -->|
+    |                   |                   |                   |
+    |                   |<- DB Connection --|                   |
+    |                   |                   |                   |
+    |                   |-- RunMigrations --|                   |
+    |                   |                   |-- CREATE TABLEs ->|
+    |                   |                   |                   |
+    | <--- 201 Created -| <--- Success -----|                   |
+    |    (Entity_ID)    |                   |                   |
+
+### 4.2 Integridade do Ledger
+O motor Lume atua como um 'Gatekeeper'. Nenhuma escrita no SQLite ocorre sem que o motor de validação de partidas dobradas confirme que a soma dos lançamentos resulta em zero (Equilíbrio Contábil).
+
+Usuário/App          API (Digna)         Lume (Ledger)      SQLite (mel.db)
+    |                   |                   |                   |
+    |-- POST /entry --> |                   |                   |
+    | {D:100, C:100}    |-- Process(entry) -|                   |
+    |                   |                   |                   |
+    |                   |                   |-- Validar Soma? --|
+    |                   |                   |   (D + C == 0)    |
+    |                   |                   |         |         |
+    |                   |                   |      OK [v]       |
+    |                   |                   |         |         |
+    |                   |                   |-- Begin Trans. -->|
+    |                   |                   |-- Insert Entry -->|
+    |                   |                   |-- Insert Posts -->|
+    |                   |                   |-- Commit -------->|
+    |                   |                   |                   |
+    | <--- 200 OK ------| <--- Success -----|                   |
+    
+## 4.3 Formalização (Transição de Status)
+
+    Usuário/App          API (Digna)        Legal Facade       Lifecycle Mgr
+    |                   |                   |                   |
+    |-- POST /formal -->|                   |                   |
+    |                   |-- RequestCNPJ() ->|                   |
+    |                   |                   |                   |
+    |                   |                   |-- Gerar Mock ---->|
+    |                   |                   |   (00.000.../01)  |
+    |                   |                   |                   |
+    |                   |<-- New Identity --|                   |
+    |                   |                   |                   |
+    |                   |-- UpdateStatus -->|-- Set FORMALIZED -|
+    |                   |                   |    no mel.db      |
+    |                   |                   |                   |
+    | <--- 200 OK ------|                   |                   |
+    | (Estatuto PDF)    |                   |                   |
+    
+### 4.4 Operação de Venda (PDV → Lume → Ledger)
+Fluxo completo de uma venda no PDV: validação de dados, validação contábil, e persistência atômica.
+
+    Usuário/App        PDV UI          Core Lume         Lifecycle Mgr    SQLite
+        |                |                 |                 |             |
+        |-- Venda 50,00->|                 |                 |             |
+        |   (PIX)        |-- RecordSale()--|                 |             |
+        |                |                 |                 |             |
+        |                |                 |-- Validate(txn)--|             |
+        |                |                 |   (D+C==0?)      |             |
+        |                |                 |      [OK]       |             |
+        |                |                 |                 |             |
+        |                |                 |-- Persist(txn)---|-- INSERT ---->|
+        |                |                 |                 |   entries    |
+        |                |                 |                 |   postings   |
+        |                |                 |                 |             |
+        |                |                 |<-- Commit -------|<-- TX OK ----|
+        |                |<-- EntryID -----|                 |             |
+        |<-- Recibo ----|                 |                 |             |
+    
+### 4.5 Registro de Trabalho (ITG 2002)
+Registro de horas de trabalho como capital social do cooperado.
+
+    Usuário/App        PDV UI          Core Lume         Lifecycle Mgr    SQLite
+        |                |                 |                 |             |
+        |-- 8h trabalho->|                 |                 |             |
+        |   membro_123   |-- RecordWork()--|                 |             |
+        |                |                 |                 |             |
+        |                |                 |-- Validate()----|             |
+        |                |                 |   (minutes>0)    |             |
+        |                |                 |      [OK]       |             |
+        |                |                 |                 |             |
+        |                |                 |-- Persist()------|-- INSERT ---->|
+        |                |                 |                 |  work_logs   |
+        |                |                 |                 |             |
+        |                |<-- Confirmação -|                 |             |
+        |<-- OK ---------|                 |                 |             |
+
+### 4.6 Auditoria de Decisão (CADSOL)
+Registro imutável de decisões de assembleia com hash criptográfico.
+
+    Usuário/App        PDV UI          Core Lume         Lifecycle Mgr    SQLite
+        |                |                 |                 |             |
+        |-- Decisão ---->|                 |                 |             |
+        |   "Aprovar     |-- RecordDecision                  |             |
+        |    Orçamento"  |                 |                 |             |
+        |                |                 |                 |             |
+        |                |                 |-- SHA256(content)|            |
+        |                |                 |   hash=abc123...  |             |
+        |                |                 |                 |             |
+        |                |                 |-- Persist()------|-- INSERT ---->|
+        |                |                 |                 | decisions_log|
+        |                |                 |                 |  (hash+status)|
+        |                |                 |                 |             |
+        |                |<-- hash=abc123 -|                 |             |
+        |<-- Hash/Docs ---|                 |                 |             |
+
+---
+
+## 5. Camadas de Segregação
+
+### 5.1 Interface Layer (PDV UI)
+- **Responsabilidade:** Receber intenções do usuário, validar formato
+- **Não faz:** Acesso direto ao banco, lógica contábil
+- **Exemplo:** `usecase/operation.go` - RecordSale()
+
+### 5.2 Domain Layer (Core Lume)
+- **Responsabilidade:** Regras de negócio, integridade, auditoria
+- **Faz:** Validação de partidas dobradas, hash de decisões, cálculo de capital
+- **Exemplo:** `pkg/ledger/service.go` - Validate(), RecordTransaction()
+
+### 5.3 Infrastructure Layer (Lifecycle)
+- **Responsabilidade:** I/O físico, conectividade, migrações
+- **Faz:** Criar arquivos .db, aplicar PRAGMAs, executar DDL
+- **Exemplo:** `pkg/lifecycle/sqlite.go` - GetConnection()
+
+---
+
+## 6. Stack Tecnológico Atualizado
+
+| Camada | Tecnologia | Uso |
+|--------|-----------|-----|
+| **Backend** | Go 1.22+ | API REST, concorrência |
+| **Storage** | SQLite3 | Isolamento por tenant |
+| **Driver** | mattn/go-sqlite3 | CGO bindings |
+| **Migrations** | SQL nativo | DDL versionado |
+| **Hash** | SHA256 | Auditoria CADSOL |
+| **Numerics** | int64 | Centavos e minutos |
+| **Architecture** | Clean Architecture | Separação de concerns |
+| **Workspace** | Go Modules | Multi-module monorepo |

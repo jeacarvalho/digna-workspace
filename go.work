@@ -4,5 +4,6 @@ use (
 	./modules/core_lume
 	./modules/legal_mock
 	./modules/lifecycle
+	./modules/pdv_ui
 	./modules/reporting
 )
