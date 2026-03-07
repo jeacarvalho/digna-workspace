@@ -45,7 +45,7 @@ func (s *Service) RecordDecision(entityID string, title string, content string) 
 		return "", fmt.Errorf("content cannot be empty")
 	}
 
-	hash := generateHash(content)
+	hash := generateHashWithSalt(content, entityID)
 
 	db, err := s.lifecycleManager.GetConnection(entityID)
 	if err != nil {
@@ -61,6 +61,13 @@ func (s *Service) RecordDecision(entityID string, title string, content string) 
 	}
 
 	return hash, nil
+}
+
+func generateHashWithSalt(content string, entityID string) string {
+	// Usar entityID como salt para evitar colisões cross-tenant
+	salted := fmt.Sprintf("%s:%s:DIGNA_SALT_v1", content, entityID)
+	hash := sha256.Sum256([]byte(salted))
+	return hex.EncodeToString(hash[:])
 }
 
 func (s *Service) GetDecisionByHash(entityID string, hash string) (*DecisionRecord, error) {

@@ -46,7 +46,7 @@ func (cs *CADSOLService) RecordDecision(entityID string, record *DecisionRecord)
 		return fmt.Errorf("content cannot be empty")
 	}
 
-	record.ContentHash = generateHash(record.Content)
+	record.ContentHash = generateHash(record.Content, entityID)
 
 	if record.Status == "" {
 		record.Status = StatusDraft
@@ -119,7 +119,10 @@ func (cs *CADSOLService) UpdateDecisionStatus(entityID string, decisionID int64,
 	return nil
 }
 
-func generateHash(content string) string {
-	hash := sha256.Sum256([]byte(content))
+func generateHash(content string, entityID string) string {
+	// Usar entityID como salt para evitar colisões cross-tenant
+	// Entidades diferentes com mesmo conteúdo terão hashes diferentes
+	salted := fmt.Sprintf("%s:%s:DIGNA_SALT_v1", content, entityID)
+	hash := sha256.Sum256([]byte(salted))
 	return hex.EncodeToString(hash[:])
 }

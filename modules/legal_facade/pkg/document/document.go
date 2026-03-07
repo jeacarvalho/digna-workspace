@@ -58,3 +58,17 @@ func (fs *FormalizationSimulator) UpdateEntityStatus(entityID string, newStatus 
 func (fs *FormalizationSimulator) SimulateFormalization(entityID string) (bool, string, error) {
 	return fs.FormalizationSimulator.SimulateFormalization(entityID)
 }
+
+type StatuteGenerator struct {
+	*document.StatuteGenerator
+}
+
+func NewStatuteGenerator(lm lifecycle.LifecycleManager) *StatuteGenerator {
+	return &StatuteGenerator{
+		StatuteGenerator: document.NewStatuteGenerator(lm),
+	}
+}
+
+func (sg *StatuteGenerator) GenerateStatute(entityID string, entityName string, status string) (string, error) {
+	return sg.StatuteGenerator.GenerateStatute(entityID, entityName, status)
+}
