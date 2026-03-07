@@ -156,3 +156,18 @@ func (s *Service) GetAccountBalance(entityID string, accountID int64) (int64, er
 	balance := debitSum.Int64 - creditSum.Int64
 	return balance, nil
 }
+
+func GetAccountByName(category string) int64 {
+	accountMap := map[string]int64{
+		"SALES":         2,
+		"EXPENSES":      5,
+		"SUPPLIERS":     4,
+		"BANK":          3,
+		"OTHER_INCOME":  6,
+		"OTHER_EXPENSE": 7,
+	}
+	if id, ok := accountMap[category]; ok {
+		return id
+	}
+	return 5
+}

@@ -108,7 +108,10 @@ func (m *Migrator) RunMigrations(db *sql.DB) error {
 				(1, '1.1.01', 'Caixa e Equivalentes', 'ASSET', strftime('%s', 'now')),
 				(2, '3.1.01', 'Receita de Vendas', 'REVENUE', strftime('%s', 'now')),
 				(3, '1.1.02', 'Bancos', 'ASSET', strftime('%s', 'now')),
-				(4, '2.1.01', 'Fornecedores', 'LIABILITY', strftime('%s', 'now'));`,
+				(4, '2.1.01', 'Fornecedores', 'LIABILITY', strftime('%s', 'now')),
+				(5, '4.1.01', 'Despesas Operacionais', 'EXPENSE', strftime('%s', 'now')),
+				(6, '3.2.01', 'Outras Receitas', 'REVENUE', strftime('%s', 'now')),
+				(7, '4.1.02', 'Outras Despesas', 'EXPENSE', strftime('%s', 'now'));`,
 		},
 	}
 

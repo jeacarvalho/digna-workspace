@@ -65,6 +65,15 @@ last_updated: 2026-03-07
 - PWA (manifest + service worker)
 - **Testes:** 9/9 PASS
 
+### Sprint 06: Gestão de Caixa (RF-09) ✅
+
+- Módulo cash_flow criado
+- Registro de entradas e saídas
+- Saldo em tempo real
+- Extrato por período
+- Interface web /cash
+- **Testes:** 3/3 PASS
+
 ---
 
 ## Total Test Coverage
@@ -76,7 +85,8 @@ last_updated: 2026-03-07
 | 03 | 8/8 | ✅ PASS |
 | 04 | 9/9 | ✅ PASS |
 | 05 | 9/9 | ✅ PASS |
-| **Total** | **40/40** | **100% PASS** 🎉 |
+| 06 | 3/3 | ✅ PASS |
+| **Total** | **43/43** | **100% PASS** 🎉 |
 
 ---
 

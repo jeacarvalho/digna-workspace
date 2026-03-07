@@ -41,6 +41,13 @@ func main() {
 	}
 	dashboardHandler.RegisterRoutes(mux)
 
+	// Cash Handler
+	cashHandler, err := handler.NewCashHandler(lifecycleMgr)
+	if err != nil {
+		log.Fatalf("Failed to create cash handler: %v", err)
+	}
+	cashHandler.RegisterRoutes(mux)
+
 	// Health check
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
