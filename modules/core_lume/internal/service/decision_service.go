@@ -3,11 +3,17 @@ package service
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/providentia/digna/core_lume/internal/domain"
 	"github.com/providentia/digna/core_lume/internal/repository"
+)
+
+var (
+	ErrTitleEmpty   = errors.New("title cannot be empty")
+	ErrContentEmpty = errors.New("content cannot be empty")
 )
 
 type DecisionService struct {
@@ -22,10 +28,10 @@ func NewDecisionService(decisionRepo repository.DecisionRepository) *DecisionSer
 
 func (s *DecisionService) RecordDecision(entityID, title, content string) (string, error) {
 	if title == "" {
-		return "", fmt.Errorf("title cannot be empty")
+		return "", ErrTitleEmpty
 	}
 	if content == "" {
-		return "", fmt.Errorf("content cannot be empty")
+		return "", ErrContentEmpty
 	}
 
 	contentHash := generateHash(content, entityID)

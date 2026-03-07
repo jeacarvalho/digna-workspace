@@ -2,7 +2,6 @@ package client
 
 import (
 	"crypto/sha256"
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -32,39 +31,34 @@ type AggregatedMetrics struct {
 }
 
 type ProviderSyncClient struct {
-	lifecycleManager lifecycle.LifecycleManager
+	syncRepo         SyncRepository
 	providerEndpoint string
 }
 
 func NewProviderSyncClient(lm lifecycle.LifecycleManager, endpoint string) *ProviderSyncClient {
 	return &ProviderSyncClient{
-		lifecycleManager: lm,
+		syncRepo:         NewSQLiteSyncRepository(lm),
 		providerEndpoint: endpoint,
 	}
 }
 
 func (psc *ProviderSyncClient) BuildSyncPackage(entityID string) (*SyncPackage, error) {
-	db, err := psc.lifecycleManager.GetConnection(entityID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get connection: %w", err)
-	}
-
-	state, err := psc.getSyncState(db)
+	state, err := psc.syncRepo.GetSyncState(entityID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get sync state: %w", err)
 	}
 
-	metrics, err := psc.calculateAggregatedMetrics(db)
+	metrics, err := psc.calculateAggregatedMetrics(entityID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate metrics: %w", err)
 	}
 
-	chainDigest, err := psc.calculateChainDigest(db)
+	chainDigest, err := psc.calculateChainDigest(entityID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate chain digest: %w", err)
 	}
 
-	deltaCount, err := psc.countDeltasSince(db, state.LastSyncAt)
+	deltaCount, err := psc.countDeltasSince(entityID, state)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count deltas: %w", err)
 	}
@@ -72,7 +66,7 @@ func (psc *ProviderSyncClient) BuildSyncPackage(entityID string) (*SyncPackage, 
 	pkg := &SyncPackage{
 		EntityID:       entityID,
 		Timestamp:      time.Now().Unix(),
-		PeriodStart:    state.LastSyncAt,
+		PeriodStart:    state,
 		PeriodEnd:      time.Now().Unix(),
 		ChainDigest:    chainDigest,
 		AggregatedData: *metrics,
@@ -95,15 +89,7 @@ func (psc *ProviderSyncClient) PushSyncPackage(entityID string) ([]byte, error) 
 		return nil, fmt.Errorf("failed to marshal package: %w", err)
 	}
 
-	db, err := psc.lifecycleManager.GetConnection(entityID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get connection: %w", err)
-	}
-
-	_, err = db.Exec(
-		"UPDATE sync_metadata SET last_sync_at = ? WHERE id = 1",
-		time.Now().Unix(),
-	)
+	err = psc.syncRepo.UpdateLastSync(entityID, time.Now().Unix())
 	if err != nil {
 		return nil, fmt.Errorf("failed to update sync timestamp: %w", err)
 	}
@@ -120,71 +106,41 @@ func (psc *ProviderSyncClient) GetPackageForTransport(entityID string) (string, 
 	return string(jsonData), nil
 }
 
-func (psc *ProviderSyncClient) getSyncState(db *sql.DB) (*syncState, error) {
-	state := &syncState{}
-
-	var lastSyncAt sql.NullInt64
-	err := db.QueryRow(
-		"SELECT last_sync_at FROM sync_metadata WHERE id = 1",
-	).Scan(&lastSyncAt)
-	if err == nil && lastSyncAt.Valid {
-		state.LastSyncAt = lastSyncAt.Int64
-	}
-
-	return state, nil
-}
-
-func (psc *ProviderSyncClient) calculateAggregatedMetrics(db *sql.DB) (*AggregatedMetrics, error) {
+func (psc *ProviderSyncClient) calculateAggregatedMetrics(entityID string) (*AggregatedMetrics, error) {
 	metrics := &AggregatedMetrics{
 		LegalStatus: "DREAM",
 	}
 
-	var totalSales sql.NullInt64
-	err := db.QueryRow(
-		"SELECT COALESCE(SUM(amount), 0) FROM postings WHERE direction = 'CREDIT' AND account_id = 2",
-	).Scan(&totalSales)
+	totalSales, err := psc.syncRepo.GetTotalSales(entityID)
 	if err == nil {
-		metrics.TotalSales = totalSales.Int64
+		metrics.TotalSales = totalSales
 	}
 
-	var totalMinutes sql.NullInt64
-	var memberCount sql.NullInt64
-	err = db.QueryRow(
-		"SELECT COALESCE(SUM(minutes), 0), COUNT(DISTINCT member_id) FROM work_logs",
-	).Scan(&totalMinutes, &memberCount)
+	totalHours, totalMembers, err := psc.syncRepo.GetTotalWorkAndMembers(entityID)
 	if err == nil {
-		metrics.TotalWorkHours = totalMinutes.Int64 / 60
-		metrics.TotalMembers = memberCount.Int64
+		metrics.TotalWorkHours = totalHours
+		metrics.TotalMembers = totalMembers
 	}
 
-	var decisionCount sql.NullInt64
-	err = db.QueryRow(
-		"SELECT COUNT(*) FROM decisions_log",
-	).Scan(&decisionCount)
+	decisionCount, err := psc.syncRepo.GetDecisionCount(entityID)
 	if err == nil {
-		metrics.DecisionCount = decisionCount.Int64
+		metrics.DecisionCount = decisionCount
 	}
 
-	if decisionCount.Int64 >= 3 {
+	if decisionCount >= 3 {
 		metrics.LegalStatus = "FORMALIZED"
 	}
 
 	return metrics, nil
 }
 
-func (psc *ProviderSyncClient) calculateChainDigest(db *sql.DB) (string, error) {
-	var lastEntryRef string
-	err := db.QueryRow(
-		"SELECT COALESCE(MAX(reference), '') FROM entries",
-	).Scan(&lastEntryRef)
+func (psc *ProviderSyncClient) calculateChainDigest(entityID string) (string, error) {
+	lastEntryRef, err := psc.syncRepo.GetLastEntryRef(entityID)
 	if err != nil {
 		return "", err
 	}
 
-	var lastDecisionHash string
-	err = db.QueryRow(
-		"SELECT COALESCE(MAX(content_hash), '') FROM decisions_log",
-	).Scan(&lastDecisionHash)
+	lastDecisionHash, err := psc.syncRepo.GetLastDecisionHash(entityID)
 	if err != nil {
 		return "", err
 	}
@@ -193,44 +149,27 @@ func (psc *ProviderSyncClient) calculateChainDigest(db *sql.DB) (string, error) 
 	return hex.EncodeToString(hash[:])[:16], nil
 }
 
-func (psc *ProviderSyncClient) countDeltasSince(db *sql.DB, since int64) (int64, error) {
-	var count int64
-
-	err := db.QueryRow(
-		"SELECT COUNT(*) FROM entries WHERE created_at > ?",
-		since,
-	).Scan(&count)
+func (psc *ProviderSyncClient) countDeltasSince(entityID string, since int64) (int64, error) {
+	entriesCount, err := psc.syncRepo.GetEntriesCountSince(entityID, since)
 	if err != nil {
 		return 0, err
 	}
 
-	var workCount int64
-	err = db.QueryRow(
-		"SELECT COUNT(*) FROM work_logs WHERE created_at > ?",
-		since,
-	).Scan(&workCount)
+	workCount, err := psc.syncRepo.GetWorkLogsCountSince(entityID, since)
 	if err != nil {
 		return 0, err
 	}
 
-	var decisionCount int64
-	err = db.QueryRow(
-		"SELECT COUNT(*) FROM decisions_log WHERE created_at > ?",
-		since,
-	).Scan(&decisionCount)
+	decisionCount, err := psc.syncRepo.GetDecisionsCountSince(entityID, since)
 	if err != nil {
 		return 0, err
 	}
 
-	return count + workCount + decisionCount, nil
+	return entriesCount + workCount + decisionCount, nil
 }
 
 func (psc *ProviderSyncClient) signPackage(pkg *SyncPackage, entityID string) string {
 	data := fmt.Sprintf("%s:%d:%s:%d", pkg.EntityID, pkg.Timestamp, pkg.ChainDigest, pkg.DeltaCount)
 	hash := sha256.Sum256([]byte(data + entityID))
 	return hex.EncodeToString(hash[:])[:16]
-}
-
-type syncState struct {
-	LastSyncAt int64
 }

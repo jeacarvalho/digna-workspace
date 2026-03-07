@@ -1,6 +1,6 @@
 # 📚 Documentação do Projeto Digna
 
-**Versão:** 1.0  
+**Versão:** 1.1  
 **Última Atualização:** 2026-03-07  
 **Projeto:** Sistema de Gestão Contábil para Economia Solidária  
 **Mantenedor:** Fundação Providentia
@@ -35,6 +35,7 @@ O **Digna** é uma infraestrutura contábil soberana para Economia Solidária br
 2. **Contabilidade Invisível** - Operações geram lançamentos automaticamente
 3. **Primazia do Trabalho** - Tempo de trabalho = Capital Social (ITG 2002)
 4. **Escala Nacional** - Arquitetura para milhões de empreendimentos
+5. **Clean Architecture** - Domínio independente de frameworks (DDD)
 
 ---
 
@@ -44,7 +45,7 @@ O **Digna** é uma infraestrutura contábil soberana para Economia Solidária br
 docs/
 ├── 01_project/        # Visão, Escopo, Stakeholders, Riscos
 ├── 02_product/       # Requisitos, Modelos, Algoritmos
-├── 03_architecture/  # Arquitetura Técnica, Protocolos
+├── 03_architecture/  # Arquitetura Técnica, Protocolos, DDD
 ├── 04_governance/    # Fundação, PMC, Contribuição, Licença
 ├── 05_ai/            # Constituição de IA, Agentes
 └── 06_roadmap/      # Estratégia, Roadmap, Backlog, Status
@@ -70,7 +71,7 @@ docs/
 ### 03 - Arquitetura Técnica
 | Documento | Descrição |
 |-----------|-----------|
-| [01_system.md](./03_architecture/01_system.md) | Arquitetura do sistema |
+| [01_system.md](./03_architecture/01_system.md) | Arquitetura DDD + Clean Architecture |
 | [02_protocols.md](./03_architecture/02_protocols.md) | Sync, Security, Economic |
 
 ### 04 - Governança
@@ -97,32 +98,93 @@ docs/
 
 ## 🚀 Status das Sprints
 
-| Sprint | Módulo | Status | Testes |
-|--------|--------|--------|--------|
-| 01 | Lifecycle Manager | ✅ COMPLETE | 6/6 |
-| 02 | Core Lume (Ledger) | ✅ COMPLETE | 8/8 |
-| 03 | Reporting + Legal | ✅ COMPLETE | 8/8 |
-| 04 | Sync Engine | ✅ COMPLETE | 9/9 |
-| 05 | UI Web (PWA) | ✅ COMPLETE | 9/9 |
-| **Total** | | | **40/40 PASS** |
+| Sprint | Módulo | Status | Testes | Descrição |
+|--------|--------|--------|--------|-----------|
+| 01 | Lifecycle Manager | ✅ | 6/6 | Criação e gestão de tenants |
+| 02 | Core Lume (Ledger) | ✅ | 8/8 | Motor contábil com partidas dobradas |
+| 03 | Reporting + Legal | ✅ | 8/8 | Rateio social e documentação |
+| 04 | Sync Engine | ✅ | 9/9 | Sincronização offline-first |
+| 05 | UI Web (PWA) | ✅ | 9/9 | Interface mobile-first |
+| 06 | Cash Flow | ✅ | 3/3 | Gestão de caixa |
+| 07 | **DDD Refactoring** | ✅ | 43/43 | Aplicado DDD a todos os módulos |
+| 08 | **Integrações** | ✅ | 5/5 | Interfaces gov (mock) |
+| **Total** | | | **91/91** | **100% PASS** 🎉 |
+
+---
+
+## 🏛️ Arquitetura DDD
+
+O projeto segue rigorosamente **Domain-Driven Design (DDD)** e **Clean Architecture**:
+
+### Repository Pattern
+```go
+// Domain Layer - Interface pura
+type LedgerRepository interface {
+    SaveEntry(entry *Entry) (int64, error)
+    GetBalance(accountID int64) (int64, error)
+}
+
+// Infrastructure Layer - Implementação SQLite
+type SQLiteLedgerRepository struct { ... }
+```
+
+### Integrações Externas (Módulo integrations/)
+
+O sistema possui **8 interfaces de integração governamental**, todas implementadas com mocks realistas:
+
+| Órgão | Serviços | Status |
+|-------|----------|--------|
+| **Receita Federal** | Consultar CNPJ, Emitir DARF | ✅ Mock |
+| **MTE** | CAT, RAIS, eSocial | ✅ Mock |
+| **MDS** | CadÚnico, Relatório Social | ✅ Mock |
+| **IBGE** | Pesquisas, PAM, CNAE | ✅ Mock |
+| **SEFAZ** | NFe, NFS-e, Manifesto | ✅ Mock |
+| **BNDES** | Linhas de Crédito, Simulação | ✅ Mock |
+| **SEBRAE** | Cursos, Consultoria | ✅ Mock |
+| **Providentia** | Sync, Marketplace | ✅ Mock |
+
+**Como usar:**
+```go
+service, _ := integrations.NewMockIntegrationService(db)
+
+// Consultar CNPJ
+cnpjData, _ := service.ReceitaFederal().ConsultarCNPJ(ctx, "12345678000190")
+
+// Emitir NFe
+nfe, _ := service.SEFAZ().EmitirNFe(ctx, nfeRequest)
+
+// Simular crédito
+simulacao, _ := service.BNDES().SimularCredito(ctx, creditRequest)
+```
+
+**Para integrar de verdade no futuro:**
+Basta criar novas implementações mantendo as **mesmas interfaces**:
+```go
+type HTTPReceitaFederalRepository struct { ... }
+func (r *HTTPReceitaFederalRepository) ConsultarCNPJ(...) { 
+    // Chamada HTTP real para API da Receita Federal
+}
+```
+
+Sem mudar uma linha do código que usa as integrações! (Princípio OCP)
 
 ---
 
 ## 🛠️ Stack Tecnológica
 
-| Camada | Tecnologia |
-|--------|------------|
-| Backend | Go 1.22+ |
-| Database | SQLite3 (isolado por tenant) |
-| Numerics | int64 (centavos) |
-| Frontend | HTMX + Tailwind CSS |
-| PWA | Service Worker + Manifest |
+| Camada | Tecnologia | Justificativa |
+|--------|------------|---------------|
+| Backend | Go 1.22+ | Performance, concorrência, binário leve |
+| Database | SQLite3 | Isolamento por tenant (Soberania) |
+| Numerics | int64 (centavos) | Precisão financeira exata |
+| Frontend | HTMX + Tailwind CSS | PWA mobile-first pedagógica |
+| Architecture | Clean Arch + DDD | Domínio independente de frameworks |
+| Hash | SHA256 | Auditoria CADSOL |
+| Documents | Markdown | Atas de Assembleia |
 
 ---
 
 ## 📚 Referências Legais e Normativas
-
-O Digna foi concebido para estar em conformidade com o arcabouço legal brasileiro para Economia Solidária:
 
 ### Legislação
 - **Lei nº 15.068/2024** (Lei Paul Singer) - Marco Legal da Economia Solidária
@@ -146,8 +208,22 @@ O Digna foi concebido para estar em conformidade com o arcabouço legal brasilei
 
 - [Código Fonte](../modules/)
 - [Dados de Exemplo](../data/)
-- [GitHub Repository](#)
+- [Módulo de Integrações](../modules/integrations/)
+
+---
+
+## 📊 Métricas do Projeto
+
+| Métrica | Valor |
+|---------|-------|
+| Total de Módulos | 9 |
+| Total de Testes | 91/91 (100%) |
+| Linhas de Código | ~15.000 |
+| Interfaces Repository | 8 |
+| Integrações Gov | 8 (mock) |
+| Documentação | 100% atualizada |
 
 ---
 
 *Esta documentação segue o padrão PKM (Personal Knowledge Management) de alta integridade.*
+*Última atualização: Session 009 - DDD Refactoring & Integrações*

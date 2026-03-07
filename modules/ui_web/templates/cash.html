@@ -122,7 +122,7 @@
                             </td>
                             <td class="py-3 px-2 text-gray-700">{{.Description}}</td>
                             <td class="py-3 px-2 text-right font-medium {{if eq .Type "CREDIT"}}text-green-600{{else}}text-red-600{{end}}">
-                                {{if eq .Type "CREDIT}}+{{else}}-{{end}}{{formatCurrency .Amount}}
+                                {{if eq .Type "CREDIT"}}{{"+"}}{{end}}{{if eq .Type "DEBIT"}}{{"-"}}{{end}}{{formatCurrency .Amount}}
                             </td>
                         </tr>
                         {{else}}

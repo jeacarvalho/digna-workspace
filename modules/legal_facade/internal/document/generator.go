@@ -62,53 +62,33 @@ type DecisionData struct {
 }
 
 type Generator struct {
-	lifecycleManager lifecycle.LifecycleManager
+	legalRepo LegalRepository
 }
 
 func NewGenerator(lm lifecycle.LifecycleManager) *Generator {
 	return &Generator{
-		lifecycleManager: lm,
+		legalRepo: NewSQLiteLegalRepository(lm),
 	}
 }
 
 func (g *Generator) GenerateAssemblyMinutes(entityID string, entityName string, status string) (string, error) {
-	db, err := g.lifecycleManager.GetConnection(entityID)
-	if err != nil {
-		return "", fmt.Errorf("failed to get connection: %w", err)
-	}
-
-	rows, err := db.Query(
-		"SELECT id, title, content_hash, status, created_at FROM decisions_log ORDER BY created_at DESC",
-	)
+	decisionsInfo, err := g.legalRepo.GetAllDecisions(entityID)
 	if err != nil {
 		return "", fmt.Errorf("failed to query decisions: %w", err)
 	}
-	defer rows.Close()
 
 	var decisions []DecisionData
 	index := 1
 
-	for rows.Next() {
-		var id int64
-		var title, hash, decisionStatus string
-		var createdAt int64
-
-		if err := rows.Scan(&id, &title, &hash, &decisionStatus, &createdAt); err != nil {
-			return "", fmt.Errorf("failed to scan decision: %w", err)
-		}
-
+	for _, d := range decisionsInfo {
 		decisions = append(decisions, DecisionData{
 			Index:     index,
-			Title:     title,
-			Status:    decisionStatus,
-			Hash:      hash,
-			CreatedAt: time.Unix(createdAt, 0).Format("2006-01-02 15:04"),
+			Title:     d.Title,
+			Status:    d.Status,
+			Hash:      d.Hash,
+			CreatedAt: time.Unix(d.CreatedAt, 0).Format("2006-01-02 15:04"),
 		})
 		index++
-	}
-
-	if err := rows.Err(); err != nil {
-		return "", fmt.Errorf("error iterating decisions: %w", err)
 	}
 
 	if len(decisions) == 0 {

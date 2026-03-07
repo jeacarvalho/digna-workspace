@@ -1,12 +1,11 @@
 package governance
 
 import (
-	"crypto/sha256"
-	"database/sql"
-	"encoding/hex"
-	"fmt"
 	"time"
 
+	"github.com/providentia/digna/core_lume/internal/domain"
+	"github.com/providentia/digna/core_lume/internal/repository"
+	"github.com/providentia/digna/core_lume/internal/service"
 	"github.com/providentia/digna/lifecycle/pkg/lifecycle"
 )
 
@@ -28,94 +27,42 @@ type DecisionRecord struct {
 }
 
 type Service struct {
-	lifecycleManager lifecycle.LifecycleManager
+	decisionService *service.DecisionService
 }
 
 func NewService(lm lifecycle.LifecycleManager) *Service {
+	decisionRepo := repository.NewSQLiteDecisionRepository(lm)
 	return &Service{
-		lifecycleManager: lm,
+		decisionService: service.NewDecisionService(decisionRepo),
 	}
 }
 
 func (s *Service) RecordDecision(entityID string, title string, content string) (string, error) {
 	if title == "" {
-		return "", fmt.Errorf("title cannot be empty")
+		return "", service.ErrTitleEmpty
 	}
 	if content == "" {
-		return "", fmt.Errorf("content cannot be empty")
+		return "", service.ErrContentEmpty
 	}
 
-	hash := generateHashWithSalt(content, entityID)
-
-	db, err := s.lifecycleManager.GetConnection(entityID)
-	if err != nil {
-		return "", fmt.Errorf("failed to get connection: %w", err)
-	}
-
-	_, err = db.Exec(
-		"INSERT INTO decisions_log (title, content_hash, status, decision_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-		title, hash, string(StatusDraft), sql.NullInt64{}, time.Now().Unix(), time.Now().Unix(),
-	)
-	if err != nil {
-		return "", fmt.Errorf("failed to insert decision: %w", err)
-	}
-
-	return hash, nil
-}
-
-func generateHashWithSalt(content string, entityID string) string {
-	// Usar entityID como salt para evitar colisões cross-tenant
-	salted := fmt.Sprintf("%s:%s:DIGNA_SALT_v1", content, entityID)
-	hash := sha256.Sum256([]byte(salted))
-	return hex.EncodeToString(hash[:])
+	return s.decisionService.RecordDecision(entityID, title, content)
 }
 
 func (s *Service) GetDecisionByHash(entityID string, hash string) (*DecisionRecord, error) {
-	db, err := s.lifecycleManager.GetConnection(entityID)
+	decision, err := s.decisionService.GetDecisionByHash(entityID, hash)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get connection: %w", err)
+		return nil, err
 	}
 
-	var record DecisionRecord
-	var decisionDate sql.NullInt64
-
-	err = db.QueryRow(
-		"SELECT id, title, content_hash, status, decision_date FROM decisions_log WHERE content_hash = ?",
-		hash,
-	).Scan(&record.ID, &record.Title, &record.ContentHash, &record.Status, &decisionDate)
-
-	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("decision not found")
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to query decision: %w", err)
-	}
-
-	if decisionDate.Valid {
-		record.DecisionDate = time.Unix(decisionDate.Int64, 0)
-	}
-
-	return &record, nil
+	return &DecisionRecord{
+		ID:           decision.ID,
+		Title:        decision.Title,
+		ContentHash:  decision.ContentHash,
+		Status:       DecisionStatus(decision.Status),
+		DecisionDate: time.Time{},
+	}, nil
 }
 
 func (s *Service) UpdateDecisionStatus(entityID string, decisionID int64, status DecisionStatus) error {
-	db, err := s.lifecycleManager.GetConnection(entityID)
-	if err != nil {
-		return fmt.Errorf("failed to get connection: %w", err)
-	}
-
-	_, err = db.Exec(
-		"UPDATE decisions_log SET status = ?, updated_at = ?, decision_date = ? WHERE id = ?",
-		string(status), time.Now().Unix(), time.Now().Unix(), decisionID,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to update decision: %w", err)
-	}
-
-	return nil
-}
-
-func generateHash(content string) string {
-	hash := sha256.Sum256([]byte(content))
-	return hex.EncodeToString(hash[:])
+	return s.decisionService.UpdateDecisionStatus(entityID, decisionID, domain.DecisionStatus(status))
 }

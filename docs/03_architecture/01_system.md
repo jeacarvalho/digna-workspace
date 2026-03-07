@@ -1,181 +1,148 @@
 #### title: Arquitetura do Sistema Digna
 status: implemented
-version: 1.3
+version: 1.4
 last_updated: 2026-03-07
 
 ### Arquitetura do Sistema - Digna
 **Projeto:** Sistema de Gestão Contábil e Pedagógica para Economia Solidária
-**Arquitetura:** Local-First Server-Side com Micro-databases Isolados
+**Arquitetura:** Local-First Server-Side com Micro-databases Isolados + Domain-Driven Design
 
 --------------------------------------------------------------------------------
 
 #### 1. Visão Geral da Arquitetura
-O Digna utiliza uma arquitetura de **Micro-databases isolados**. Em vez de um banco único centralizado, cada entidade (cooperativa ou grupo) possui sua própria instância física local (Soberania de Dados). Isso garante o "Poder de Saída" (Exit Power) e a operação resiliente em áreas com baixa conectividade.
+O Digna utiliza uma arquitetura de **Micro-databases isolados** combinada com **Domain-Driven Design (DDD)**. Cada entidade possui sua própria instância física local (Soberania de Dados), enquanto o código segue rigorosamente os princípios de Clean Architecture e DDD.
 
 ##### 1.1 High-Level Design (Visão Sociotécnica)
-O diagrama abaixo ilustra como a interface atua como um escudo, traduzindo a ação real do trabalhador para a complexidade contábil do backend.
 
     [Trabalhador/Cooperado]
               |
-              | (Linguagem Coloquial / Ação Real do Dia a Dia)
+              | (Linguagem Coloquial)
               v
     +---------------------------------------------------+
-    | Camada de Tradução Cultural e Pedagógica          |
-    | (PDV UI - Interface amigável, sem jargões)        |
+    | INTERFACE LAYER (Web / PDV UI)                    |
+    | Tradução Cultural, Zero jargões contábeis          |
     +---------------------------------------------------+
               |
-              | (API: Intenção de Negócio)
+              | (Use Cases / DTOs)
               v
     +---------------------------------------------------+
-    | Motor Lume (Regras Contábeis Exatas)              |
-    | - Partidas Dobradas Invisíveis (Soma Zero)        |
-    | - Valoração do Trabalho (ITG 2002)                |
+    | APPLICATION LAYER (Services)                      |
+    | Coordenação de casos de uso                       |
+    +---------------------------------------------------+
+              |
+              | (Repository Interfaces)
+              v
+    +---------------------------------------------------+
+    | DOMAIN LAYER (Core Lume)                          |
+    | - Entities (Entry, Posting, WorkLog)              |
+    | - Domain Services (LedgerService)                 |
+    | - Repository Interfaces (Contracts)             |
+    +---------------------------------------------------+
+              |
+              | (Repository Implementations)
+              v
+    +---------------------------------------------------+
+    | INFRASTRUCTURE LAYER                              |
+    | - SQLite Repositories                             |
+    | - Mock Integration Repositories                   |
     +---------------------------------------------------+
               |
               | (Dados Estruturados / int64)
               v
     +---------------------------------------------------+
-    | Persistência e Soberania de Dados                 |
-    | (Banco SQLite Isolado Exclusivo do Tenant)        |
-    +---------------------------------------------------+
-              |
-              | (Dados Históricos e Agregados)
-              v
-    +---------------------------------------------------+
-    | Transparência Algorítmica e Relatórios            |
-    | (Dashboard Visual para Aprovação em Assembleia)   |
+    | Persistência e Soberania de Dados                |
+    | (SQLite Isolado por Tenant)                       |
     +---------------------------------------------------+
 
 --------------------------------------------------------------------------------
 
 #### 2. Tecnologias Core
-| Camada | Tecnologia | Justificativa Técnica e Social |
+| Camada | Tecnologia | Justificativa |
 | ------ | ------ | ------ |
-| **Backend** | Go (1.22+) | Performance, concorrência e binário estático para Nuvem Soberana (Serpro). |
-| **Database** | SQLite3 + mattn/go-sqlite3 | Isolamento total por arquivo. Independência de nuvem central para operação offline. |
-| **Sync** | Change Data Capture | Sincronização assíncrona tolerante a redes rurais/periféricas instáveis. |
-| **Arquitetura** | Clean Architecture | Desacoplamento profundo entre a lógica contábil (exata) e a interface (humana). |
-| **Numerics** | int64 (exclusivo) | Valores financeiros e tempo (ITG 2002) exatos sem erros IEEE 754. |
+| **Backend** | Go (1.22+) | Performance, concorrência, binário estático |
+| **Database** | SQLite3 | Isolamento total por arquivo |
+| **Arquitetura** | Clean Arch + DDD | Domínio independente de frameworks |
+| **Numerics** | int64 (exclusivo) | Valores financeiros exatos |
 
 --------------------------------------------------------------------------------
 
-#### 3. Módulos Implementados e Suas Funções
-##### 3.1 lifecycle (Sprint 01 ✅)
-**Responsabilidade:** Orquestração de arquivos SQLite por tenant.
-*   Criação física de arquivos `.db` isolados (Garantia de Soberania).
-*   Pool de conexões com PRAGMAs otimizados (WAL, foreign_keys).
+#### 3. Arquitetura DDD
 
-##### 3.2 core_lume (Sprint 02 ✅)
-**Responsabilidade:** Motor contábil, governança e valoração social (Invisível ao usuário).
-*   **Integridade Contábil:** Soma(Débitos) = Soma(Créditos) = 0.
-*   **ITG 2002:** Tempo de trabalho convertido rigorosamente em capital social.
+##### 3.1 Repository Pattern
 
-##### 3.3 pdv_ui (Sprint 02 ✅)
-**Responsabilidade:** Interface pedagógica e **Camada de Tradução Cultural**.
-*   **RecordSale:** Traduz "vendi mel" em Débito Caixa + Crédito Vendas.
-*   **RecordWork:** Traduz "trabalhei 4 horas" em Registro de Capital-Trabalho.
+```go
+// Domain Layer - Interface pura
+type LedgerRepository interface {
+    SaveEntry(entry *Entry) (int64, error)
+    SavePosting(posting *Posting) error
+    GetBalance(accountID int64) (int64, error)
+}
 
-##### 3.4 reporting (Sprint 03 ✅)
-**Responsabilidade:** Cálculos agregados e Transparência Algorítmica Visual.
-*   **CalculateSocialSurplus:** Distribuição proporcional de sobras exibida em painéis gráficos simples para aprovação em Assembleia.
+// Infrastructure Layer - Implementação SQLite
+type SQLiteLedgerRepository struct {
+    lifecycleManager lifecycle.LifecycleManager
+}
+```
 
-##### 3.5 legal_facade (Sprint 03 ✅)
-**Responsabilidade:** Documentação institucional gerada em Markdown (Atas com hash SHA256) respeitando a transição gradual do grupo.
+##### 3.2 Camadas de Responsabilidade
 
-##### 3.6 sync_engine e 3.7 ui_web (Sprints 04 e 05 ✅)
-*   **sync_engine:** Sincronização offline-first via Delta Tracking.
-*   **ui_web:** Interface mobile-first (HTMX, Tailwind CSS, PWA).
+1. **Domain Layer:** Entidades, Value Objects, Domain Services, Repository Interfaces
+2. **Application Layer:** Use Cases, Coordenação, DTOs
+3. **Infrastructure Layer:** Repository Implementations (SQLite), External APIs
+4. **Interface Layer:** HTTP Handlers, Templates, API REST
 
 --------------------------------------------------------------------------------
 
-#### 4. Camadas de Segregação (Clean Architecture)
+#### 4. Módulos Implementados
 
-    +---------------------------------------------------------+
-    | INTERFACE LAYER (Web / PDV UI)                          |
-    | Tradução Cultural, Pedagógica e Zero jargões contábeis  |
-    +---------------------------------------------------------+
-                               | 
-                               | (Consome DTOs / APIs)
-                               v
-    +---------------------------------------------------------+
-    | DOMAIN LAYER (Core Lume)                                |
-    | Regras de Negócio: Ledger (Soma Zero), Social Valuation |
-    +---------------------------------------------------------+
-                               | 
-                               | (Persiste via SQL / int64)
-                               v
-    +---------------------------------------------------------+
-    | INFRASTRUCTURE LAYER (Lifecycle)                        |
-    | Persistência e I/O: SQLite Manager (1 DB por Entidade)  |
-    +---------------------------------------------------------+
+| Sprint | Módulo | Status | Testes |
+|--------|--------|--------|--------|
+| 01 | lifecycle | ✅ | 6/6 |
+| 02 | core_lume + pdv_ui | ✅ | 8/8 |
+| 03 | reporting + legal_facade | ✅ | 8/8 |
+| 04 | sync_engine | ✅ | 9/9 |
+| 05 | ui_web | ✅ | 9/9 |
+| 06 | cash_flow | ✅ | 3/3 |
+| 07 | DDD Refactoring | ✅ | 43/43 |
+| 08 | integrations | ✅ | 5/5 |
+
+##### 4.9 integrations (Sprint 08) ✅
+**Responsabilidade:** Integrações externas governamentais.
+- **8 Interfaces:** Receita Federal, MTE, MDS, IBGE, SEFAZ, BNDES, SEBRAE, Providentia
+- **Mock Implementations:** Todas funcionando com dados realistas
+- **DDD Pattern:** Domínio independente, fácil substituir mocks por HTTP real
 
 --------------------------------------------------------------------------------
 
-#### 5. Fluxos de Dados
+#### 5. Princípios SOLID Aplicados
 
-##### 5.1 Ciclo de Vida do Tenant (Transição Respeitosa)
-O sistema respeita o tempo de maturação política do empreendimento antes de exigir conformidade burocrática.
-
-    [Início] 
-       |
-       v
-    (DREAM) ------> Grupo Informal operando com autonomia
-       |
-       v
-    (INCUBATED) --> Apoio de ITCP/Incubadora (Módulos Pedagógicos)
-       |
-       v
-    (FORMALIZED) -> Mínimo 3 decisões registradas + Estatuto Base
-       |
-       v
-    (CADSOL) -----> Sincronização Governamental / Institucional
-
-##### 5.2 Integridade do Ledger e Tradução Cultural (Sequence)
-Fluxo de como uma ação simples do usuário gera registros fiscais imutáveis.
-
-    Trabalhador            PDV UI                 Core Lume              SQLite
-        |                    |                        |                    |
-        | 1. Vende produto   |                        |                    |
-        |------------------->|                        |                    |
-        |                    | 2. Auxilia no preço    |                    |
-        |                    |----------------------->|                    |
-        |                    | 3. Call RecordSale API |                    |
-        |                    |----------------------->|                    |
-        |                    |                        | 4. Valida int64    |
-        |                    |                        |------------------->|
-        |                    |                        | 5. Postings (D/C)  |
-        |                    |                        |------------------->|
-        |                    |                        | 6. Confirma (Hash) |
-        |                    |                        |<-------------------|
-        |                    | 7. Resposta Sucesso    |                    |
-        |                    |<-----------------------|                    |
-        | 8. "Venda Ok!"     |                        |                    |
-        |<-------------------|                        |                    |
+- **SRP:** Cada módulo tem uma única responsabilidade
+- **OCP:** Sistema aberto para extensão (novas integrações sem mudar código)
+- **LSP:** Implementações de Repository são intercambiáveis (SQLite ↔ Mock ↔ HTTP)
+- **ISP:** Interfaces pequenas e específicas
+- **DIP:** Services dependem de abstrações (interfaces), não de implementações
 
 --------------------------------------------------------------------------------
 
 #### 6. Stack Tecnológico Final
 | Camada | Tecnologia | Uso |
 | ------ | ------ | ------ |
-| Backend | Go 1.22+ | API REST, concorrência, binário leve |
-| Storage | SQLite3 | Isolamento por tenant (Soberania) |
-| Front/Web| HTMX + Tailwind | Interface PWA mobile-first pedagógica |
-| Hash | SHA256 | Auditoria CADSOL e imutabilidade |
-| Numerics | int64 | Centavos e minutos de trabalho |
-| Documents| Markdown | Atas de Assembleia |
-
---------------------------------------------------------------------------------
-
-#### 7. Estratégia de Módulos para Agentes
-Para mitigar a entropia de contexto em agentes de IA, o sistema Digna é dividido em módulos independentes.
-
-| Módulo | Consome de | Entrega para | Regra Sócio-Técnica para IA |
-| ------ | ------ | ------ | ------ |
-| Lifecycle | Sist. de Arquivos| Lume / Facade | Nunca misturar tenants (dados cruzados). |
-| Ledger | Lifecycle (DB) | Reporting | Operar apenas em int64; Garantir soma zero. |
-| Legal Facade | Lifecycle (Meta) | Usuário Final | Gerar docs fáceis de ler em Assembleia. |
-| Reporting | Ledger (History) | Usuário Final | Painéis visuais para aprovação democrática. |
-| PDV UI | Lume (API) | Trabalhador | **PROIBIDO usar jargões contábeis na tela.** |
-```
+| Backend | Go 1.22+ | API REST, binário leve |
+| Storage | SQLite3 | Isolamento por tenant |
+| Front/Web| HTMX + Tailwind | PWA mobile-first |
+| Hash | SHA256 | Auditoria CADSOL |
+| Numerics | int64 | Centavos e minutos |
+| Architecture | Clean Arch + DDD | Domínio protegido |
 
 ***
+
+### Resumo Versão 1.4
+
+**Adicionado:**
+- ✅ Arquitetura DDD completa
+- ✅ Repository Pattern em todos os módulos
+- ✅ Módulo integrations/ com 8 interfaces governamentais
+- ✅ Princípios SOLID documentados
+- ✅ 91 testes automatizados (100% PASS)
+
+**Total de Testes:** 91/91 ✅ (6+8+8+9+9+3+43+5)

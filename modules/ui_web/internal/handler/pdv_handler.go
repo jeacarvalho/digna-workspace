@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/providentia/digna/lifecycle/pkg/lifecycle"
 	"github.com/providentia/digna/pdv_ui/usecase"
@@ -16,13 +17,18 @@ type PDVHandler struct {
 }
 
 func NewPDVHandler(lm lifecycle.LifecycleManager) (*PDVHandler, error) {
-	// Create template with custom functions
 	funcMap := template.FuncMap{
 		"divide": func(a, b float64) float64 {
 			if b == 0 {
 				return 0
 			}
 			return a / b
+		},
+		"formatCurrency": func(amount int64) string {
+			return fmt.Sprintf("R$ %.2f", float64(amount)/100)
+		},
+		"formatDate": func(t time.Time) string {
+			return t.Format("02/01/2006 15:04")
 		},
 	}
 

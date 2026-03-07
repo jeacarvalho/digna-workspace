@@ -3,6 +3,8 @@ go 1.25.4
 use (
 	./modules/cash_flow
 	./modules/core_lume
+	./modules/integration_test
+	./modules/integrations
 	./modules/legal_facade
 	./modules/legal_mock
 	./modules/lifecycle

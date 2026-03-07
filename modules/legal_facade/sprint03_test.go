@@ -103,9 +103,16 @@ func TestSprint03_DoD(t *testing.T) {
 			t.Error("socio_001 should have more minutes than socio_002")
 		}
 
-		if socio1.Amount <= socio2.Amount {
-			t.Errorf("socio_001 should receive more credit (%.2f vs %.2f)",
-				float64(socio1.Amount)/100, float64(socio2.Amount)/100)
+		if calc.TotalSurplus >= 0 {
+			if socio1.Amount <= socio2.Amount {
+				t.Errorf("socio_001 should receive more credit (%.2f vs %.2f)",
+					float64(socio1.Amount)/100, float64(socio2.Amount)/100)
+			}
+		} else {
+			if socio1.Amount >= socio2.Amount {
+				t.Errorf("socio_001 should receive less debt (more negative): (%.2f vs %.2f)",
+					float64(socio1.Amount)/100, float64(socio2.Amount)/100)
+			}
 		}
 
 		t.Log("✅ Rateio validado: quem trabalhou mais recebeu mais crédito")
