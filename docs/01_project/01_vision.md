@@ -1,74 +1,88 @@
----
-title: Visão Estratégica
+#### title: Visão Estratégica
 status: implemented
-version: 1.0
+version: 1.3
 last_updated: 2026-03-07
----
 
-# Visão Estratégica - Digna
+### Visão Estratégica - Digna
 
----
+--------------------------------------------------------------------------------
 
-## 1. Introdução
+#### 1. Introdução
+O **Digna** é um ecossistema de soberania financeira desenhado para a Economia Solidária (EES). Ele não é um "ERP" (Enterprise Resource Planning) imposto de cima para baixo com lógica extrativista; é uma **Tecnologia Social e um Protocolo de Emancipação**. 
 
-O **Digna** é um ecossistema de soberania financeira desenhado para a Economia Solidária (EES). Ele não é apenas um software de gestão; é um **protocolo de emancipação** que transforma a atividade produtiva em cidadania digital.
+Seu propósito é transformar a contabilidade — historicamente vista como um fardo burocrático — em um subproduto invisível da operação diária, atuando simultaneamente como uma ferramenta pedagógica que transforma a atividade produtiva em cidadania digital.
 
-### 1.1 Declaração de Posicionamento
+##### 1.1 Declaração de Posicionamento Estratégico
 
-- **Para:** Grupos informais ("Sonhos"), Cooperativas e Associações de EES
-- **Que:** Enfrentam exclusão financeira, burocracia do CADSOL e falta de ferramentas de autogestão
-- **O Digna:** É uma infraestrutura contábil e operacional "Local-First"
-- **Que proporciona:** Contabilidade invisível, valoração do trabalho (ITG 2002) e soberania de dados
-- **Diferente de:** ERPs tradicionais ou planilhas vulneráveis, ele isola fisicamente o dado de cada entidade e automatiza a conformidade com a Lei Paul Singer
+    [ PARA ]        Grupos informais ("Sonhos"), Cooperativas e Associações de EES, 
+                    muitas vezes afetados pela baixa literacia digital.
+                    
+    [ QUE ]         Enfrentam exclusão financeira, dificuldade na formação de preço, 
+                    burocracia do CADSOL e falta de ferramentas de autogestão.
+                    
+    [ O DIGNA É ]   Uma infraestrutura contábil "Local-First" e uma Tecnologia Social 
+                    pedagógica.
+                    
+    [ QUE GERA ]    Contabilidade invisível, valoração do tempo de trabalho (ITG 2002),
+                    educação gerencial e soberania de dados isolados.
+                    
+    [ DIFERENTE DE] ERPs tradicionais comerciais ou planilhas vulneráveis, que usam 
+                    lógica de mercado de capitais e não respeitam os laços de 
+                    solidariedade e o tempo de amadurecimento do grupo.
 
----
+--------------------------------------------------------------------------------
 
-## 2. Pilares de Design (As Leis do Sistema)
+#### 2. Pilares de Design (As Leis Sociotécnicas do Sistema)
 
-1. **Soberania do Dado (Local-First):** O dado reside em um arquivo SQLite isolado por entidade. O usuário tem o "poder de saída" (Exit Power)
+##### Pilar 1: Soberania do Dado e Poder de Saída (Exit Power)
+O dado não pertence à "nuvem" de uma corporação, pertence à entidade produtiva. O dado reside em um arquivo SQLite isolado fisicamente por empreendimento. O usuário detém o poder absoluto de auditar, copiar ou sair do sistema levando toda a sua história com ele.
 
-2. **Contabilidade Invisível:** A interface foca na operação (venda/trabalho). O débito/crédito é um subproduto automático e soberano
+##### Pilar 2: Contabilidade Invisível e Tradução Cultural
+A interface humana (Frontend) foca na ação coloquial (vender, comprar, trabalhar) e atua como uma barreira contra jargões contábeis. O débito e o crédito (Partidas Dobradas) são subprodutos gerados automaticamente pelo Motor Lume no backend.
 
-3. **Primazia do Trabalho:** O sistema valoriza o tempo (minutos) como ativo contábil fundamental para o rateio de sobras
+##### Pilar 3: Primazia do Trabalho (ITG 2002)
+O sistema inverte a lógica capitalista: o suor (tempo/horas trabalhadas) vale tanto ou mais que o capital investido (R$). O tempo registrado (em minutos/int64) constitui o Capital Social de Trabalho e é a base para o rateio justo de sobras.
 
-4. **Conformidade Nativa (CADSOL/Sinaes):** O software é um indutor de formalidade, gerando atas e dossiês conforme as normas do Ministério do Trabalho e Emprego
+##### Pilar 4: Transição Institucional Gradual (Sem Burocracia Forçada)
+O Digna respeita o tempo social do grupo. Ele atua como um facilitador da conformidade (CADSOL/Sinaes), gerando atas e relatórios, mas não impõe a formalização precoce a grupos informais ("Sonhos") que ainda estão construindo sua confiança e coesão política.
 
----
+##### Pilar 5: Ferramenta Pedagógica e Design Participativo (Novo)
+O software ensina enquanto é operado. Ele auxilia visualmente o trabalhador na formação correta do seu preço (custo de insumos + hora trabalhada). Todo o seu desenvolvimento deve ser validado *com* os trabalhadores e Incubadoras (ITCPs).
 
-## 3. Princípios Centrais
+--------------------------------------------------------------------------------
 
-### O empreendedor não faz contabilidade
+#### 3. Princípios Centrais de Operação
 
-Ele apenas:
-- Vende
-- Compra
-- Trabalha
-- Decide coletivamente
+O trabalhador da Economia Solidária **não faz contabilidade tradicional**, ele pratica a autogestão. 
 
-O sistema traduz essas ações em contabilidade formal.
+    AÇÃO DO TRABALHADOR (Interface Simples)        AÇÃO DO DIGNA (Motor Lume)
+    +----------------------------------------+     +--------------------------------------------+
+    | 1. Vende seu produto na feira          | ==> | Gera partida dobrada (D:Ativo / C:Receita) |
+    | 2. Compra sementes e insumos           | ==> | Registra despesa e baixa no estoque        |
+    | 3. Trabalha 4 horas na produção        | ==> | Valora o tempo como Capital Social         |
+    | 4. Reúne-se em Assembleia              | ==> | Gera Ata em Markdown (Hash SHA256)         |
+    | 5. Decide dividir os ganhos            | ==> | Calcula as Reservas (15%) e o Rateio       |
+    +----------------------------------------+     +--------------------------------------------+
 
----
+--------------------------------------------------------------------------------
 
-## 4. Roadmap Estratégico de Longo Prazo
+#### 4. Roadmap Estratégico de Longo Prazo
 
-### Fase 1: Fundação e Operação (Atual)
-- **Milestone:** PDV Funcional + Motor Lume + Valoração Social (ITG 2002)
-- **Resultado:** O grupo informal já opera com rigor contábil
+##### Fase 0: Demonstração e Validação Cultural (Atual)
+*   **Foco:** O grupo informal passa a operar com rigor contábil, mas com interface amigável.
+*   **Milestones:** Motor Lume Exato + PDV Pedagógico + Testes de Usabilidade em Campo com as EES.
 
-### Fase 2: O Trilho da Formalização (Próximo)
-- **Milestone:** Integração Gov.br + Dossiê CADSOL/DCSOL Automático
-- **Resultado:** Grupos informais tornam-se visíveis ao Estado com um clique
+##### Fase 1: Integração e O Trilho da Formalização 
+*   **Foco:** Oferecer os benefícios do Estado sem o peso da burocracia.
+*   **Milestones:** Integração Gov.br + Dossiê CADSOL automático (apenas quando o grupo decidir se formalizar).
 
-### Fase 3: Finanças e Moedas Sociais
-- **Milestone:** Bancos Comunitários + Moedas Sociais + Estoque Substantivo (Sementes/Animais)
-- **Resultado:** O sistema gerencia riqueza além do Real (R$)
+##### Fase 2: Finanças Solidárias e Territoriais
+*   **Foco:** Gerenciar riquezas além da moeda oficial (Real R$).
+*   **Milestones:** Integração tecnológica com Bancos Comunitários de Desenvolvimento (BCDs) + Moedas Sociais Locais + Estoque Substantivo (Troca de Sementes, Animais e Horas).
 
-### Fase 4: Intercooperação e Escala
-- **Milestone:** Marketplace B2B + Score de Crédito Social + Integração BNDES
-- **Resultado:** Uma rede nacional de economia solidária interconectada via Serpro
+##### Fase 3: Intercooperação e Escala
+*   **Foco:** Uma rede nacional de apoio mútuo (O 6º Princípio do Cooperativismo).
+*   **Milestones:** Marketplace B2B fechado para EES + Score de Crédito Social baseado no trabalho + Integração com BNDES e políticas públicas via Serpro.
+```
 
----
-
-## 5. Governança
-
-O projeto segue o modelo **Apache-Way**, gerido pela **Fundação Providentia**. O Serpro atua como provedor de infraestrutura de nuvem soberana, garantindo a integridade dos backups e a unicidade de acesso via Gov.br.
+***

@@ -1,10 +1,9 @@
 package surplus
 
 import (
-	"database/sql"
 	"fmt"
 
-	"github.com/providentia/digna/lifecycle/pkg/lifecycle"
+	"github.com/providentia/digna/core_lume/pkg/ledger"
 )
 
 const (
@@ -26,30 +25,58 @@ type SurplusCalculation struct {
 	Members      []MemberShare
 }
 
-type Calculator struct {
-	lifecycleManager lifecycle.LifecycleManager
+type SurplusRepository interface {
+	GetAccountBalance(entityID string, accountID int64) (int64, error)
+	GetAllMembersWork(entityID string) (map[string]int64, error)
 }
 
-func NewCalculator(lm lifecycle.LifecycleManager) *Calculator {
+type Calculator struct {
+	surplusRepo SurplusRepository
+}
+
+func NewCalculator(ledgerRepo ledger.LedgerRepository, workRepo ledger.WorkRepository) *Calculator {
 	return &Calculator{
-		lifecycleManager: lm,
+		surplusRepo: &SurplusAdapter{
+			ledgerRepo: ledgerRepo,
+			workRepo:   workRepo,
+		},
 	}
+}
+
+type SurplusAdapter struct {
+	ledgerRepo ledger.LedgerRepository
+	workRepo   ledger.WorkRepository
+}
+
+func (a *SurplusAdapter) GetAccountBalance(entityID string, accountID int64) (int64, error) {
+	return a.ledgerRepo.GetAccountBalance(entityID, accountID)
+}
+
+func (a *SurplusAdapter) GetAllMembersWork(entityID string) (map[string]int64, error) {
+	return a.workRepo.GetAllMembersWork(entityID)
 }
 
 func (c *Calculator) CalculateSocialSurplus(entityID string) (*SurplusCalculation, error) {
-	db, err := c.lifecycleManager.GetConnection(entityID)
+	revenue, err := c.surplusRepo.GetAccountBalance(entityID, AccountSales)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get connection: %w", err)
+		return nil, fmt.Errorf("failed to get revenue: %w", err)
 	}
 
-	surplus, err := c.calculateTotalSurplus(db)
+	expenses, err := c.surplusRepo.GetAccountBalance(entityID, AccountExpenses)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate surplus: %w", err)
+		return nil, fmt.Errorf("failed to get expenses: %w", err)
 	}
 
-	memberMinutes, totalMinutes, err := c.getMemberWorkMinutes(db)
+	surplus := revenue - expenses
+
+	memberMinutes, err := c.surplusRepo.GetAllMembersWork(entityID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get member work minutes: %w", err)
+	}
+
+	var totalMinutes int64
+	for _, minutes := range memberMinutes {
+		totalMinutes += minutes
 	}
 
 	members := make([]MemberShare, 0, len(memberMinutes))
@@ -78,56 +105,4 @@ func (c *Calculator) CalculateSocialSurplus(entityID string) (*SurplusCalculatio
 		TotalMinutes: totalMinutes,
 		Members:      members,
 	}, nil
-}
-
-func (c *Calculator) calculateTotalSurplus(db *sql.DB) (int64, error) {
-	var revenue, expenses sql.NullInt64
-
-	err := db.QueryRow(
-		"SELECT COALESCE(SUM(CASE WHEN direction = 'CREDIT' THEN amount ELSE -amount END), 0) FROM postings WHERE account_id = ?",
-		AccountSales,
-	).Scan(&revenue)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get revenue: %w", err)
-	}
-
-	err = db.QueryRow(
-		"SELECT COALESCE(SUM(CASE WHEN direction = 'DEBIT' THEN amount ELSE -amount END), 0) FROM postings WHERE account_id = ?",
-		AccountExpenses,
-	).Scan(&expenses)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get expenses: %w", err)
-	}
-
-	surplus := revenue.Int64 - expenses.Int64
-	return surplus, nil
-}
-
-func (c *Calculator) getMemberWorkMinutes(db *sql.DB) (map[string]int64, int64, error) {
-	rows, err := db.Query(
-		"SELECT member_id, COALESCE(SUM(minutes), 0) FROM work_logs GROUP BY member_id",
-	)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to query work logs: %w", err)
-	}
-	defer rows.Close()
-
-	memberMinutes := make(map[string]int64)
-	var totalMinutes int64
-
-	for rows.Next() {
-		var memberID string
-		var minutes int64
-		if err := rows.Scan(&memberID, &minutes); err != nil {
-			return nil, 0, fmt.Errorf("failed to scan row: %w", err)
-		}
-		memberMinutes[memberID] = minutes
-		totalMinutes += minutes
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, 0, fmt.Errorf("error iterating rows: %w", err)
-	}
-
-	return memberMinutes, totalMinutes, nil
 }
