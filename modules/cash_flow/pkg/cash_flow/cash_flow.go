@@ -5,6 +5,7 @@ import (
 
 	"github.com/providentia/digna/cash_flow/internal/domain"
 	"github.com/providentia/digna/cash_flow/internal/service"
+	"github.com/providentia/digna/core_lume/pkg/ledger"
 	"github.com/providentia/digna/lifecycle/pkg/lifecycle"
 )
 
@@ -13,8 +14,9 @@ type CashFlowAPI struct {
 }
 
 func NewCashFlowAPI(lm lifecycle.LifecycleManager) *CashFlowAPI {
+	ledgerService := ledger.NewService(lm)
 	return &CashFlowAPI{
-		service: service.NewCashFlowService(lm),
+		service: service.NewCashFlowService(ledgerService),
 	}
 }
 
