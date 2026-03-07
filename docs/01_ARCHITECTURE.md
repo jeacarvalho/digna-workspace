@@ -1,6 +1,6 @@
 # 01 ARCHITECTURE - Digna (Providentia Foundation)
 
-**Status:** Architecture Implemented (v0.4)
+**Status:** Architecture Implemented (v1.0 - MVP Complete)
 **Last Updated:** 2026-03-07
 
 ---
@@ -232,6 +232,59 @@ sync_engine/
 
 ---
 
+### 3.7 ui_web (Sprint 05 ✅)
+**Path:** `modules/ui_web/`
+**Responsabilidade:** Interface web mobile-first para operação diária
+
+```
+ui_web/
+├── main.go                    # Servidor HTTP porta 8080
+├── internal/handler/
+│   ├── pdv_handler.go         # Rotas PDV e API
+│   └── dashboard.go           # Dashboard e Social Clock
+├── templates/
+│   ├── layout.html            # Base com navegação
+│   ├── pdv.html               # Teclado numérico vendas
+│   ├── social_clock.html      # Registro de horas
+│   └── dashboard.html         # Painel de dignidade
+├── static/
+│   ├── manifest.json          # Config PWA
+│   └── sw.js                  # Service Worker cache
+└── sprint05_test.go           # 9 testes DoD
+```
+
+**Stack Frontend:**
+| Tecnologia | Versão | Uso |
+|------------|--------|-----|
+| **Go net/http** | Nativo | Servidor web |
+| **html/template** | Nativo | Server-side rendering |
+| **HTMX** | 1.9.10 | Atualizações parciais AJAX |
+| **Tailwind CSS** | CDN | Design mobile-first |
+| **PWA** | - | Instalação mobile |
+
+**Telas:**
+- **/`** - Home com navegação (3 botões grandes)
+- **`/pdv`** - PDV com teclado numérico
+  - Botões 72px (acessibilidade sob sol)
+  - Produtos: Mel, Artesanato, Serviços
+  - Atualização parcial HTMX
+- **`/social`** - Ponto Social (ITG 2002)
+  - Toggle Iniciar/Encerrar
+  - Cronômetro em tempo real
+  - Registro manual de minutos
+- **`/dashboard`** - Painel de Dignidade
+  - Cards: Saldo, Sobras, Horas
+  - Barras de progresso por cooperado
+  - Fórmula ITG 2002
+
+**PWA Features:**
+- ✅ **manifest.json**: Nome, ícones, tema emerald
+- ✅ **Service Worker**: Cache First strategy
+- ✅ **Offline**: Templates em cache funcionam sem rede
+- ✅ **Instalável**: "Add to Home Screen" no mobile
+
+---
+
 ## 4. Fluxos de Dados (Sequência)
 
 ### 4.1 Ciclo de Vida do Tenant
@@ -385,6 +438,39 @@ Transformação de decisões do banco em documento institucional Markdown.
         |                |<-- MD Doc ----|                 |             |
         |<-- Ata.md -----|              |                 |             |
 
+### 4.9 Interface Web (UI Web)
+Interação do usuário via navegador mobile com backend Go, usando HTMX para atualizações parciais.
+
+    Mobile/Browser    UI Web          PDV UI          Core Lume       SQLite
+        |               |               |               |             |
+        |-- GET /pdv -->|               |               |             |
+        |               |-- Render()----|               |             |
+        |               |  (templates)   |               |             |
+        |               |               |               |             |
+        |<-- HTML ------|               |               |             |
+        |  (Tailwind)   |               |               |             |
+        |               |               |               |             |
+        |-- Click ------|               |               |             |
+        |  "Vender"     |               |               |             |
+        |               |               |               |             |
+        |-- HTMX POST -->|              |               |             |
+        |  /api/sale    |-- RecordSale()-|               |             |
+        |               |               |-- Validate()--|             |
+        |               |               |      [OK]     |             |
+        |               |               |               |             |
+        |               |               |-- Save()------|-- INSERT --->|
+        |               |               |               |             |
+        |<-- HTML -------|               |               |             |
+        |  (partial)    |<-- Result ----|               |             |
+        |  Saldo: 50,00 |               |               |             |
+
+**Diferenças HTMX vs SPA:**
+- ❌ Sem JSON APIs complexas
+- ❌ Sem React/Vue/Angular
+- ✅ HTML parcial do servidor
+- ✅ Atualização de div específica
+- ✅ Fallback se JS falhar
+
 ---
 
 ## 5. Camadas de Segregação
@@ -413,6 +499,14 @@ Transformação de decisões do banco em documento institucional Markdown.
 - **Responsabilidade:** Geração de documentos institucionais
 - **Faz:** Templates, formatação Markdown, hash de auditoria
 - **Exemplo:** `pkg/document/generator.go` - GenerateAssemblyMinutes()
+
+### 5.6 Web Layer (UI Web) 
+- **Responsabilidade:** Interface humana, servidor HTTP, PWA
+- **Faz:** Renderizar templates, servir assets estáticos, HTMX endpoints
+- **Exemplo:** `internal/handler/pdv_handler.go` - PDVPage(), RecordSale()
+- **Stack:** Go net/http + html/template + HTMX + Tailwind
+
+---
 
 ---
 
