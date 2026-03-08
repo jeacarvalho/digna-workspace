@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,6 +12,7 @@ import (
 
 	"github.com/providentia/digna/lifecycle/pkg/lifecycle"
 	"github.com/providentia/digna/ui_web/internal/handler"
+	"github.com/providentia/digna/ui_web/internal/middleware"
 )
 
 const (
@@ -20,18 +21,30 @@ const (
 )
 
 func main() {
-	fmt.Println("🚀 Iniciando Digna Web Server...")
-	fmt.Println("📍 Versão: v.0 MVP")
-	fmt.Printf("🔗 http://localhost:%s\n\n", DefaultPort)
+	// Configurar logger estruturado
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+	slog.SetDefault(logger)
+
+	logger.Info("🚀 Iniciando Digna Web Server",
+		slog.String("version", "v.0 MVP"),
+		slog.String("port", DefaultPort),
+	)
 
 	// Inicializar Lifecycle Manager
 	lifecycleMgr := lifecycle.NewSQLiteManager()
-	defer lifecycleMgr.CloseAll()
+	defer func() {
+		logger.Info("🔄 Fechando conexões com banco de dados...")
+		lifecycleMgr.CloseAll()
+		logger.Info("✅ Conexões fechadas")
+	}()
 
 	// Criar server configurado
-	server, err := createServer(lifecycleMgr)
+	server, err := createServer(lifecycleMgr, logger)
 	if err != nil {
-		log.Fatalf("Failed to create server: %v", err)
+		logger.Error("Failed to create server", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	// Canal para sinais de shutdown
@@ -41,31 +54,46 @@ func main() {
 	// Iniciar server em goroutine
 	go func() {
 		addr := ":" + DefaultPort
-		fmt.Printf("✅ Servidor iniciado em %s\n", addr)
-		fmt.Println("📱 Acesse pelo navegador ou instale o PWA")
-		fmt.Println("⏹️  Pressione Ctrl+C para parar")
+		logger.Info("✅ Servidor iniciado",
+			slog.String("addr", addr),
+			slog.String("url", fmt.Sprintf("http://localhost:%s", DefaultPort)),
+		)
+		logger.Info("📱 Acesse pelo navegador ou instale o PWA")
+		logger.Info("⏹️  Pressione Ctrl+C para parar")
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server failed: %v", err)
+			logger.Error("Server failed", slog.String("error", err.Error()))
+			os.Exit(1)
 		}
 	}()
 
 	// Aguardar sinal de shutdown
-	<-quit
-	fmt.Println("🛑 Sinal de shutdown recebido, iniciando desligamento gracioso...")
+	sig := <-quit
+	logger.Info("🛑 Sinal de shutdown recebido",
+		slog.String("signal", sig.String()),
+		slog.String("action", "iniciando desligamento gracioso"),
+	)
 
 	// Graceful shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
 	defer cancel()
 
+	shutdownStart := time.Now()
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		logger.Error("Server forced to shutdown",
+			slog.String("error", err.Error()),
+			slog.Duration("timeout", ShutdownTimeout),
+		)
+		os.Exit(1)
 	}
 
-	fmt.Println("✅ Servidor desligado com sucesso")
+	shutdownDuration := time.Since(shutdownStart)
+	logger.Info("✅ Servidor desligado com sucesso",
+		slog.Duration("shutdown_duration", shutdownDuration),
+	)
 }
 
-func createServer(lifecycleMgr lifecycle.LifecycleManager) (*http.Server, error) {
+func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger) (*http.Server, error) {
 	mux := http.NewServeMux()
 
 	// Static files (PWA)
@@ -102,13 +130,18 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager) (*http.Server, error)
 		fmt.Fprintln(w, `{"ready":true}`)
 	})
 
+	// Adicionar middleware de logging
+	loggerMiddleware := middleware.NewLoggerMiddleware(logger)
+	handler := loggerMiddleware.Handler(mux)
+
 	// Configure server with timeouts
 	server := &http.Server{
 		Addr:         ":" + DefaultPort,
-		Handler:      mux,
+		Handler:      handler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
+		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
 	}
 
 	return server, nil
