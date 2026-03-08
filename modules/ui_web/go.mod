@@ -3,10 +3,14 @@ module github.com/providentia/digna/ui_web
 go 1.25.4
 
 require (
-	github.com/providentia/digna/core_lume v0.0.0
 	github.com/providentia/digna/lifecycle v0.0.0
 	github.com/providentia/digna/pdv_ui v0.0.0
 	github.com/providentia/digna/reporting v0.0.0
+)
+
+require (
+	github.com/mattn/go-sqlite3 v1.14.34 // indirect
+	github.com/providentia/digna/core_lume v0.0.0 // indirect
 )
 
 replace (
