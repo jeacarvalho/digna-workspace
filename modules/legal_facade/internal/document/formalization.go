@@ -55,3 +55,30 @@ func (fs *FormalizationSimulator) SimulateFormalization(entityID string) (bool, 
 
 	return true, "FORMALIZED", nil
 }
+
+func (fs *FormalizationSimulator) AutoTransitionIfReady(entityID string) (bool, string, error) {
+	currentStatus, err := fs.GetEntityStatus(entityID)
+	if err != nil {
+		return false, "", err
+	}
+
+	if currentStatus == "FORMALIZED" {
+		return false, currentStatus, nil
+	}
+
+	canFormalize, err := fs.CheckFormalizationCriteria(entityID)
+	if err != nil {
+		return false, "", err
+	}
+
+	if !canFormalize {
+		return false, currentStatus, nil
+	}
+
+	err = fs.UpdateEntityStatus(entityID, "FORMALIZED")
+	if err != nil {
+		return false, "", err
+	}
+
+	return true, "FORMALIZED", nil
+}

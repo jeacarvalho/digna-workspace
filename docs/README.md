@@ -108,7 +108,10 @@ docs/
 | 06 | Cash Flow | ✅ | 3/3 | Gestão de caixa |
 | 07 | **DDD Refactoring** | ✅ | 43/43 | Aplicado DDD a todos os módulos |
 | 08 | **Integrações** | ✅ | 5/5 | Interfaces gov (mock) |
-| **Total** | | | **91/91** | **100% PASS** 🎉 |
+| 09 | **Code Remediation** | ✅ | 8/8 | Quality improvements |
+| 10 | **Gestão de Membros** | ✅ | 19/19 | Member CRUD, roles, status |
+| 11 | **E2E Journey Tests** | ✅ | 2/2 | BDD tests, integrações gov |
+| **Total** | | | **120+/120** | **100% PASS** 🎉 |
 
 ---
 
@@ -216,11 +219,12 @@ Sem mudar uma linha do código que usa as integrações! (Princípio OCP)
 
 | Métrica | Valor |
 |---------|-------|
-| Total de Módulos | 9 |
-| Total de Testes | 91/91 (100%) |
-| Linhas de Código | ~15.000 |
+| Total de Módulos | 11 |
+| Total de Testes | 120+/120 (100%) |
+| Linhas de Código | ~18.000 |
 | Interfaces Repository | 8 |
 | Integrações Gov | 8 (mock) |
+| Testes E2E | 3 |
 | Documentação | 100% atualizada |
 
 ---

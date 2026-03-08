@@ -9,6 +9,8 @@ import (
 const (
 	AccountSales    int64 = 2
 	AccountExpenses int64 = 5
+	ReserveLegalPct int64 = 10
+	FATESPct        int64 = 5
 )
 
 type MemberShare struct {
@@ -23,6 +25,18 @@ type SurplusCalculation struct {
 	TotalSurplus int64
 	TotalMinutes int64
 	Members      []MemberShare
+}
+
+type SurplusWithDeductions struct {
+	EntityID          string
+	GrossSurplus      int64
+	LegalReserve      int64
+	FATES             int64
+	TotalDeductions   int64
+	AvailableForShare int64
+	TotalMinutes      int64
+	Members           []MemberShare
+	Residual          int64
 }
 
 type SurplusRepository interface {
@@ -104,5 +118,86 @@ func (c *Calculator) CalculateSocialSurplus(entityID string) (*SurplusCalculatio
 		TotalSurplus: surplus,
 		TotalMinutes: totalMinutes,
 		Members:      members,
+	}, nil
+}
+
+func (c *Calculator) CalculateWithDeductions(entityID string) (*SurplusWithDeductions, error) {
+	revenue, err := c.surplusRepo.GetAccountBalance(entityID, AccountSales)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get revenue: %w", err)
+	}
+
+	expenses, err := c.surplusRepo.GetAccountBalance(entityID, AccountExpenses)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get expenses: %w", err)
+	}
+
+	grossSurplus := revenue - expenses
+	if grossSurplus <= 0 {
+		return &SurplusWithDeductions{
+			EntityID:          entityID,
+			GrossSurplus:      grossSurplus,
+			LegalReserve:      0,
+			FATES:             0,
+			TotalDeductions:   0,
+			AvailableForShare: 0,
+			TotalMinutes:      0,
+			Members:           []MemberShare{},
+			Residual:          0,
+		}, nil
+	}
+
+	legalReserve := grossSurplus * ReserveLegalPct / 100
+	fates := grossSurplus * FATESPct / 100
+	totalDeductions := legalReserve + fates
+	availableForShare := grossSurplus - totalDeductions
+
+	memberMinutes, err := c.surplusRepo.GetAllMembersWork(entityID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get member work minutes: %w", err)
+	}
+
+	var totalMinutes int64
+	for _, minutes := range memberMinutes {
+		totalMinutes += minutes
+	}
+
+	members := make([]MemberShare, 0, len(memberMinutes))
+	for memberID, minutes := range memberMinutes {
+		percentage := 0.0
+		if totalMinutes > 0 {
+			percentage = float64(minutes) / float64(totalMinutes) * 100
+		}
+
+		amount := int64(0)
+		if totalMinutes > 0 && availableForShare > 0 {
+			amount = (availableForShare * minutes) / totalMinutes
+		}
+
+		members = append(members, MemberShare{
+			MemberID:   memberID,
+			Minutes:    minutes,
+			Percentage: percentage,
+			Amount:     amount,
+		})
+	}
+
+	var totalDistributed int64
+	for _, m := range members {
+		totalDistributed += m.Amount
+	}
+
+	residual := availableForShare - totalDistributed
+
+	return &SurplusWithDeductions{
+		EntityID:          entityID,
+		GrossSurplus:      grossSurplus,
+		LegalReserve:      legalReserve,
+		FATES:             fates + residual,
+		TotalDeductions:   legalReserve + fates + residual,
+		AvailableForShare: availableForShare,
+		TotalMinutes:      totalMinutes,
+		Members:           members,
+		Residual:          residual,
 	}, nil
 }

@@ -8,6 +8,7 @@ import (
 
 type MemberShare = surplus.MemberShare
 type SurplusCalculation = surplus.SurplusCalculation
+type SurplusWithDeductions = surplus.SurplusWithDeductions
 
 type Calculator struct {
 	calc *surplus.Calculator
@@ -23,4 +24,8 @@ func NewCalculator(lm lifecycle.LifecycleManager) *Calculator {
 
 func (c *Calculator) CalculateSocialSurplus(entityID string) (*SurplusCalculation, error) {
 	return c.calc.CalculateSocialSurplus(entityID)
+}
+
+func (c *Calculator) CalculateWithDeductions(entityID string) (*SurplusWithDeductions, error) {
+	return c.calc.CalculateWithDeductions(entityID)
 }

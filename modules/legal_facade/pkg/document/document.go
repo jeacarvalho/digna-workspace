@@ -59,6 +59,10 @@ func (fs *FormalizationSimulator) SimulateFormalization(entityID string) (bool, 
 	return fs.FormalizationSimulator.SimulateFormalization(entityID)
 }
 
+func (fs *FormalizationSimulator) AutoTransitionIfReady(entityID string) (bool, string, error) {
+	return fs.FormalizationSimulator.AutoTransitionIfReady(entityID)
+}
+
 type StatuteGenerator struct {
 	*document.StatuteGenerator
 }

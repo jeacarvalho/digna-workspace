@@ -105,27 +105,70 @@ make build
 
 ### 2. Execução de Testes no Workspace
 
-**Status:** ⚠️ Risco Médio
+**Status:** ✅ RESOLVIDO
 
 **Problema:** Comando `go test ./...` no diretório raiz não funciona corretamente com Go workspaces.
 
-**Impacto:**
-- Novos desenvolvedores podem ficar confusos
-- Scripts de CI/CD precisam de lógica especial
-- Dificuldade em rodar testes de regressão
-
-**Soluções Implementadas:**
+**Solução Implementada:**
 1. ✅ Makefile com targets específicos por módulo
-2. ✅ Documentação de comandos recomendados
-3. ⚠️ Possível: Adicionar script shell para CI/CD
+2. ✅ Testes de integração em módulo separado (`integration_test`)
+3. ✅ Scripts de teste por módulo
 
-**Comando recomendado para CI:**
-```bash
-#!/bin/bash
-# scripts/test-all.sh
-set -e
+---
 
-MODULES=("modules/core_lume" "modules/ui_web" "modules/distribution" "modules/integration_test")
+### 3. SurplusCalculator - Cálculo de Sobras
+
+**Status:** ✅ RESOLVIDO
+
+**Problema:** O SurplusCalculator retornava `TotalSurplus` com sinal negativo e não aplicava deduções automaticamente.
+
+**Solução Implementada:**
+- ✅ Novo método `CalculateWithDeductions()` implementado
+- ✅ Calcula automaticamente: Reserva Legal (10%) + FATES (5%)
+- ✅ Rateio proporcional baseado em minutos trabalhados
+- ✅ Tratamento de resíduos (centavos)
+
+---
+
+### 4. Transição Automática DREAM → FORMALIZED
+
+**Status:** ✅ RESOLVIDO
+
+**Problema:** A transição de status não acontecia automaticamente após 3 decisões.
+
+**Solução Implementada:**
+- ✅ Novo método `AutoTransitionIfReady()` implementado
+- ✅ Transiciona automaticamente após 3 decisões registradas
+- ✅ Integração com `CheckFormalizationCriteria`
+
+---
+
+### 5. Testes E2E de Integrações Governamentais
+
+**Status:** ✅ RESOLVIDO
+
+**Problema:** Não existiam testes E2E que validassem as integrações governamentais.
+
+**Solução Implementada:**
+- ✅ `journey_e2e_test.go` - Teste BDD da jornada anual
+- ✅ `integrations_e2e_test.go` - Teste de todas as 8 integrações mock
+- ✅ Cobertura de: Receita Federal, MTE, MDS, IBGE, SEFAZ, BNDES, SEBRAE, Providentia
+
+---
+
+### 6. Falta de Conta de Capital Social no Seed
+
+**Status:** ⚠️ ABERTO
+
+**Problema:** O seed de contas padrão não inclui conta de Capital Social (Equity).
+
+**Impacto:** Testes precisam criar dinamicamente a conta ID 8.
+
+**Recomendação:** Adicionar conta "Capital Social" (2.2.01) ao seed de migração em `lifecycle/internal/repository/migration.go`.
+
+---
+
+## Recomendações Futuras
 
 for module in "${MODULES[@]}"; do
     echo "Testing $module..."

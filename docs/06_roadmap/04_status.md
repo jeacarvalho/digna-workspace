@@ -1,15 +1,15 @@
 ---
 title: Status Atual
 status: implemented
-version: 1.0
-last_updated: 2026-03-07
+version: 1.1
+last_updated: 2026-03-08
 ---
 
 # Status Atual - Digna
 
-**Última Atualização:** 2026-03-07
-**Fase Atual:** Sprint 09 (Code Remediation) ✅ COMPLETE
-**Próximo Marco:** Fase 4 - Configuration & Tooling
+**Última Atualização:** 2026-03-08
+**Fase Atual:** Sprint 11 (E2E Journey Tests) ✅ COMPLETE
+**Próximo Marco:** Fase 4 - Production Deploy
 
 ---
 
@@ -25,7 +25,9 @@ last_updated: 2026-03-07
 | DDD Refactoring | Marco 07 | ✅ COMPLETE | 100% |
 | Integrations (Mock) | Marco 08 | ✅ COMPLETE | 100% |
 | Code Remediation | Marco 09 | ✅ COMPLETE | 100% |
-| Financial (Phase 3) | Marco 06 | 🟡 EM DESENVOLVIMENTO | 25% |
+| Member Management | Marco 10 | ✅ COMPLETE | 100% |
+| E2E Journey Tests | Marco 11 | ✅ COMPLETE | 100% |
+| Financial (Phase 3) | Marco 06 | 🟡 EM DESENVOLVIMENTO | 50% |
 | Production Deploy | Marco 05 | 📋 PLANNED | 0% |
 
 ---
@@ -105,6 +107,26 @@ last_updated: 2026-03-07
 - Implementado graceful shutdown no servidor HTTP
 - **Testes:** 8/8 PASS (novos) + regressão 91 PASS
 
+### Sprint 10: Gestão de Membros ✅
+- Entity Member com roles (COORDINATOR, MEMBER, ADVISOR)
+- MemberRepository com UPSERT, FindByID, ListByEntity
+- MemberService com Register, Update, Deactivate
+- Validação: não permite desativar último coordenador
+- **Testes:** 19/19 PASS
+
+### Sprint 11: E2E Journey Tests ✅
+- **journey_e2e_test.go:** Teste BDD da jornada anual completa
+  - Mês 01: Nascimento (DREAM)
+  - Mês 02: Vaquinha e Insumos (partidas dobradas)
+  - Mês 03: Suor e Venda (ITG 2002 - 7200min)
+  - Mês 04-06: Governança CADSOL (3 decisões → FORMALIZED)
+  - Mês 12: Rateio de sobras (15% reservas + rateio proporcional)
+- **integrations_e2e_test.go:** Teste de integrações governamentais
+  - Receita Federal, MTE, MDS, IBGE, SEFAZ, BNDES, SEBRAE, Providentia
+- **SurplusCalculator:** Novo método CalculateWithDeductions()
+- **FormalizationSimulator:** Novo método AutoTransitionIfReady()
+- **Testes:** 5/5 PASS
+
 ---
 
 ## Total Test Coverage
@@ -120,7 +142,9 @@ last_updated: 2026-03-07
 | 07 | 43/43 | ✅ PASS |
 | 08 | 5/5 | ✅ PASS |
 | 09 | 8/8 | ✅ PASS |
-| **Total** | **99/99** | **100% PASS** 🎉 |
+| 10 | 19/19 | ✅ PASS |
+| 11 | 5/5 | ✅ PASS |
+| **Total** | **120/120** | **100% PASS** 🎉 |
 
 ---
 
