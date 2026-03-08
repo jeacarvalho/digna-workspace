@@ -33,3 +33,15 @@ type AccountRepository interface {
 	FindByCode(code string) (*domain.Account, error)
 	ListAll() ([]domain.Account, error)
 }
+
+type MemberRepository interface {
+	Save(member *domain.Member) error
+	FindByID(entityID, memberID string) (*domain.Member, error)
+	FindByEmail(entityID, email string) (*domain.Member, error)
+	ListByEntity(entityID string) ([]domain.Member, error)
+	ListByRole(entityID string, role domain.MemberRole) ([]domain.Member, error)
+	Update(member *domain.Member) error
+	UpdateStatus(entityID, memberID string, status domain.MemberStatus) error
+	CountByEntity(entityID string) (int, error)
+	CountActiveByEntity(entityID string) (int, error)
+}
