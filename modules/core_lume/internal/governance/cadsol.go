@@ -70,7 +70,11 @@ func (cs *CADSOLService) RecordDecision(entityID string, record *DecisionRecord)
 		return fmt.Errorf("failed to insert decision: %w", err)
 	}
 
-	record.ID, _ = result.LastInsertId()
+	id, err := result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("failed to get last insert id: %w", err)
+	}
+	record.ID = id
 	return nil
 }
 

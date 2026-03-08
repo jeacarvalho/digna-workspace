@@ -2,6 +2,7 @@ package ledger
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/providentia/digna/lifecycle/pkg/lifecycle"
 )
@@ -87,6 +88,10 @@ func (r *sqliteWorkRepository) GetAllMembersWork(entityID string) (map[string]in
 			return nil, err
 		}
 		result[memberID] = minutes
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
 	return result, nil
