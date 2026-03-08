@@ -7,9 +7,9 @@ last_updated: 2026-03-07
 
 # Status Atual - Digna
 
-**Última Atualização:** 2026-03-07  
-**Fase Atual:** Sprint 09 (DDD Refactoring & Integrações) ✅ COMPLETE  
-**Próximo Marco:** Phase 3 - Integrações HTTP Reais
+**Última Atualização:** 2026-03-07
+**Fase Atual:** Sprint 09 (Code Remediation) ✅ COMPLETE
+**Próximo Marco:** Fase 4 - Configuration & Tooling
 
 ---
 
@@ -24,6 +24,7 @@ last_updated: 2026-03-07
 | UI & Dashboard | Marco 04 | ✅ COMPLETE | 100% |
 | DDD Refactoring | Marco 07 | ✅ COMPLETE | 100% |
 | Integrations (Mock) | Marco 08 | ✅ COMPLETE | 100% |
+| Code Remediation | Marco 09 | ✅ COMPLETE | 100% |
 | Financial (Phase 3) | Marco 06 | 🟡 EM DESENVOLVIMENTO | 25% |
 | Production Deploy | Marco 05 | 📋 PLANNED | 0% |
 
@@ -94,6 +95,16 @@ last_updated: 2026-03-07
 - Logging automático de integrações
 - **Testes:** 5/5 PASS
 
+### Sprint 09: Code Remediation & Quality ✅
+
+- Implementado GetBalance com entityID
+- Criado método atômico CreateEntryWithPostingsTx
+- Centralizado validação de transações (EntryValidator)
+- Removido erros ignorados (result.LastInsertId)
+- Adicionado rows.Err() checks em todas as queries
+- Implementado graceful shutdown no servidor HTTP
+- **Testes:** 8/8 PASS (novos) + regressão 91 PASS
+
 ---
 
 ## Total Test Coverage
@@ -108,7 +119,8 @@ last_updated: 2026-03-07
 | 06 | 3/3 | ✅ PASS |
 | 07 | 43/43 | ✅ PASS |
 | 08 | 5/5 | ✅ PASS |
-| **Total** | **91/91** | **100% PASS** 🎉 |
+| 09 | 8/8 | ✅ PASS |
+| **Total** | **99/99** | **100% PASS** 🎉 |
 
 ---
 
