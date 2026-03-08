@@ -9,7 +9,8 @@ import (
 type LedgerRepository interface {
 	SaveEntry(entry *domain.Entry) (int64, error)
 	SavePosting(posting *domain.Posting) error
-	GetBalance(accountID int64) (int64, error)
+	CreateEntryWithPostingsTx(entityID string, entry *domain.Entry, postings []*domain.Posting) (int64, error)
+	GetBalance(entityID string, accountID int64) (int64, error)
 	GetAccountBalance(entityID string, accountID int64) (int64, error)
 }
 

@@ -62,8 +62,30 @@ func (r *SQLiteLedgerRepository) SavePosting(posting *domain.Posting) error {
 	return nil
 }
 
-func (r *SQLiteLedgerRepository) GetBalance(accountID int64) (int64, error) {
-	return 0, nil
+func (r *SQLiteLedgerRepository) GetBalance(entityID string, accountID int64) (int64, error) {
+	db, err := r.GetDB(entityID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get connection: %w", err)
+	}
+
+	// Calculate balance: debits - credits
+	// In accounting: positive balance = debit balance, negative = credit balance
+	var balance int64
+	err = db.QueryRow(`
+		SELECT COALESCE(SUM(CASE 
+			WHEN direction = 'DEBIT' THEN amount 
+			WHEN direction = 'CREDIT' THEN -amount 
+			ELSE 0 
+		END), 0)
+		FROM postings 
+		WHERE account_id = ?
+	`, accountID).Scan(&balance)
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to calculate balance: %w", err)
+	}
+
+	return balance, nil
 }
 
 func (r *SQLiteLedgerRepository) GetAccountBalance(entityID string, accountID int64) (int64, error) {
@@ -91,6 +113,65 @@ func (r *SQLiteLedgerRepository) GetAccountBalance(entityID string, accountID in
 	}
 
 	return debitSum.Int64 - creditSum.Int64, nil
+}
+
+// CreateEntryWithPostingsTx cria entry e postings de forma atômica (transacional)
+// Se qualquer operação falhar, todo o transaction é revertido (rollback)
+func (r *SQLiteLedgerRepository) CreateEntryWithPostingsTx(entityID string, entry *domain.Entry, postings []*domain.Posting) (int64, error) {
+	db, err := r.GetDB(entityID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get connection: %w", err)
+	}
+
+	// Inicia transação
+	tx, err := db.Begin()
+	if err != nil {
+		return 0, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	// Garante rollback em caso de erro
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// 1. Insere o entry
+	entryDate := entry.Date.Unix()
+	if entry.Date.IsZero() {
+		entryDate = 0
+	}
+
+	result, err := tx.Exec(
+		"INSERT INTO entries (entry_date, description, reference, created_at) VALUES (?, ?, ?, ?)",
+		entryDate, entry.Description, entry.Reference, entry.CreatedAt.Unix(),
+	)
+	if err != nil {
+		return 0, fmt.Errorf("failed to insert entry: %w", err)
+	}
+
+	entryID, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get entry id: %w", err)
+	}
+
+	// 2. Insere os postings
+	for i, posting := range postings {
+		_, err = tx.Exec(
+			"INSERT INTO postings (entry_id, account_id, amount, direction, created_at) VALUES (?, ?, ?, ?, ?)",
+			entryID, posting.AccountID, posting.Amount, string(posting.Direction), posting.CreatedAt.Unix(),
+		)
+		if err != nil {
+			return 0, fmt.Errorf("failed to insert posting at index %d: %w", i, err)
+		}
+	}
+
+	// 3. Commit da transação
+	if err = tx.Commit(); err != nil {
+		return 0, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return entryID, nil
 }
 
 type SQLiteDecisionRepository struct {
@@ -204,6 +285,10 @@ func (r *SQLiteDecisionRepository) FindByEntity(entityID string) ([]domain.Decis
 		decisions = append(decisions, d)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
 	return decisions, nil
 }
 
@@ -294,6 +379,10 @@ func (r *SQLiteWorkRepository) GetAllMembersWork(entityID string) (map[string]in
 		result[memberID] = minutes
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
 	return result, nil
 }
 
@@ -321,6 +410,10 @@ func (r *SQLiteWorkRepository) GetWorkByPeriod(entityID string, startDate, endDa
 		}
 		w.LogDate = time.Unix(logDate, 0)
 		logs = append(logs, w)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
 	return logs, nil

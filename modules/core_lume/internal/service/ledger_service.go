@@ -121,25 +121,20 @@ func (s *LedgerService) RecordTransaction(txn *Transaction) error {
 		CreatedAt:   time.Now(),
 	}
 
-	entryID, err := s.ledgerRepo.SaveEntry(entry)
-	if err != nil {
-		return fmt.Errorf("failed to save entry: %w", err)
-	}
-
-	for _, posting := range txn.Postings {
-		posting := domain.Posting{
+	postings := make([]*domain.Posting, len(txn.Postings))
+	for i, p := range txn.Postings {
+		postings[i] = &domain.Posting{
 			EntityID:  txn.EntityID,
-			EntryID:   entryID,
-			AccountID: posting.AccountID,
-			Amount:    posting.Amount,
-			Direction: domain.Direction(posting.Direction),
+			AccountID: p.AccountID,
+			Amount:    p.Amount,
+			Direction: domain.Direction(p.Direction),
 			CreatedAt: time.Now(),
 		}
+	}
 
-		err = s.ledgerRepo.SavePosting(&posting)
-		if err != nil {
-			return fmt.Errorf("failed to save posting for account %d: %w", posting.AccountID, err)
-		}
+	entryID, err := s.ledgerRepo.CreateEntryWithPostingsTx(txn.EntityID, entry, postings)
+	if err != nil {
+		return fmt.Errorf("failed to record transaction: %w", err)
 	}
 
 	txn.ID = entryID
