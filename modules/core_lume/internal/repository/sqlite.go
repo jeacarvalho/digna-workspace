@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/providentia/digna/core_lume/internal/domain"
@@ -417,4 +418,315 @@ func (r *SQLiteWorkRepository) GetWorkByPeriod(entityID string, startDate, endDa
 	}
 
 	return logs, nil
+}
+
+func parseSkills(skillsStr string) []string {
+	if skillsStr == "" || skillsStr == "[]" {
+		return []string{}
+	}
+	// Simple parsing: remove brackets and split by comma
+	skillsStr = strings.TrimPrefix(skillsStr, "[")
+	skillsStr = strings.TrimSuffix(skillsStr, "]")
+	if skillsStr == "" {
+		return []string{}
+	}
+	return strings.Split(skillsStr, ",")
+}
+
+func joinStrings(strs []string, sep string) string {
+	if len(strs) == 0 {
+		return ""
+	}
+	result := strs[0]
+	for i := 1; i < len(strs); i++ {
+		result += sep + strs[i]
+	}
+	return result
+}
+
+type SQLiteMemberRepository struct {
+	lifecycleManager lifecycle.LifecycleManager
+}
+
+func NewSQLiteMemberRepository(lm lifecycle.LifecycleManager) *SQLiteMemberRepository {
+	return &SQLiteMemberRepository{lifecycleManager: lm}
+}
+
+func (r *SQLiteMemberRepository) GetDB(entityID string) (*sql.DB, error) {
+	return r.lifecycleManager.GetConnection(entityID)
+}
+
+func (r *SQLiteMemberRepository) Save(member *domain.Member) error {
+	if err := member.Validate(); err != nil {
+		return fmt.Errorf("invalid member: %w", err)
+	}
+
+	db, err := r.GetDB(member.EntityID)
+	if err != nil {
+		return fmt.Errorf("failed to get connection: %w", err)
+	}
+
+	skillsJSON := "[]"
+	if len(member.Skills) > 0 {
+		skillsJSON = fmt.Sprintf("[%s]", joinStrings(member.Skills, ","))
+	}
+
+	_, err = db.Exec(
+		`INSERT INTO members (id, entity_id, name, email, phone, cpf, role, status, joined_at, skills, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET
+			name = excluded.name,
+			email = excluded.email,
+			phone = excluded.phone,
+			cpf = excluded.cpf,
+			role = excluded.role,
+			status = excluded.status,
+			skills = excluded.skills,
+			updated_at = excluded.updated_at`,
+		member.ID, member.EntityID, member.Name, member.Email, member.Phone, member.CPF,
+		string(member.Role), string(member.Status), member.JoinedAt.Unix(), skillsJSON,
+		member.CreatedAt.Unix(), member.UpdatedAt.Unix(),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to save member: %w", err)
+	}
+
+	return nil
+}
+
+func (r *SQLiteMemberRepository) FindByID(entityID, memberID string) (*domain.Member, error) {
+	db, err := r.GetDB(entityID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get connection: %w", err)
+	}
+
+	var member domain.Member
+	var joinedAt int64
+	var createdAt int64
+	var updatedAt int64
+	var skillsStr string
+
+	err = db.QueryRow(
+		`SELECT id, entity_id, name, email, phone, cpf, role, status, joined_at, skills, created_at, updated_at
+		FROM members WHERE id = ? AND entity_id = ?`,
+		memberID, entityID,
+	).Scan(&member.ID, &member.EntityID, &member.Name, &member.Email, &member.Phone, &member.CPF,
+		&member.Role, &member.Status, &joinedAt, &skillsStr, &createdAt, &updatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("member not found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to query member: %w", err)
+	}
+
+	member.JoinedAt = time.Unix(joinedAt, 0)
+	member.CreatedAt = time.Unix(createdAt, 0)
+	member.UpdatedAt = time.Unix(updatedAt, 0)
+	member.Skills = parseSkills(skillsStr)
+
+	return &member, nil
+}
+
+func (r *SQLiteMemberRepository) FindByEmail(entityID, email string) (*domain.Member, error) {
+	db, err := r.GetDB(entityID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get connection: %w", err)
+	}
+
+	var member domain.Member
+	var joinedAt int64
+	var createdAt int64
+	var updatedAt int64
+	var skillsStr string
+
+	err = db.QueryRow(
+		`SELECT id, entity_id, name, email, phone, cpf, role, status, joined_at, skills, created_at, updated_at
+		FROM members WHERE email = ? AND entity_id = ?`,
+		email, entityID,
+	).Scan(&member.ID, &member.EntityID, &member.Name, &member.Email, &member.Phone, &member.CPF,
+		&member.Role, &member.Status, &joinedAt, &skillsStr, &createdAt, &updatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("member not found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to query member: %w", err)
+	}
+
+	member.JoinedAt = time.Unix(joinedAt, 0)
+	member.CreatedAt = time.Unix(createdAt, 0)
+	member.UpdatedAt = time.Unix(updatedAt, 0)
+	member.Skills = parseSkills(skillsStr)
+
+	return &member, nil
+}
+
+func (r *SQLiteMemberRepository) ListByEntity(entityID string) ([]domain.Member, error) {
+	db, err := r.GetDB(entityID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get connection: %w", err)
+	}
+
+	rows, err := db.Query(
+		`SELECT id, entity_id, name, email, phone, cpf, role, status, joined_at, skills, created_at, updated_at
+		FROM members WHERE entity_id = ? ORDER BY name`,
+		entityID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query members: %w", err)
+	}
+	defer rows.Close()
+
+	var members []domain.Member
+	for rows.Next() {
+		var member domain.Member
+		var joinedAt int64
+		var createdAt int64
+		var updatedAt int64
+		var skillsStr string
+
+		if err := rows.Scan(&member.ID, &member.EntityID, &member.Name, &member.Email, &member.Phone, &member.CPF,
+			&member.Role, &member.Status, &joinedAt, &skillsStr, &createdAt, &updatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan member: %w", err)
+		}
+
+		member.JoinedAt = time.Unix(joinedAt, 0)
+		member.CreatedAt = time.Unix(createdAt, 0)
+		member.UpdatedAt = time.Unix(updatedAt, 0)
+		member.Skills = parseSkills(skillsStr)
+		members = append(members, member)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	return members, nil
+}
+
+func (r *SQLiteMemberRepository) ListByRole(entityID string, role domain.MemberRole) ([]domain.Member, error) {
+	db, err := r.GetDB(entityID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get connection: %w", err)
+	}
+
+	rows, err := db.Query(
+		`SELECT id, entity_id, name, email, phone, cpf, role, status, joined_at, skills, created_at, updated_at
+		FROM members WHERE entity_id = ? AND role = ? ORDER BY name`,
+		entityID, string(role),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query members: %w", err)
+	}
+	defer rows.Close()
+
+	var members []domain.Member
+	for rows.Next() {
+		var member domain.Member
+		var joinedAt int64
+		var createdAt int64
+		var updatedAt int64
+		var skillsStr string
+
+		if err := rows.Scan(&member.ID, &member.EntityID, &member.Name, &member.Email, &member.Phone, &member.CPF,
+			&member.Role, &member.Status, &joinedAt, &skillsStr, &createdAt, &updatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan member: %w", err)
+		}
+
+		member.JoinedAt = time.Unix(joinedAt, 0)
+		member.CreatedAt = time.Unix(createdAt, 0)
+		member.UpdatedAt = time.Unix(updatedAt, 0)
+		member.Skills = parseSkills(skillsStr)
+		members = append(members, member)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	return members, nil
+}
+
+func (r *SQLiteMemberRepository) Update(member *domain.Member) error {
+	if err := member.Validate(); err != nil {
+		return fmt.Errorf("invalid member: %w", err)
+	}
+
+	db, err := r.GetDB(member.EntityID)
+	if err != nil {
+		return fmt.Errorf("failed to get connection: %w", err)
+	}
+
+	skillsJSON := "[]"
+	if len(member.Skills) > 0 {
+		skillsJSON = fmt.Sprintf("[%s]", joinStrings(member.Skills, ","))
+	}
+
+	member.UpdatedAt = time.Now()
+
+	_, err = db.Exec(
+		`UPDATE members SET name = ?, email = ?, phone = ?, cpf = ?, role = ?, status = ?, skills = ?, updated_at = ?
+		WHERE id = ? AND entity_id = ?`,
+		member.Name, member.Email, member.Phone, member.CPF, string(member.Role), string(member.Status),
+		skillsJSON, member.UpdatedAt.Unix(), member.ID, member.EntityID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update member: %w", err)
+	}
+
+	return nil
+}
+
+func (r *SQLiteMemberRepository) UpdateStatus(entityID, memberID string, status domain.MemberStatus) error {
+	db, err := r.GetDB(entityID)
+	if err != nil {
+		return fmt.Errorf("failed to get connection: %w", err)
+	}
+
+	_, err = db.Exec(
+		`UPDATE members SET status = ?, updated_at = ? WHERE id = ? AND entity_id = ?`,
+		string(status), time.Now().Unix(), memberID, entityID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update member status: %w", err)
+	}
+
+	return nil
+}
+
+func (r *SQLiteMemberRepository) CountByEntity(entityID string) (int, error) {
+	db, err := r.GetDB(entityID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get connection: %w", err)
+	}
+
+	var count int
+	err = db.QueryRow(
+		`SELECT COUNT(*) FROM members WHERE entity_id = ?`,
+		entityID,
+	).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count members: %w", err)
+	}
+
+	return count, nil
+}
+
+func (r *SQLiteMemberRepository) CountActiveByEntity(entityID string) (int, error) {
+	db, err := r.GetDB(entityID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get connection: %w", err)
+	}
+
+	var count int
+	err = db.QueryRow(
+		`SELECT COUNT(*) FROM members WHERE entity_id = ? AND status = 'ACTIVE'`,
+		entityID,
+	).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count active members: %w", err)
+	}
+
+	return count, nil
 }
