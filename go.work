@@ -7,7 +7,6 @@ use (
 	./modules/integration_test
 	./modules/integrations
 	./modules/legal_facade
-	./modules/legal_mock
 	./modules/lifecycle
 	./modules/pdv_ui
 	./modules/reporting
