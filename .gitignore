@@ -1,4 +1,3 @@
-cat <<EOF > .gitignore
 # Binários
 bin/
 dist/
@@ -24,4 +23,3 @@ data/entities/*.db-wal
 # Logs
 *.log
 docs/sessions/*.log
-EOF
