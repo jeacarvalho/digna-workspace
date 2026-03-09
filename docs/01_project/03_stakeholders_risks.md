@@ -1,85 +1,86 @@
----
-title: Stakeholders e Riscos
+***
+
+```markdown
+#### title: Stakeholders e Riscos
 status: implemented
-version: 1.0
-last_updated: 2026-03-07
----
+version: 1.1
+last_updated: 2026-03-08
 
-# Stakeholders e Riscos - Digna
+### Stakeholders e Riscos - Digna
 
----
+--------------------------------------------------------------------------------
 
-## 1. Stakeholder Map
+#### 1. Stakeholder Map
 
-### 1.1 Stakeholders Primários
-
+##### 1.1 Stakeholders Primários
 | Stakeholder | Role |
 |-------------|------|
-| Cooperativas | Usuários principais |
-| Associações | Gestão coletiva |
-| Grupos informais | Entrada no sistema |
+| Cooperativas | Usuários principais da operação e autogestão |
+| Associações | Gestão coletiva e deliberações em assembleia |
+| Grupos informais ("Sonhos")| Entrada no sistema (Estágio DREAM) |
+| Contadores Sociais [NOVO] | Auditores e facilitadores da conformidade via Painel Multi-tenant |
 
-### 1.2 Stakeholders Institucionais
-
+##### 1.2 Stakeholders Institucionais
 | Stakeholder | Interest |
 |-------------|----------|
-| Ministério do Trabalho | Política pública |
-| Senaes | Economia solidária |
-| Serpro | Infraestrutura tecnológica |
+| Ministério do Trabalho | Política pública e CADSOL |
+| Senaes | Fortalecimento da economia solidária (SINAES) |
+| Serpro | Infraestrutura tecnológica de nuvem soberana |
+| CFC / CRCs [NOVO] | Conformidade com a norma ITG 2002 e ampliação da contabilidade formal |
 
-### 1.3 Stakeholders de Suporte
-
+##### 1.3 Stakeholders de Suporte
 | Stakeholder | Role |
 |-------------|------|
-| Universidades | Pesquisa |
-| ONGs | Apoio territorial |
-| Incubadoras | Formação cooperativa |
+| Universidades | Pesquisa, extensão e Mutirões de "Fechamento Anual Solidário" |
+| ONGs | Apoio territorial e articulação local |
+| Incubadoras (ITCPs) | Formação cooperativa, pedagógica e validação de campo |
 
-### 1.4 Stakeholders de Governança
-
+##### 1.4 Stakeholders de Governança
 | Stakeholder | Role |
 |-------------|------|
-| Fundação Providentia | Governança |
-| PMC | Decisões técnicas |
-| Comunidade dev | Evolução do software |
+| Fundação Providentia | Governança, neutralidade e curadoria do projeto |
+| PMC | Decisões técnicas e roadmap de arquitetura |
+| Comunidade dev | Evolução do software (The Apache Way) |
 
----
+--------------------------------------------------------------------------------
 
-## 2. Risk Register
+#### 2. Risk Register
 
-### 2.1 Riscos de Projeto
-
+##### 2.1 Riscos de Projeto
 | Risco | Probabilidade | Impacto | Mitigação |
 |-------|---------------|---------|-----------|
-| Perda de dados locais | Medium | High | Backup automatizado (Litestream) |
-| Uso incorreto do sistema | Medium | Medium | UX simplificada |
-| Bugs contábeis | Low | Critical | Testes contábeis rigorosos |
-| Complexidade institucional | Medium | High | Documentação clara |
-| Dependência tecnológica | Low | High | Open source |
+| Perda de dados locais | Medium | High | Backup automatizado (Litestream/Sync) e educação digital |
+| Uso incorreto do sistema | Medium | Medium | UX simplificada, pedagógica e testada com o usuário final |
+| Bugs contábeis | Low | Critical | Testes unitários contábeis rigorosos (Validação Soma Zero em int64) |
+| Complexidade institucional | Medium | High | Documentação clara e transição gradual (Não forçar formalização) |
+| Resistência da Classe Contábil [NOVO] | Medium | High | Inserção do CFC/CRCs como aliados e criação do Painel Multi-tenant que poupa tempo do contador |
+| Dependência tecnológica | Low | High | Arquitetura Local-First e código Open Source |
 
-### 2.2 Riscos Técnicos
-
+##### 2.2 Riscos Técnicos
 | Risco | Probabilidade | Impacto | Mitigação |
 |-------|---------------|---------|-----------|
-| Inconsistência no ledger | Low | Critical | Validação soma zero |
-| Falhas na sincronização | Medium | Medium | Retry com backoff |
-| Corrupção de banco SQLite | Low | High | WAL mode + backup |
+| Inconsistência no ledger | Low | Critical | Motor Lume blindado e isolado da UI (Anti-Float) |
+| Falhas na sincronização | Medium | Medium | Retry com backoff e arquitetura baseada em Delta tracking |
+| Corrupção de banco SQLite | Low | High | PRAGMAs otimizados (WAL mode, foreign_keys) + backup |
+| Desatualização do Formato SPED/Fiscal [NOVO] | High | Medium | Módulo de exportação isolado na arquitetura e feedback contínuo da comunidade de Contadores parceiros |
 
-### 2.3 Riscos de Governança
-
+##### 2.3 Riscos de Governança
 | Risco | Probabilidade | Impacto | Mitigação |
 |-------|---------------|---------|-----------|
-| Captura institucional | Low | High | Modelo Apache |
-| Fragmentação da comunidade | Medium | Medium | Comunicação ativa |
+| Captura corporativa/institucional | Low | High | Modelo Apache, governança via Fundação Providentia e licença livre |
+| Fragmentação da comunidade | Medium | Medium | Comunicação ativa, RFCs transparentes e meritocracia técnica |
 
----
+--------------------------------------------------------------------------------
 
-## 3. Matriz de Responsabilidade
+#### 3. Matriz de Responsabilidade (RACI Adaptada)
 
-| Atividade | Fundação | PMC | Comunidade |
-|-----------|----------|-----|------------|
-| Roadmap estratégico | Decisão | Input | Input |
-| Decisões técnicas | Veto | Decisão | Input |
-| Implementação | - | Review | Execução |
-| Documentação | - | Aprovação | Contribuição |
-| Suporte | Oversight | - | Community |
+| Atividade | Fundação | PMC | Comunidade | Contadores Parceiros [NOVO] |
+|-----------|----------|-----|------------|----------------------|
+| Roadmap estratégico | Decisão | Input | Input | Input (Compliance) |
+| Decisões técnicas | Veto | Decisão | Input | - |
+| Implementação Core | - | Review | Execução | - |
+| Documentação | - | Aprovação | Contribuição | - |
+| Conformidade ITG 2002 | Validação | Implementação | - | Auditoria Prática |
+| Suporte e Educação | Oversight | - | Execução Local | Orientação Fiscal |
+
+```

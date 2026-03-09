@@ -1,7 +1,10 @@
+***
+
+```markdown
 #### title: Modelos de Domínio e Dados
 status: implemented
-version: 1.2
-last_updated: 2026-03-07
+version: 1.3
+last_updated: 2026-03-08
 
 ### Modelos - Projeto Digna
 **Projeto:** Sistema de Gestão Contábil e Pedagógica para Economia Solidária
@@ -10,7 +13,7 @@ last_updated: 2026-03-07
 
 #### 1. Domain Model (Modelo de Domínio)
 
-O domínio do Digna reflete os princípios da autogestão e da contabilidade invisível, priorizando as relações humanas sobre o capital financeiro.
+O domínio do Digna reflete os princípios da autogestão e da contabilidade invisível, priorizando as relações humanas sobre o capital financeiro, mas agora atuando também como **ponte institucional** para a conformidade legal.
 
 ##### 1.1 Entidades Principais
 
@@ -18,10 +21,13 @@ O domínio do Digna reflete os princípios da autogestão e da contabilidade inv
 Representa o coletivo produtivo. Pode transitar gradualmente por três estados, respeitando o tempo político do grupo:
 *   **DREAM (Sonho):** Grupo informal, focado na união produtiva inicial.
 *   **INCUBATED (Incubado):** Em processo de estruturação, recebendo apoio pedagógico (ITCPs, ONGs).
-*   **FORMALIZED (Formalizado):** Cooperativa ou Associação com CNPJ e estatuto base (Pronto para CADSOL).
+*   **FORMALIZED (Formalizado):** Cooperativa ou Associação com CNPJ e estatuto base (Pronto para CADSOL e obrigações fiscais).
 
 ###### Member (Trabalhador/Cooperado)
 Pessoa participante do empreendimento. Suas horas dedicadas são o lastro do capital social (Princípio da Primazia do Trabalho).
+
+###### SocialAccountant (Contador Social) [NOVO]
+Entidade parceira (externa). Não é dona do dado, mas possui permissão delegada de leitura para auditar a conformidade (ITG 2002) e extrair os balancetes através de um Painel Multi-tenant.
 
 ###### Transaction (Operação Comercial)
 Evento econômico do dia a dia (venda na feira, compra de insumo). Traduzido internamente para partidas dobradas.
@@ -35,20 +41,24 @@ Decisão coletiva tomada e registrada em Assembleia. Base para a geração das A
 ###### Fund (Fundos Obrigatórios)
 Reservas estatutárias e legais blindadas pelo sistema (Ex: Reserva Legal e FATES).
 
+###### FiscalBatch (Lote Fiscal) [NOVO]
+Conjunto imutável de transações agregadas e exportadas para o formato exigido pela Receita Federal (ex: SPED) ou softwares de escrituração contábil externos.
+
 ##### 1.2 Value Objects
 
 | Value Object | Formato Técnico | Justificativa Sociotécnica |
 | ------ | ------ | ------ |
 | **Money** | `int64` (centavos) | Evita erros de arredondamento capitalista (IEEE 754). Garante exatidão total para o trabalhador. |
 | **Time/Labor** | `int64` (minutos) | Unidade de medida do Capital Social. |
-| **AccountCode**| `string` (ex: 1.1.01)| Padronização invisível ao usuário, usada apenas no backend para gerar relatórios formais. |
+| **AccountCode**| `string` (ex: 1.1.01)| Padronização invisível ao usuário, usada para tradução fiscal. |
 | **Period** | `YYYY-MM` | Ciclo contábil e de prestação de contas. |
 
 --------------------------------------------------------------------------------
 
-#### 2. Data Model (Schema v0)
+#### 2. Data Model (Schema v1)
 
-O banco de dados é instanciado fisicamente de forma isolada por `Enterprise` (Soberania do Dado local).
+O banco de dados é instanciado fisicamente de forma isolada por `Enterprise` (Soberania do Dado local). 
+*Nota Arquitetural:* O Painel do Contador Social **não possui** banco de transações próprio; ele atua apenas consumindo dados em modo de leitura (Read-Only) dos micro-databases autorizados.
 
     TABELAS PRINCIPAIS (SQLite)
     
@@ -58,6 +68,7 @@ O banco de dados é instanciado fisicamente de forma isolada por `Enterprise` (S
     [ work_logs ]         --> Tabela de valoração social (Registro de minutos trabalhados)
     [ decisions_log ]     --> Registro de governança em Assembleia (Gera a Ata)
     [ sync_metadata ]     --> Delta tracking para resiliência Offline-First
+    [ fiscal_exports ]    --> [NOVO] Log de extrações SPED realizadas pelo Contador Social (evita envios duplicados)
 
 --------------------------------------------------------------------------------
 
@@ -65,7 +76,7 @@ O banco de dados é instanciado fisicamente de forma isolada por `Enterprise` (S
 
 ##### 3.1 Algoritmo de Rateio Social (Transparência Algorítmica Visual)
 **Objetivo:** Distribuir o excedente financeiro de forma justa, baseada na Primazia do Trabalho.
-**Regra Sociotécnica:** O cálculo não deve ser obscuro. O algoritmo DEVE emitir uma saída (gráfico/tabela) didática para ser projetada ou lida durante a Assembleia Geral, permitindo a aprovação consciente do grupo.
+**Regra Sociotécnica:** O cálculo não deve ser obscuro. O algoritmo DEVE emitir uma saída (gráfico/tabela) didática para ser lida em Assembleia Geral.
 **Entrada:** `totalSurplus` (int64), `memberHours` (Mapa de member_id -> minutos).
 
     Exemplo Didático Gerado pelo Algoritmo para a Assembleia:
@@ -78,7 +89,7 @@ O banco de dados é instanciado fisicamente de forma isolada por `Enterprise` (S
     --------------------------------------------------------------
 
 ##### 3.2 Algoritmo de Reservas Obrigatórias (Segregação de Fundos)
-**Objetivo:** Garantir a conformidade legal (Lei Paul Singer) e a sustentabilidade de longo prazo antes de qualquer rateio individual.
+**Objetivo:** Garantir a conformidade legal (Lei Paul Singer) e a sustentabilidade de longo prazo antes de qualquer rateio.
 **Processo:** 
 1. Apura o resultado positivo do período.
 2. Bloqueia 10% para o Fundo de Reserva Legal.
@@ -96,19 +107,27 @@ O banco de dados é instanciado fisicamente de forma isolada por `Enterprise` (S
 *   Mínimo de 1 membro ativo com histórico de `WorkLog`.
 *   Criação automática do Dossiê Hash SHA256.
 
+##### 3.5 Algoritmo de Tradução Fiscal (Ponte do Contador) [NOVO]
+**Objetivo:** Converter a contabilidade social gerada invisivelmente pelo produtor em linguagem de conformidade estatal (SPED/Lotes Fiscais).
+**Processo:**
+1. Painel do Contador solicita dados de um `Period` fechado.
+2. O algoritmo compila todas as `entries` de soma zero.
+3. Mapeia as contas locais amigáveis ("Gaveta") para o Plano de Contas Referencial da Receita Federal.
+4. Gera o pacote CSV/SPED e salva o evento de exportação na tabela `fiscal_exports`.
+
 --------------------------------------------------------------------------------
 
 #### 4. Seed Data (Carga Inicial Padrão)
 
 Toda nova base SQLite de um EES nasce com este plano de contas enxuto e adaptado:
 
-| ID | Código | Nome Amigável | Natureza Contábil (Invisível) |
-| -- | ------ | ------------- | ----------------------------- |
-| 1  | 1.1.01 | Gaveta / Caixa| ASSET (Ativo) |
-| 2  | 3.1.01 | Nossas Vendas | REVENUE (Receita) |
-| 3  | 1.1.02 | Banco / Conta | ASSET (Ativo) |
-| 4  | 2.1.01 | Quem Fornece  | LIABILITY (Passivo) |
-| 5  | 3.2.01 | Fundo FATES   | EQUITY (Patrimônio Líquido) |
+| ID | Código | Nome Amigável | Natureza Contábil (Invisível) | Mapeamento Fiscal [NOVO] |
+| -- | ------ | ------------- | ----------------------------- | ------------------------ |
+| 1  | 1.1.01 | Gaveta / Caixa| ASSET (Ativo)                 | Disponibilidades (Ativo) |
+| 2  | 3.1.01 | Nossas Vendas | REVENUE (Receita)             | Receita Bruta            |
+| 3  | 1.1.02 | Banco / Conta | ASSET (Ativo)                 | Contas Bancárias         |
+| 4  | 2.1.01 | Quem Fornece  | LIABILITY (Passivo)           | Fornecedores a Pagar     |
+| 5  | 3.2.01 | Fundo FATES   | EQUITY (Patrimônio Líquido)   | Reservas Estatutárias    |
 ```
 
 ***

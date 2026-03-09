@@ -118,6 +118,13 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger) 
 	}
 	cashHandler.RegisterRoutes(mux)
 
+	// Accountant dashboard handler
+	accountantHandler, err := handler.NewAccountantHandler(lifecycleMgr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create accountant handler: %w", err)
+	}
+	accountantHandler.RegisterRoutes(mux)
+
 	// Health check
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

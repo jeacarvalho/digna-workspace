@@ -1,6 +1,7 @@
 go 1.25.4
 
 use (
+	./modules/accountant_dashboard
 	./modules/cash_flow
 	./modules/core_lume
 	./modules/distribution

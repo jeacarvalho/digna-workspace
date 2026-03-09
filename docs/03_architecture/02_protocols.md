@@ -1,8 +1,11 @@
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ---
+***
+
+```markdown
+---
 title: Protocolos Técnicos
 status: implemented
-version: 1.0
-last_updated: 2026-03-07
+version: 1.1
+last_updated: 2026-03-08
 ---
 
 # Protocolos Técnicos - Digna
@@ -14,7 +17,6 @@ last_updated: 2026-03-07
 ### 1.1 Modelo
 
 **Estratégia:** Delta-based synchronization
-
 O sistema detecta alterações desde a última sincronização e transmite apenas os deltas, não os dados completos.
 
 ### 1.2 Estrutura do Pacote de Sync
@@ -38,11 +40,12 @@ O sistema detecta alterações desde a última sincronização e transmite apena
 
 ### 1.3 Processo de Sincronização
 
-```
+```text
 1. DETECT: Query deltas desde last_sync_at
    - entries: alterações em lançamentos
    - work_logs: novos registros de trabalho
    - decisions_log: novas decisões
+   - fiscal_exports: novos lotes extraídos pelo Contador Social [NOVO]
 
 2. AGGREGATE: Calcular métricas agregadas
    - Soma de vendas (total_sales)
@@ -74,6 +77,7 @@ O sistema detecta alterações desde a última sincronização e transmite apena
 | legal_status | ✅ | DREAM ou FORMALIZED |
 | chain_digest | ✅ | Hash de integridade |
 | signature | ✅ | Assinatura digital |
+| fiscal_batch_hash | ✅ | Hash de integridade do último Lote SPED [NOVO] |
 | member_id | ❌ | Dados sensíveis protegidos |
 | entry_details | ❌ | Transações detalhadas |
 | posting_id | ❌ | IDs internos |
@@ -88,6 +92,9 @@ Cada entidade possui banco próprio:
 - Path: `data/entities/{entity_id}.db`
 - Isolamento físico total
 - Sem acesso cruzado entre tenants
+
+**Acesso do Contador Social (Painel Multi-tenant):**
+O acesso do contador parceiro aos dados do empreendimento ocorre estritamente em modo de leitura (*Read-Only*) e mediante delegação de acesso prévia. O painel apenas consulta e compila as transações, sem nunca quebrar o isolamento do arquivo local `.sqlite`.
 
 ### 2.2 Integridade
 
@@ -119,72 +126,59 @@ Cada entidade possui banco próprio:
 ### 3.1 Introdução
 
 O **Economic Protocol do Digna** define as regras econômicas fundamentais que governam a operação dos Empreendimentos de Economia Solidária (EES) dentro do sistema.
-
 Este protocolo não descreve a implementação técnica, mas os **princípios econômicos e contábeis** que orientam seu funcionamento.
 
 ### 3.2 Princípios Fundamentais
 
 #### 3.2.1 Primazia do Trabalho
-
 O trabalho humano é reconhecido como a principal fonte de valor econômico.
-
 O protocolo reconhece:
 - Horas de trabalho
 - Trabalho voluntário
 - Contribuição coletiva
-
 como formas legítimas de capital social.
 
 #### 3.2.2 Autogestão
-
 Toda decisão econômica relevante deve ser tomada coletivamente.
-
 O sistema registra:
 - Decisões de assembleia
 - Distribuição de sobras
 - Regras internas do grupo
 
 #### 3.2.3 Transparência
-
 Todas as operações econômicas são registradas em ledger verificável.
-
 Cada operação gera:
 - Registro contábil
 - Hash de auditoria
 - Histórico imutável
 
 #### 3.2.4 Soberania de Dados
-
 Cada empreendimento mantém controle sobre seus próprios dados.
-
 O protocolo exige:
 - Banco de dados próprio
 - Exportação a qualquer momento
 - Sem dependência centralizada
 
+#### 3.2.5 Ponte Institucional (Aliança Contábil) [NOVO]
+A conformidade não deve ser um fardo. O protocolo assegura a tradução automática das ações de autogestão do produtor para a formalidade técnica requerida pelo Estado e pelo Conselho Federal de Contabilidade (CFC), tornando a contabilidade popular auditável.
+
 ### 3.3 Unidades de Valor
 
 #### 3.3.1 Moeda Nacional
-
 **Real (R$)**
-
 Utilizado para:
 - Vendas
 - Compras
 - Contabilidade financeira
 
 #### 3.3.2 Trabalho
-
 O tempo de trabalho é tratado como capital social.
-
 **Unidade:** minutos de trabalho
-
 Utilizado para:
 - Cálculo de participação
 - Distribuição de sobras
 
 #### 3.3.3 Bens Substantivos (Futuro)
-
 O protocolo poderá suportar:
 - Sementes
 - Animais
@@ -192,8 +186,7 @@ O protocolo poderá suportar:
 
 ### 3.4 Registro de Operações
 
-Toda operação econômica é registrada no ledger contábil.
-
+Toda operação econômica é registrada no ledger contábil e mapeada silenciosamente para o Plano de Contas Referencial.
 **Tipos principais:**
 - Venda
 - Compra
@@ -201,21 +194,18 @@ Toda operação econômica é registrada no ledger contábil.
 - Decisão coletiva
 
 **Regra obrigatória:**
-
-```
+```text
 soma dos débitos = soma dos créditos (partidas dobradas)
 ```
 
 ### 3.5 Trabalho Cooperativo (ITG 2002)
 
 O sistema registra trabalho coletivo conforme a ITG 2002.
-
 Cada registro contém:
 - Membro
 - Atividade
 - Minutos trabalhados
 - Data
-
 Este registro constitui **capital social de trabalho**.
 
 ### 3.6 Distribuição de Sobras
@@ -223,27 +213,14 @@ Este registro constitui **capital social de trabalho**.
 Ao final de um período econômico, o sistema calcula o excedente financeiro.
 
 **Antes da distribuição:**
-
-```
-10% Reserva Legal
-5% FATES
-```
+Obrigatoriamente bloqueia-se 10% para Reserva Legal e 5% para FATES.
 
 **Após segregação, o excedente pode ser distribuído.**
-
-#### Fórmula básica de distribuição
-
-Distribuição proporcional baseada em trabalho:
-
-```
-participação = horas_do_membro / horas_totais
-valor_distribuído = participação × excedente
-```
+Distribuição proporcional baseada em trabalho (int64, sem erros decimais).
 
 ### 3.7 Registro de Decisões
 
 Decisões coletivas são registradas como eventos institucionais.
-
 Exemplos:
 - Aprovação de estatuto
 - Eleição de coordenação
@@ -257,13 +234,10 @@ Cada decisão gera:
 ### 3.8 Formalização
 
 O protocolo permite transição progressiva de grupo informal para entidade formal.
-
 **Estados:**
-
-```
+```text
 DREAM → FORMALIZED
 ```
-
 A formalização depende de:
 - Registro de decisões (mínimo 3)
 - Existência de membros
@@ -272,7 +246,6 @@ A formalização depende de:
 ### 3.9 Intercooperação
 
 O protocolo permite interação econômica entre empreendimentos.
-
 Possibilidades:
 - Troca de produtos
 - Cooperação produtiva
@@ -281,41 +254,47 @@ Possibilidades:
 ### 3.10 Privacidade Econômica
 
 O protocolo estabelece que apenas dados agregados podem ser compartilhados.
-
 **Dados protegidos:**
 - Identidade de membros
-- Detalhes de transações
-- Dados sensíveis
+- Detalhes de transações sensíveis internas
 
 **Dados compartilháveis:**
 - Volume econômico
 - Número de membros
 - Status institucional
 
-### 3.11 Evolução do Protocolo
+### 3.11 Protocolo de Tradução Fiscal (Lote SPED) [NOVO]
+
+O sistema atua como motor de pré-processamento para a classe contábil:
+- **Agregação:** Compila as `Entries` íntegras de um período (`Period`).
+- **Mapeamento:** Vincula as contas locais (amigáveis) ao Plano de Contas Referencial.
+- **Exportação:** O Contador Social, via painel, gera o Lote Fiscal (`FiscalBatch`) exportando para sistemas de escrituração comercial ou Receita Federal (SPED), evitando retrabalho.
+
+### 3.12 Evolução do Protocolo
 
 O Economic Protocol pode evoluir através de decisões comunitárias.
-
 Mudanças devem ser aprovadas pelo PMC da Fundação Providentia.
-
 Cada alteração deve:
 - Manter compatibilidade contábil
 - Preservar soberania dos dados
 - Respeitar princípios da economia solidária
 
-### 3.12 Escopo
+### 3.13 Escopo
 
 Este protocolo define apenas:
 - Regras econômicas
 - Princípios institucionais
 - Lógica distributiva
-
 A implementação técnica está descrita em `03_architecture/01_system.md`.
 
 ---
 
 ## 4. Referências Externas
 
-- **ITG 2002** - Norma ITG do Conselho Federal de Contabilidade
-- **Lei nº 15.068/2024** - Lei Paul Singer
-- **CADSOL** - Cadastro Nacional de Economia Solidária
+- **ITG 2002** - Norma ITG do Conselho Federal de Contabilidade (CFC).
+- **Lei nº 15.068/2024** - Lei Paul Singer.
+- **CADSOL / SINAES** - Cadastro Nacional de Economia Solidária.
+- **SPED** - Sistema Público de Escrituração Digital (Receita Federal).
+```
+
+***

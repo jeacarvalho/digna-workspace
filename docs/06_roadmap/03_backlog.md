@@ -1,7 +1,10 @@
+***
+
+```markdown
 ---
 title: Product Backlog
 status: proposed
-version: 1.1
+version: 1.2
 last_updated: 2026-03-08
 ---
 
@@ -57,25 +60,28 @@ last_updated: 2026-03-08
 
 ## Funcionalidades Futuras
 
-### Alta Prioridade
-
-- [ ] Autenticação Gov.br
+### Alta Prioridade (Fase 1: Integração e Aliança Contábil)
+- [ ] **[NOVO] Painel do Contador Social (Accountant Dashboard):** Interface Web Multi-tenant em modo Read-Only para auditores voluntários/parceiros.
+- [ ] **[NOVO] Motor de Exportação Fiscal (SPED):** Mapeamento do `Core Lume` para formatos padrões exigidos pela Receita Federal e sistemas contábeis comerciais.
+- [ ] **[NOVO] Plataforma de Mutirão:** Módulo de gerenciamento para o "Imposto de Renda Solidário" em parceria com Universidades/CRCs.
+- [ ] Autenticação Gov.br (Realização do fluxo OAuth2)
 - [ ] Exportação CADSOL completa
-- [ ] Auditoria pública
-- [ ] Integrações reais (APIs governo)
+- [ ] Auditoria pública (Validação visual ITG 2002)
+- [ ] Integrações reais (Substituição de Mocks por APIs do governo)
 
 ### Média Prioridade
-
+- [ ] **[NOVO] Módulos educativos embutidos:** UI com auxílio visual na formação de preço no PDV (Custo vs. Hora trabalhada).
 - [ ] Gestão de membros (UI)
 - [ ] Gestão de compras (RF-07)
 - [ ] Gestão de fornecedores
 - [ ] Controle de estoque (RF-08)
 - [ ] Gestão orçamentária (RF-10)
-- [ ] Múltiplas moedas sociais
+- [ ] Múltiplas moedas sociais (Preparação para Fase 2)
 
 ### Baixa Prioridade
-
-- [ ] Integração contábil fiscal
 - [ ] API GraphQL
-- [ ] App mobile nativo
+- [ ] App mobile nativo (Substituindo o atual PWA, se necessário)
 - [ ] Relatórios em PDF
+```
+
+***

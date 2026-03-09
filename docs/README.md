@@ -1,175 +1,141 @@
+***
+
+```markdown
 # 📚 Documentação do Projeto Digna
 
-**Versão:** 1.1  
-**Última Atualização:** 2026-03-07  
-**Projeto:** Sistema de Gestão Contábil para Economia Solidária  
+**Versão:** 1.2
+**Última Atualização:** 2026-03-08
+**Projeto:** Sistema de Gestão Contábil, Institucional e Pedagógica para Economia Solidária
 **Mantenedor:** Fundação Providentia
 
 ---
 
 ## 📋 Visão Geral
 
-O **Digna** é uma infraestrutura contábil soberana para Economia Solidária brasileira, mantido pela **Fundação Providentia**.
+O **Digna** é uma infraestrutura contábil soberana para a Economia Solidária (EES) brasileira, mantida pela **Fundação Providentia**. Mais do que um software, o Digna é uma Tecnologia Social desenhada para combater a exclusão digital e financeira.
 
 ### Missão
 
-> Promover a autogestão, soberania e transformação digital dos Empreendimentos de Economia Solidária (EES) no Brasil, através de tecnologia livre e acessível.
-
-### Visão
-
-> Ser a principal infraestrutura digital de conexão e gestão para uma rede nacional de Empreendimentos de Economia Solidária, contribuindo para a transformação social e econômica do país.
-
-### Valores
-
-| Valor | Descrição |
-|-------|-----------|
-| **Autogestão** | Respeito à decisão coletiva e管理模式 autónomo dos EES |
-| **Soberania** | Controle dos dados pelos próprios empreendimentos |
-| **Inclusão** | Acessibilidade para grupos historicamente marginalizados |
-| **Transparência** | Clareza nos processos, dados e decisões |
-| **Transformação** | Compromisso com a mudança social real |
+> Promover a autogestão, soberania e transformação digital dos Empreendimentos de Economia Solidária no Brasil através de tecnologia livre e acessível, atuando simultaneamente como uma **ponte tecnológica inclusiva para a conformidade legal e a classe contábil**.
 
 ### Princípios Fundamentais
 
-1. **Soberania do Dado** - Cada entidade possui seu próprio banco SQLite
-2. **Contabilidade Invisível** - Operações geram lançamentos automaticamente
-3. **Primazia do Trabalho** - Tempo de trabalho = Capital Social (ITG 2002)
-4. **Escala Nacional** - Arquitetura para milhões de empreendimentos
-5. **Clean Architecture** - Domínio independente de frameworks (DDD)
+1. **Soberania do Dado** - Cada entidade possui seu próprio banco SQLite isolado fisicamente (Exit Power).
+2. **Contabilidade Invisível** - Operações coloquiais no app geram lançamentos de partidas dobradas automaticamente no backend.
+3. **Primazia do Trabalho** - Tempo de trabalho é convertido em Capital Social (Baseado na norma ITG 2002).
+4. **Escala Nacional** - Arquitetura desenhada para milhões de empreendimentos informais e formais.
+5. **Clean Architecture** - Domínio de negócios independente de frameworks e interfaces (TDD & DDD).
+6. **Aliança Contábil** - Valorização do Contador Social parceiro através de painel multi-tenant e geração de lotes fiscais (SPED) sem onerar o trabalhador.
+7. **Aliança Institucional** - Previsão de envolver diversos atores da sociedade, tanto governamentais como privados, bem como o terceiro setor. O objetivo não é criar um produto para ser monetizado, mas, sim, um facilitador de sonhos e vocação. Sonhos dos empreendedores sociais, sem "força" de ação mais plena e vocação de profissionais de todos os setores citados, que poderão ver no Digna a possibilidade de algo "maior" do que apenas o seu próprio bem estar
 
 ---
 
 ## 🗂️ Estrutura de Documentação
 
-```
+A documentação segue o padrão PKM (Personal Knowledge Management) de alta integridade.
+
+```text
 docs/
-├── 01_project/        # Visão, Escopo, Stakeholders, Riscos
-├── 02_product/       # Requisitos, Modelos, Algoritmos
-├── 03_architecture/  # Arquitetura Técnica, Protocolos, DDD
-├── 04_governance/    # Fundação, PMC, Contribuição, Licença
-├── 05_ai/            # Constituição de IA, Agentes
+├── 01_project/      # Visão, Escopo, Stakeholders, Riscos
+├── 02_product/      # Requisitos, Modelos de Domínio, Algoritmos
+├── 03_architecture/ # Arquitetura Técnica, Protocolos, Melhorias
+├── 04_governance/   # Fundação, PMC, Regras de Contribuição, Licença
+├── 05_ai/           # Constituição de IA, Agentes, Padrões de Sessão
 └── 06_roadmap/      # Estratégia, Roadmap, Backlog, Status
 ```
 
 ---
 
-## 📖 Navegação por Seção
+## 📖 Navegação por Seção (Índice)
 
-### 01 - Projeto (Gestão)
+### 01 - Projeto (Estratégia e Gestão)
 | Documento | Descrição |
 |-----------|-----------|
-| [01_vision.md](./01_project/01_vision.md) | Visão estratégica do produto |
-| [02_scope.md](./01_project/02_scope.md) | Escopo e capacidades principais |
-| [03_stakeholders_risks.md](./01_project/03_stakeholders_risks.md) | Stakeholders e riscos |
+| [01_vision.md](./01_project/01_vision.md) | Visão estratégica do produto e aliança contábil |
+| [02_scope.md](./01_project/02_scope.md) | Escopo, limites e capacidades principais |
+| [03_stakeholders_risks.md](./01_project/03_stakeholders_risks.md) | Mapa de partes interessadas e matriz de riscos |
 
-### 02 - Produto (Requisitos)
+### 02 - Produto (Requisitos e Domínio)
 | Documento | Descrição |
 |-----------|-----------|
-| [01_requirements.md](./02_product/01_requirements.md) | BRD + NFR consolidados |
-| [02_models.md](./02_product/02_models.md) | Domain Model + Data Model + Algoritmos |
+| [01_requirements.md](./02_product/01_requirements.md) | Requisitos Funcionais e Não Funcionais (RFs/RNFs) |
+| [02_models.md](./02_product/02_models.md) | Modelos de Entidades, Schema e Algoritmos de Negócio |
 
 ### 03 - Arquitetura Técnica
 | Documento | Descrição |
 |-----------|-----------|
-| [01_system.md](./03_architecture/01_system.md) | Arquitetura DDD + Clean Architecture |
-| [02_protocols.md](./03_architecture/02_protocols.md) | Sync, Security, Economic |
+| [01_system.md](./03_architecture/01_system.md) | Arquitetura DDD, Clean Architecture e Componentes |
+| [02_protocols.md](./03_architecture/02_protocols.md) | Protocolos de Sincronização, Segurança e Economia |
+| [03_improvements.md](./03_architecture/03_improvements.md) | Radar de dívida técnica, riscos e melhorias futuras |
 
 ### 04 - Governança
 | Documento | Descrição |
 |-----------|-----------|
-| [governance.md](./04_governance/governance.md) | Fundação, PMC, Contribuição, Licença |
+| [governance.md](./04_governance/governance.md) | Fundação Providentia, Comitês, Licença (Apache 2.0) |
 
 ### 05 - IA & Agentes
 | Documento | Descrição |
 |-----------|-----------|
-| [01_constitution.md](./05_ai/01_constitution.md) | Constituição + Agentes |
-| [02_session.md](./05_ai/02_session.md) | Padrão de sessão |
+| [01_constitution.md](./05_ai/01_constitution.md) | Regras de Ouro inegociáveis para LLMs e Agentes (Anti-float) |
+| [02_session.md](./05_ai/02_session.md) | Padrão obrigatório para execução de sessões de código |
 
-### 06 - Roadmap
+### 06 - Roadmap e Tático
 | Documento | Descrição |
 |-----------|-----------|
-| [01_strategy.md](./06_roadmap/01_strategy.md) | Estratégia de release |
-| [02_roadmap.md](./06_roadmap/02_roadmap.md) | Roadmap de produto |
-| [03_backlog.md](./06_roadmap/03_backlog.md) | Product Backlog |
-| [04_status.md](./06_roadmap/04_status.md) | Status atual |
-| [05_session_log.md](./06_roadmap/05_session_log.md) | Histórico de sessões |
+| [01_strategy.md](./06_roadmap/01_strategy.md) | Fases de Release (v0 à v3) |
+| [02_roadmap.md](./06_roadmap/02_roadmap.md) | Roadmap detalhado do Produto |
+| [03_backlog.md](./06_roadmap/03_backlog.md) | Product Backlog priorizado |
+| [04_status.md](./06_roadmap/04_status.md) | Status atual de todas as Sprints e Testes |
+| [05_session_log.md](./06_roadmap/05_session_log.md) | Histórico de sessões de desenvolvimento |
 
 ---
 
-## 🚀 Status das Sprints
+## 🚀 Status das Sprints (Resumo)
 
 | Sprint | Módulo | Status | Testes | Descrição |
 |--------|--------|--------|--------|-----------|
-| 01 | Lifecycle Manager | ✅ | 6/6 | Criação e gestão de tenants |
-| 02 | Core Lume (Ledger) | ✅ | 8/8 | Motor contábil com partidas dobradas |
-| 03 | Reporting + Legal | ✅ | 8/8 | Rateio social e documentação |
-| 04 | Sync Engine | ✅ | 9/9 | Sincronização offline-first |
-| 05 | UI Web (PWA) | ✅ | 9/9 | Interface mobile-first |
-| 06 | Cash Flow | ✅ | 3/3 | Gestão de caixa |
-| 07 | **DDD Refactoring** | ✅ | 43/43 | Aplicado DDD a todos os módulos |
-| 08 | **Integrações** | ✅ | 5/5 | Interfaces gov (mock) |
-| 09 | **Code Remediation** | ✅ | 8/8 | Quality improvements |
-| 10 | **Gestão de Membros** | ✅ | 19/19 | Member CRUD, roles, status |
-| 11 | **E2E Journey Tests** | ✅ | 2/2 | BDD tests, integrações gov |
-| **Total** | | | **120+/120** | **100% PASS** 🎉 |
+| 01 | Lifecycle Manager | ✅ | 6/6 | Criação e gestão física de tenants (.sqlite) |
+| 02 | Core Lume (Ledger) | ✅ | 8/8 | Motor contábil com partidas dobradas exatas em `int64` |
+| 03 | Reporting + Legal | ✅ | 8/8 | Rateio social (ITG 2002) e geração de documentos |
+| 04 | Sync Engine | ✅ | 9/9 | Motor de sincronização offline-first e B2B |
+| 05 | UI Web (PWA) | ✅ | 9/9 | Interface mobile-first (HTMX + Tailwind) |
+| 06 | Cash Flow | ✅ | 3/3 | Gestão de fluxo de caixa |
+| 07 | DDD Refactoring | ✅ | 43/43 | Refatoração de Clean Architecture em todos os módulos |
+| 08-09 | Integrações (Mocks) | ✅ | 13/13 | APIs Simuladas (Gov.br, CADSOL, Receita Federal) |
+| 10 | Gestão de Membros | ✅ | 19/19 | Perfis de acesso, cooperados e permissões |
+| 11 | Formalização e E2E | ✅ | 5/5 | Jornada completa "Sonho Solidário" testada ponta a ponta |
+| 12 | **Accountant Dashboard** | 🟡 | 0/0 | [ATUAL] Painel do Contador Social e Exportação Fiscal (SPED) |
 
 ---
 
-## 🏛️ Arquitetura DDD
+## 💻 Exemplo Prático de Arquitetura (O Poder do DDD)
 
-O projeto segue rigorosamente **Domain-Driven Design (DDD)** e **Clean Architecture**:
+Nossa arquitetura permite isolar totalmente as regras de negócio das tecnologias externas. Exemplo real do nosso módulo de integrações:
 
-### Repository Pattern
 ```go
-// Domain Layer - Interface pura
-type LedgerRepository interface {
-    SaveEntry(entry *Entry) (int64, error)
-    GetBalance(accountID int64) (int64, error)
+// 1. O Serviço usa apenas a Interface (Domain Layer)
+type CreditService struct {
+    gov IntegrationRepository
 }
 
-// Infrastructure Layer - Implementação SQLite
-type SQLiteLedgerRepository struct { ... }
-```
-
-### Integrações Externas (Módulo integrations/)
-
-O sistema possui **8 interfaces de integração governamental**, todas implementadas com mocks realistas:
-
-| Órgão | Serviços | Status |
-|-------|----------|--------|
-| **Receita Federal** | Consultar CNPJ, Emitir DARF | ✅ Mock |
-| **MTE** | CAT, RAIS, eSocial | ✅ Mock |
-| **MDS** | CadÚnico, Relatório Social | ✅ Mock |
-| **IBGE** | Pesquisas, PAM, CNAE | ✅ Mock |
-| **SEFAZ** | NFe, NFS-e, Manifesto | ✅ Mock |
-| **BNDES** | Linhas de Crédito, Simulação | ✅ Mock |
-| **SEBRAE** | Cursos, Consultoria | ✅ Mock |
-| **Providentia** | Sync, Marketplace | ✅ Mock |
-
-**Como usar:**
-```go
-service, _ := integrations.NewMockIntegrationService(db)
-
-// Consultar CNPJ
-cnpjData, _ := service.ReceitaFederal().ConsultarCNPJ(ctx, "12345678000190")
-
-// Emitir NFe
-nfe, _ := service.SEFAZ().EmitirNFe(ctx, nfeRequest)
-
-// Simular crédito
-simulacao, _ := service.BNDES().SimularCredito(ctx, creditRequest)
+// 2. A regra de negócio é agnóstica à implementação
+func (s *CreditService) SolicitarCredito(...) {
+    // Pode ser um Mock, pode ser HTTP real, o Core não se importa!
+    simulacao, _ := s.gov.BNDES().SimularCredito(ctx, creditRequest)
+}
 ```
 
 **Para integrar de verdade no futuro:**
-Basta criar novas implementações mantendo as **mesmas interfaces**:
+Basta criar novas implementações mantendo as **mesmas interfaces** e trocá-las na injeção de dependência:
+
 ```go
 type HTTPReceitaFederalRepository struct { ... }
-func (r *HTTPReceitaFederalRepository) ConsultarCNPJ(...) { 
-    // Chamada HTTP real para API da Receita Federal
+
+func (r *HTTPReceitaFederalRepository) ConsultarCNPJ(...) {
+    // Chamada HTTP real para a API da Receita Federal
 }
 ```
-
-Sem mudar uma linha do código que usa as integrações! (Princípio OCP)
+Sem mudar uma linha de código do Core Lume! (Princípio OCP).
 
 ---
 
@@ -177,39 +143,17 @@ Sem mudar uma linha do código que usa as integrações! (Princípio OCP)
 
 | Camada | Tecnologia | Justificativa |
 |--------|------------|---------------|
-| Backend | Go 1.22+ | Performance, concorrência, binário leve |
-| Database | SQLite3 | Isolamento por tenant (Soberania) |
-| Numerics | int64 (centavos) | Precisão financeira exata |
-| Frontend | HTMX + Tailwind CSS | PWA mobile-first pedagógica |
-| Architecture | Clean Arch + DDD | Domínio independente de frameworks |
-| Hash | SHA256 | Auditoria CADSOL |
-| Documents | Markdown | Atas de Assembleia |
-
----
-
-## 📚 Referências Legais e Normativas
-
-### Legislação
-- **Lei nº 15.068/2024** (Lei Paul Singer) - Marco Legal da Economia Solidária
-- **Constituição Federal** - Artigos 3º e 4º (Dignidade da pessoa humana, trabalho)
-- **CLT** - Artigos 442-A a 442-O (Cooperativas)
-
-### Normas Contábeis
-- **ITG 2002** (CFC) - NBC T 19.51 - Contabilidade para Entidades sem Finalidade de Lucro
-- **NBC TG 1000** - Contabilidade para Pequenas e Médias Empresas
-
-### Registros Públicos
-- **CADSOL** - Cadastro Nacional de Economia Solidária (MTE)
-- **DCSOL** - Declaração de Economia Solidária
-
-### Infraestrutura
-- **Serpro** - Infraestrutura de nuvem soberana do governo federal
+| Backend / Motor | Go 1.22+ | Performance, concorrência nativa, binário estático único |
+| Banco de Dados | SQLite3 | Isolamento físico por Tenant (Soberania do Dado) |
+| Frontend (Trabalhador) | HTMX + Tailwind | PWA leve, foco no comportamento "Offline-first" |
+| Frontend (Contador) | Vue/React ou HTMX | Visão agregada Multi-tenant para exportações fiscais |
+| Tipagem Financeira | `int64` | Erros de arredondamento (`float`) são terminantemente proibidos |
 
 ---
 
 ## 🔗 Links Rápidos
 
-- [Código Fonte](../modules/)
+- [Código Fonte (Módulos)](../modules/)
 - [Dados de Exemplo](../data/)
 - [Módulo de Integrações](../modules/integrations/)
 
@@ -217,17 +161,15 @@ Sem mudar uma linha do código que usa as integrações! (Princípio OCP)
 
 ## 📊 Métricas do Projeto
 
-| Métrica | Valor |
-|---------|-------|
-| Total de Módulos | 11 |
-| Total de Testes | 120+/120 (100%) |
-| Linhas de Código | ~18.000 |
-| Interfaces Repository | 8 |
-| Integrações Gov | 8 (mock) |
-| Testes E2E | 3 |
-| Documentação | 100% atualizada |
+| Métrica | Valor Atualizado |
+|---------|------------------|
+| Total de Módulos | 12 |
+| Total de Testes | 120/120 (100% Pass) |
+| Cobertura de Código | > 80% |
+| Interfaces de Repositório | 9 |
+| Integrações Gov (Mocks) | 8 |
+| Testes E2E Completos | Jornada Anual BDD (1) |
+| Documentação | 100% Sincronizada |
+```
 
----
-
-*Esta documentação segue o padrão PKM (Personal Knowledge Management) de alta integridade.*
-*Última atualização: Session 009 - DDD Refactoring & Integrações*
+***
