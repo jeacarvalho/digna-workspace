@@ -147,7 +147,7 @@ Mover para variáveis de ambiente:
 **Exemplo:**
 ```bash
 # .env
-DIGNA_PORT=8080
+DIGNA_PORT=8088
 DIGNA_LOG_LEVEL=info
 DIGNA_DATA_DIR=/var/lib/digna
 DIGNA_SHUTDOWN_TIMEOUT=10s

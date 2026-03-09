@@ -81,6 +81,7 @@ func (api *SupplyAPIImpl) RegisterStockItem(ctx context.Context, req StockItemRe
 	item := &domain.StockItem{
 		Name:        req.Name,
 		Type:        domain.StockItemType(req.Type),
+		Unit:        domain.StockItemUnit(req.Unit),
 		Quantity:    req.Quantity,
 		MinQuantity: req.MinQuantity,
 		UnitCost:    req.UnitCost,
@@ -119,6 +120,7 @@ func (api *SupplyAPIImpl) GetStockItems(ctx context.Context, entityID string) ([
 			ID:          di.ID,
 			Name:        di.Name,
 			Type:        string(di.Type),
+			Unit:        string(di.Unit),
 			Quantity:    di.Quantity,
 			MinQuantity: di.MinQuantity,
 			UnitCost:    di.UnitCost,
@@ -142,6 +144,7 @@ func (api *SupplyAPIImpl) GetStockItemsByType(ctx context.Context, entityID stri
 			ID:          di.ID,
 			Name:        di.Name,
 			Type:        string(di.Type),
+			Unit:        string(di.Unit),
 			Quantity:    di.Quantity,
 			MinQuantity: di.MinQuantity,
 			UnitCost:    di.UnitCost,

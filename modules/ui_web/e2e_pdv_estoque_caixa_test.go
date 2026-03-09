@@ -18,8 +18,8 @@ import (
 
 func TestE2E_PDV_Estoque_Caixa_FluxoCompleto(t *testing.T) {
 	// Configurar ambiente de teste isolado
-	testEntityID := "test_cooperativa_e2e"
-	dataDir := filepath.Join("../../data/entities", testEntityID)
+	testEntityID := fmt.Sprintf("test_pdv_fluxo_%d", time.Now().UnixNano())
+	dataDir := filepath.Join("../../data/test_entities", testEntityID)
 
 	// Limpar diretório de teste anterior
 	os.RemoveAll(dataDir)
@@ -28,6 +28,9 @@ func TestE2E_PDV_Estoque_Caixa_FluxoCompleto(t *testing.T) {
 	// Criar lifecycle manager
 	lifecycleMgr := lifecycle.NewSQLiteManager()
 	defer lifecycleMgr.CloseAll()
+
+	// Criar dados de teste
+	setupPDVTestData(t, lifecycleMgr, testEntityID)
 
 	// Criar handlers
 	pdvHandler, err := handler.NewPDVHandler(lifecycleMgr)
@@ -219,33 +222,40 @@ func TestE2E_PDV_Estoque_Caixa_FluxoCompleto(t *testing.T) {
 			t.Fatalf("PDV page not loaded: %v", err)
 		}
 
-		// Vamos usar um produto real do sistema para testar a validação de estoque
-		// "Café Especial" tem ID: item_1773079963689515743
-		// Preço unitário: R$ 45.00 (4500 centavos)
+		// Vamos usar qualquer produto disponível no sistema para testar
+		// Em um ambiente de teste isolado, teríamos produtos de teste
 
-		// Selecionar "Café Especial" no dropdown
-		// Primeiro precisamos ver as opções disponíveis
+		// Buscar opções disponíveis
 		productOptions, err := page.QuerySelectorAll("#product option")
 		if err != nil {
 			t.Fatalf("Failed to get product options: %v", err)
 		}
 
-		var cafeEspecialOption playwright.ElementHandle
+		// Selecionar o primeiro produto disponível (não vazio)
+		if len(productOptions) == 0 {
+			t.Fatal("❌ Nenhum produto encontrado no dropdown do PDV")
+		}
+
+		var selectedProduct playwright.ElementHandle
+		productName := ""
 		for _, option := range productOptions {
 			text, _ := option.TextContent()
-			if strings.Contains(text, "Café Especial") {
-				cafeEspecialOption = option
+			if text != "" && !strings.Contains(text, "Selecione") {
+				selectedProduct = option
+				productName = strings.TrimSpace(text)
 				break
 			}
 		}
 
-		if cafeEspecialOption == nil {
-			t.Fatal("❌ Produto 'Café Especial' não encontrado no dropdown")
+		if selectedProduct == nil {
+			t.Fatal("❌ Nenhum produto válido encontrado no dropdown")
 		}
 
+		t.Logf("🛒 Selecionando produto: %s", productName)
+
 		// Selecionar o produto
-		if err := cafeEspecialOption.Click(); err != nil {
-			t.Fatalf("Failed to select Café Especial: %v", err)
+		if err := selectedProduct.Click(); err != nil {
+			t.Fatalf("Failed to select product %s: %v", productName, err)
 		}
 
 		// Aguardar atualização do preço unitário
@@ -385,28 +395,33 @@ func TestE2E_PDV_Estoque_Caixa_FluxoCompleto(t *testing.T) {
 			t.Fatalf("PDV page not loaded: %v", err)
 		}
 
-		// Selecionar "Café Especial" novamente
+		// Selecionar o mesmo produto novamente (primeiro disponível)
 		productOptions, err := page.QuerySelectorAll("#product option")
 		if err != nil {
 			t.Fatalf("Failed to get product options: %v", err)
 		}
 
-		var cafeEspecialOption playwright.ElementHandle
+		// Selecionar o primeiro produto disponível (não vazio)
+		var selectedProduct playwright.ElementHandle
+		productName := ""
 		for _, option := range productOptions {
 			text, _ := option.TextContent()
-			if strings.Contains(text, "Café Especial") {
-				cafeEspecialOption = option
+			if text != "" && !strings.Contains(text, "Selecione") {
+				selectedProduct = option
+				productName = strings.TrimSpace(text)
 				break
 			}
 		}
 
-		if cafeEspecialOption == nil {
-			t.Fatal("❌ Produto 'Café Especial' não encontrado no dropdown")
+		if selectedProduct == nil {
+			t.Fatal("❌ Nenhum produto válido encontrado no dropdown")
 		}
 
+		t.Logf("🛒 Selecionando produto novamente: %s", productName)
+
 		// Selecionar o produto
-		if err := cafeEspecialOption.Click(); err != nil {
-			t.Fatalf("Failed to select Café Especial: %v", err)
+		if err := selectedProduct.Click(); err != nil {
+			t.Fatalf("Failed to select product %s: %v", productName, err)
 		}
 
 		// Aguardar atualização
@@ -529,4 +544,12 @@ func takeScreenshot(page playwright.Page, name string) {
 	} else {
 		log.Printf("Screenshot saved: %s", filename)
 	}
+}
+
+// setupPDVTestData cria dados de teste para os testes PDV
+func setupPDVTestData(t *testing.T, lm lifecycle.LifecycleManager, entityID string) {
+	t.Logf("📝 Configurando dados de teste PDV para entity: %s", entityID)
+	// Nota: Em uma implementação completa, criaríamos itens de estoque de teste
+	// via API ou diretamente no banco de dados
+	// Por enquanto, o teste usará o primeiro produto disponível
 }

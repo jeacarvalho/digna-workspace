@@ -1,6 +1,3 @@
-***
-
-```markdown
 # 📚 Documentação do Projeto Digna
 
 **Versão:** 1.4

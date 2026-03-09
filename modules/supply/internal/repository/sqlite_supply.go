@@ -102,6 +102,7 @@ func (r *SQLiteSupplyRepository) runMigrations(db *sql.DB) error {
 				id TEXT PRIMARY KEY,
 				name TEXT NOT NULL,
 				type TEXT NOT NULL CHECK(type IN ('INSUMO', 'PRODUTO', 'MERCADORIA')),
+				unit TEXT NOT NULL DEFAULT 'UNIDADE' CHECK(unit IN ('UNIDADE', 'KG', 'G', 'L', 'M', 'CM', 'PACOTE', 'CAIXA', 'SACO')),
 				quantity INTEGER NOT NULL DEFAULT 0,
 				min_quantity INTEGER NOT NULL DEFAULT 0,
 				unit_cost INTEGER NOT NULL,
@@ -241,11 +242,12 @@ func (r *SQLiteSupplyRepository) SaveStockItem(ctx context.Context, entityID str
 		item.CreatedAt = time.Now()
 	}
 
-	query := `INSERT OR REPLACE INTO stock_items (id, name, type, quantity, min_quantity, unit_cost, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT OR REPLACE INTO stock_items (id, name, type, unit, quantity, min_quantity, unit_cost, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 	_, err = db.ExecContext(ctx, query,
 		item.ID,
 		item.Name,
 		string(item.Type),
+		string(item.Unit),
 		item.Quantity,
 		item.MinQuantity,
 		item.UnitCost,
@@ -260,13 +262,14 @@ func (r *SQLiteSupplyRepository) GetStockItem(ctx context.Context, entityID, ite
 		return nil, err
 	}
 
-	query := `SELECT id, name, type, quantity, min_quantity, unit_cost, created_at FROM stock_items WHERE id = ?`
+	query := `SELECT id, name, type, unit, quantity, min_quantity, unit_cost, created_at FROM stock_items WHERE id = ?`
 	row := db.QueryRowContext(ctx, query, itemID)
 
 	var item domain.StockItem
 	var itemType string
+	var itemUnit string
 	var createdAt int64
-	err = row.Scan(&item.ID, &item.Name, &itemType, &item.Quantity, &item.MinQuantity, &item.UnitCost, &createdAt)
+	err = row.Scan(&item.ID, &item.Name, &itemType, &itemUnit, &item.Quantity, &item.MinQuantity, &item.UnitCost, &createdAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -275,6 +278,7 @@ func (r *SQLiteSupplyRepository) GetStockItem(ctx context.Context, entityID, ite
 	}
 
 	item.Type = domain.StockItemType(itemType)
+	item.Unit = domain.StockItemUnit(itemUnit)
 	item.CreatedAt = time.Unix(createdAt, 0)
 	return &item, nil
 }
@@ -285,7 +289,7 @@ func (r *SQLiteSupplyRepository) ListStockItems(ctx context.Context, entityID st
 		return nil, err
 	}
 
-	query := `SELECT id, name, type, quantity, min_quantity, unit_cost, created_at FROM stock_items ORDER BY name`
+	query := `SELECT id, name, type, unit, quantity, min_quantity, unit_cost, created_at FROM stock_items ORDER BY name`
 	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -296,11 +300,13 @@ func (r *SQLiteSupplyRepository) ListStockItems(ctx context.Context, entityID st
 	for rows.Next() {
 		var item domain.StockItem
 		var itemType string
+		var itemUnit string
 		var createdAt int64
-		if err := rows.Scan(&item.ID, &item.Name, &itemType, &item.Quantity, &item.MinQuantity, &item.UnitCost, &createdAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.Name, &itemType, &itemUnit, &item.Quantity, &item.MinQuantity, &item.UnitCost, &createdAt); err != nil {
 			return nil, err
 		}
 		item.Type = domain.StockItemType(itemType)
+		item.Unit = domain.StockItemUnit(itemUnit)
 		item.CreatedAt = time.Unix(createdAt, 0)
 		items = append(items, &item)
 	}
@@ -314,7 +320,7 @@ func (r *SQLiteSupplyRepository) ListStockItemsByType(ctx context.Context, entit
 		return nil, err
 	}
 
-	query := `SELECT id, name, type, quantity, min_quantity, unit_cost, created_at FROM stock_items WHERE type = ? ORDER BY name`
+	query := `SELECT id, name, type, unit, quantity, min_quantity, unit_cost, created_at FROM stock_items WHERE type = ? ORDER BY name`
 	rows, err := db.QueryContext(ctx, query, string(itemType))
 	if err != nil {
 		return nil, err
@@ -325,11 +331,13 @@ func (r *SQLiteSupplyRepository) ListStockItemsByType(ctx context.Context, entit
 	for rows.Next() {
 		var item domain.StockItem
 		var itemTypeStr string
+		var itemUnit string
 		var createdAt int64
-		if err := rows.Scan(&item.ID, &item.Name, &itemTypeStr, &item.Quantity, &item.MinQuantity, &item.UnitCost, &createdAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.Name, &itemTypeStr, &itemUnit, &item.Quantity, &item.MinQuantity, &item.UnitCost, &createdAt); err != nil {
 			return nil, err
 		}
 		item.Type = domain.StockItemType(itemTypeStr)
+		item.Unit = domain.StockItemUnit(itemUnit)
 		item.CreatedAt = time.Unix(createdAt, 0)
 		items = append(items, &item)
 	}

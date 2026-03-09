@@ -10,10 +10,25 @@ const (
 	StockItemTypeMerchandise StockItemType = "MERCADORIA" // Produto para revenda
 )
 
+type StockItemUnit string
+
+const (
+	StockItemUnitUnit       StockItemUnit = "UNIDADE" // Unidades (peças, caixas, etc)
+	StockItemUnitKilogram   StockItemUnit = "KG"      // Quilogramas
+	StockItemUnitGram       StockItemUnit = "G"       // Gramas
+	StockItemUnitLiter      StockItemUnit = "L"       // Litros
+	StockItemUnitMeter      StockItemUnit = "M"       // Metros
+	StockItemUnitCentimeter StockItemUnit = "CM"      // Centímetros
+	StockItemUnitPackage    StockItemUnit = "PACOTE"  // Pacotes
+	StockItemUnitBox        StockItemUnit = "CAIXA"   // Caixas
+	StockItemUnitBag        StockItemUnit = "SACO"    // Sacos
+)
+
 type StockItem struct {
 	ID          string
 	Name        string
 	Type        StockItemType // INSUMO|PRODUTO|MERCADORIA
+	Unit        StockItemUnit // UNIDADE|KG|G|L|M|CM|PACOTE|CAIXA|SACO
 	Quantity    int           // Quantidade atual em estoque
 	MinQuantity int           // Quantidade mínima para alerta
 	UnitCost    int64         // Custo unitário em centavos (int64)
@@ -33,7 +48,34 @@ func (si *StockItem) Validate() error {
 	if si.Type != StockItemTypeRawMaterial && si.Type != StockItemTypeProduct && si.Type != StockItemTypeMerchandise {
 		return ErrInvalidStockItemType
 	}
+	// Validar unidade
+	if si.Unit == "" {
+		si.Unit = StockItemUnitUnit // Default para UNIDADE
+	}
+	if !si.isValidUnit(si.Unit) {
+		return ErrInvalidStockItemUnit
+	}
 	return nil
+}
+
+func (si *StockItem) isValidUnit(unit StockItemUnit) bool {
+	validUnits := []StockItemUnit{
+		StockItemUnitUnit,
+		StockItemUnitKilogram,
+		StockItemUnitGram,
+		StockItemUnitLiter,
+		StockItemUnitMeter,
+		StockItemUnitCentimeter,
+		StockItemUnitPackage,
+		StockItemUnitBox,
+		StockItemUnitBag,
+	}
+	for _, validUnit := range validUnits {
+		if unit == validUnit {
+			return true
+		}
+	}
+	return false
 }
 
 func (si *StockItem) UpdateQuantity(delta int) error {
@@ -59,6 +101,7 @@ var (
 	ErrInvalidStockItemQuantity = newDomainError("quantidade do item de estoque inválida")
 	ErrInvalidStockItemUnitCost = newDomainError("custo unitário do item de estoque inválido")
 	ErrInvalidStockItemType     = newDomainError("tipo do item de estoque inválido")
+	ErrInvalidStockItemUnit     = newDomainError("unidade do item de estoque inválida")
 	ErrInsufficientStock        = newDomainError("estoque insuficiente")
 )
 

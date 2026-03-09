@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -111,7 +112,7 @@ func (h *CashHandler) CashPage(w http.ResponseWriter, r *http.Request) {
 		"EntityID":   entityID,
 		"Balance":    balance,
 		"Entries":    entries,
-		"Categories": []string{"SALES", "EXPENSES", "SUPPLIERS", "BANK", "OTHER_INCOME", "OTHER_EXPENSE"},
+		"Categories": []string{"VENDAS", "DESPESAS", "FORNECEDORES", "BANCO", "OUTRAS ENTRADAS", "OUTRAS SAÍDAS"},
 	}
 
 	if err := h.tmpl.ExecuteTemplate(w, "cash.html", data); err != nil {
@@ -236,7 +237,7 @@ func (h *CashHandler) getEntriesFromDatabase(entityID string, limit int) []CashE
 		return []CashEntry{}
 	}
 
-	// Buscar vendas (entradas de receita)
+	// Buscar movimentos de caixa (vendas e compras)
 	query := `
 		SELECT 
 			e.id,
@@ -244,12 +245,25 @@ func (h *CashHandler) getEntriesFromDatabase(entityID string, limit int) []CashE
 			e.description,
 			e.reference,
 			p.amount,
-			a.name as account_name
+			a.name as account_name,
+			p.direction,
+			a.code
 		FROM entries e
 		JOIN postings p ON e.id = p.entry_id
 		JOIN accounts a ON p.account_id = a.id
-		WHERE a.code LIKE '3.%' AND p.direction = 'CREDIT'
-		AND e.description LIKE 'Venda PDV:%'
+		WHERE (
+			-- Vendas: crédito em receitas (3.x)
+			(a.code LIKE '3.%' AND p.direction = 'CREDIT' AND e.description LIKE 'Venda PDV:%')
+			OR
+			-- Compras à vista: débito em caixa (1)
+			(a.code = '1' AND p.direction = 'DEBIT' AND e.description LIKE 'Compra %')
+			OR
+			-- Saídas de caixa manualmente registradas
+			(a.code = '1' AND p.direction = 'DEBIT' AND e.description NOT LIKE 'Venda PDV:%' AND e.description NOT LIKE 'Compra %')
+			OR
+			-- Entradas de caixa manualmente registradas  
+			(a.code = '1' AND p.direction = 'CREDIT' AND e.description NOT LIKE 'Venda PDV:%' AND e.description NOT LIKE 'Compra %')
+		)
 		ORDER BY e.entry_date DESC
 		LIMIT ?
 	`
@@ -269,21 +283,48 @@ func (h *CashHandler) getEntriesFromDatabase(entityID string, limit int) []CashE
 		var entryDate int64
 		var description, reference string
 		var amount int64
-		var accountName string
+		var accountName, direction, accountCode string
 
-		err := rows.Scan(&id, &entryDate, &description, &reference, &amount, &accountName)
+		err := rows.Scan(&id, &entryDate, &description, &reference, &amount, &accountName, &direction, &accountCode)
 		if err != nil {
 			slog.Error("CashHandler - Failed to scan row", "error", err, "row_count", rowCount)
 			continue
 		}
 
+		// Determinar tipo baseado na direção e conta
+		entryType := "CREDIT"
+		category := "OUTROS"
+
+		// Lógica para determinar tipo e categoria
+		if strings.Contains(strings.ToUpper(description), "VENDA PDV") {
+			category = "VENDAS"
+			entryType = "CREDIT" // Vendas são entradas (crédito)
+		} else if strings.Contains(strings.ToUpper(description), "COMPRA") {
+			category = "COMPRAS"
+			// Compras à vista: débito em caixa = saída
+			if accountCode == "1" && direction == "DEBIT" {
+				entryType = "DEBIT" // Saída de caixa
+			} else if accountCode == "1" && direction == "CREDIT" {
+				entryType = "CREDIT" // Entrada de caixa (devolução?)
+			}
+		} else if accountCode == "1" {
+			// Movimentos manuais em caixa
+			if direction == "CREDIT" {
+				entryType = "CREDIT"
+				category = "ENTRADA"
+			} else {
+				entryType = "DEBIT"
+				category = "SAÍDA"
+			}
+		}
+
 		entry := CashEntry{
 			ID:          id,
 			EntityID:    entityID,
-			Type:        "CREDIT", // Vendas são créditos (entradas)
+			Type:        entryType,
 			Amount:      amount,
 			Description: description,
-			Category:    "SALES",
+			Category:    category,
 			Date:        time.Unix(entryDate, 0),
 			CreatedAt:   time.Unix(entryDate, 0),
 		}

@@ -47,7 +47,7 @@ last_updated: 2026-03-09
 - **Testes:** 9/9 PASS
 
 ### Sprint 05: Interface Humana Dignidade ✅
-- Servidor HTTP porta 8080
+- Servidor HTTP porta 8088
 - PDV Screen (HTMX)
 - Social Clock e Dashboard
 - PWA (manifest + service worker)

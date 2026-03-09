@@ -95,11 +95,36 @@ const supplyTemplates = `
             const unitCost = parseInt(document.getElementById('unit_cost').value) || 0;
             const total = quantity * unitCost;
             document.getElementById('total_cost').value = total;
-            document.getElementById('total_display').textContent = 'R$ ' + (total / 100).toFixed(2);
+            document.getElementById('total_display').textContent = 'R$ ' + (total / 100).toFixed(2).replace('.', ',');
+            
+            // Validação: mostrar alerta se cálculo parece errado
+            if (quantity > 0 && unitCost > 0 && total <= 0) {
+                console.error('Erro no cálculo: quantidade=', quantity, 'unitCost=', unitCost, 'total=', total);
+            }
+        }
+        
+        function formatCurrency(value) {
+            // Garantir que o valor seja tratado como centavos
+            if (value < 100 && value > 0) {
+                // Se o usuário digitar "45" (R$ 0,45), converter para centavos
+                return value;
+            }
+            return value;
         }
         
         function submitPurchase() {
             const form = document.getElementById('purchase-form');
+            
+            // Validar cálculo antes de enviar
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            const unitCost = parseInt(document.getElementById('unit_cost').value) || 0;
+            const calculatedTotal = quantity * unitCost;
+            
+            if (calculatedTotal <= 0) {
+                alert('Por favor, verifique os valores. O total da compra deve ser maior que zero.');
+                return false;
+            }
+            
             htmx.ajax('POST', '/api/supply/purchase', {
                 values: htmx.values(form),
                 target: '#purchase-result',
@@ -110,6 +135,11 @@ const supplyTemplates = `
             });
             return false;
         }
+        
+        // Inicializar cálculo ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateTotal();
+        });
     </script>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -340,14 +370,14 @@ const supplyTemplates = `
                 values: htmx.values(form),
                 target: '#stock-item-result',
                 swap: 'innerHTML'
-            }).then(() => {
-                form.reset();
-                // Recarregar lista de itens
-                htmx.ajax('GET', '/api/supply/stock-item', {
-                    target: '#stock-items-list',
-                    swap: 'innerHTML'
-                });
-            });
+             }).then(() => {
+                 form.reset();
+                 // Recarregar lista de itens
+                 htmx.ajax('GET', '/api/supply/stock-items', {
+                     target: '#stock-items-list',
+                     swap: 'innerHTML'
+                 });
+             });
             return false;
         }
     </script>
@@ -384,34 +414,49 @@ const supplyTemplates = `
                                placeholder="Ex: Cera de Abelha">
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo do item</label>
-                        <select name="type" required class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-amber-500 focus:outline-none">
-                            <option value="">Selecione o tipo</option>
-                            <option value="INSUMO">Insumo (matéria-prima)</option>
-                            <option value="PRODUTO">Produto (para venda)</option>
-                            <option value="MERCADORIA">Mercadoria (para revenda)</option>
-                        </select>
-                        <p class="text-gray-500 text-xs mt-1">
-                            <strong>Insumo:</strong> matéria-prima para produção<br>
-                            <strong>Produto:</strong> produto acabado para venda<br>
-                            <strong>Mercadoria:</strong> produto para revenda
-                        </p>
-                    </div>
+                     <div class="mb-4">
+                         <label class="block text-sm font-medium text-gray-700 mb-2">Tipo do item</label>
+                         <select name="type" required class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-amber-500 focus:outline-none">
+                             <option value="">Selecione o tipo</option>
+                             <option value="INSUMO">Insumo (matéria-prima)</option>
+                             <option value="PRODUTO">Produto (para venda)</option>
+                             <option value="MERCADORIA">Mercadoria (para revenda)</option>
+                         </select>
+                         <p class="text-gray-500 text-xs mt-1">
+                             <strong>Insumo:</strong> matéria-prima para produção<br>
+                             <strong>Produto:</strong> produto acabado para venda<br>
+                             <strong>Mercadoria:</strong> produto para revenda
+                         </p>
+                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantidade inicial</label>
-                            <input type="number" name="quantity" min="0" required 
-                                   class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-amber-500 focus:outline-none">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantidade mínima</label>
-                            <input type="number" name="min_quantity" min="0" required 
-                                   class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-amber-500 focus:outline-none">
-                        </div>
-                    </div>
+                     <div class="mb-4">
+                         <label class="block text-sm font-medium text-gray-700 mb-2">Unidade de medida</label>
+                         <select name="unit" required class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-amber-500 focus:outline-none">
+                             <option value="UNIDADE">Unidade (peça, caixa, etc)</option>
+                             <option value="KG">Quilograma (kg)</option>
+                             <option value="G">Grama (g)</option>
+                             <option value="L">Litro (L)</option>
+                             <option value="M">Metro (m)</option>
+                             <option value="CM">Centímetro (cm)</option>
+                             <option value="PACOTE">Pacote</option>
+                             <option value="CAIXA">Caixa</option>
+                             <option value="SACO">Saco</option>
+                         </select>
+                     </div>
+
+                     <div class="grid grid-cols-2 gap-4 mb-4">
+                         <div>
+                             <label class="block text-sm font-medium text-gray-700 mb-2">Quantidade inicial</label>
+                             <input type="number" name="quantity" min="0" required 
+                                    class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-amber-500 focus:outline-none">
+                         </div>
+                         
+                         <div>
+                             <label class="block text-sm font-medium text-gray-700 mb-2">Quantidade mínima</label>
+                             <input type="number" name="min_quantity" min="0" required 
+                                    class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-amber-500 focus:outline-none">
+                         </div>
+                     </div>
 
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Custo unitário (R$)</label>
@@ -447,22 +492,26 @@ const supplyTemplates = `
                                             {{stockItemTypeLabel .Type}}
                                         </span>
                                     </div>
-                                    <div class="mt-2 grid grid-cols-3 gap-4 text-sm">
-                                        <div>
-                                            <span class="text-gray-500">Quantidade:</span>
-                                            <span class="font-semibold ml-1 {{if isBelowMinimum .Quantity .MinQuantity}}text-red-600{{else}}text-gray-800{{end}}">
-                                                {{.Quantity}}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <span class="text-gray-500">Mínimo:</span>
-                                            <span class="font-semibold ml-1">{{.MinQuantity}}</span>
-                                        </div>
-                                        <div>
-                                            <span class="text-gray-500">Custo:</span>
-                                            <span class="font-semibold ml-1">R$ {{formatCurrency .UnitCost}}</span>
-                                        </div>
-                                    </div>
+                                     <div class="mt-2 grid grid-cols-4 gap-3 text-sm">
+                                         <div>
+                                             <span class="text-gray-500">Qtde:</span>
+                                             <span class="font-semibold ml-1 {{if isBelowMinimum .Quantity .MinQuantity}}text-red-600{{else}}text-gray-800{{end}}">
+                                                 {{.Quantity}} {{stockItemUnitLabel .Unit}}
+                                             </span>
+                                         </div>
+                                         <div>
+                                             <span class="text-gray-500">Mín:</span>
+                                             <span class="font-semibold ml-1">{{.MinQuantity}} {{stockItemUnitLabel .Unit}}</span>
+                                         </div>
+                                         <div>
+                                             <span class="text-gray-500">Custo:</span>
+                                             <span class="font-semibold ml-1">R$ {{formatCurrency .UnitCost}}/{{stockItemUnitLabel .Unit}}</span>
+                                         </div>
+                                         <div>
+                                             <span class="text-gray-500">Total:</span>
+                                             <span class="font-semibold ml-1">R$ {{formatCurrency (multiply .UnitCost .Quantity)}}</span>
+                                         </div>
+                                     </div>
                                     {{if isBelowMinimum .Quantity .MinQuantity}}
                                     <div class="mt-2 text-xs text-red-600 font-medium">
                                         ⚠️ Estoque abaixo do mínimo

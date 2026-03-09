@@ -43,6 +43,7 @@ type StockItem struct {
 	ID          string
 	Name        string
 	Type        string // "INSUMO", "PRODUTO", "MERCADORIA"
+	Unit        string // "UNIDADE", "KG", "G", "L", "M", "CM", "PACOTE", "CAIXA", "SACO"
 	Quantity    int
 	MinQuantity int
 	UnitCost    int64
@@ -80,6 +81,7 @@ type StockItemRequest struct {
 	EntityID    string
 	Name        string
 	Type        string // "INSUMO", "PRODUTO", "MERCADORIA"
+	Unit        string // "UNIDADE", "KG", "G", "L", "M", "CM", "PACOTE", "CAIXA", "SACO"
 	Quantity    int
 	MinQuantity int
 	UnitCost    int64

@@ -53,9 +53,9 @@ func TestIntegracao_Estoque_PDV_Caixa(t *testing.T) {
 		t.Log("📊 Estado inicial do sistema:")
 
 		// Verificar caixa vazio
-		resp, err := client.Get(server.URL + "/cash/entries")
+		resp, err := client.Get(server.URL + "/cash")
 		if err != nil {
-			t.Fatalf("Failed to get cash entries: %v", err)
+			t.Fatalf("Failed to get cash page: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -131,9 +131,9 @@ func TestIntegracao_Estoque_PDV_Caixa(t *testing.T) {
 		// Aguardar um pouco para processamento
 		time.Sleep(500 * time.Millisecond)
 
-		resp, err := client.Get(server.URL + "/cash/entries")
+		resp, err := client.Get(server.URL + "/cash")
 		if err != nil {
-			t.Fatalf("Failed to get cash entries: %v", err)
+			t.Fatalf("Failed to get cash page: %v", err)
 		}
 		defer resp.Body.Close()
 
