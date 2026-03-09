@@ -19,6 +19,7 @@ type CashHandler struct {
 
 func NewCashHandler(lm lifecycle.LifecycleManager) (*CashHandler, error) {
 	funcMap := template.FuncMap{
+		"divide": divide,
 		"formatCurrency": func(amount int64) string {
 			return fmt.Sprintf("R$ %.2f", float64(amount)/100)
 		},

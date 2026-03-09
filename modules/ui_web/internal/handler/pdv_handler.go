@@ -8,12 +8,14 @@ import (
 	"time"
 
 	"github.com/providentia/digna/lifecycle/pkg/lifecycle"
+	"github.com/providentia/digna/pdv_ui/pkg/pricing"
 	"github.com/providentia/digna/pdv_ui/usecase"
 )
 
 type PDVHandler struct {
-	lifecycleManager lifecycle.LifecycleManager
-	tmpl             *template.Template
+	lifecycleManager  lifecycle.LifecycleManager
+	tmpl              *template.Template
+	pricingCalculator *pricing.PricingCalculator
 }
 
 func NewPDVHandler(lm lifecycle.LifecycleManager) (*PDVHandler, error) {
@@ -37,9 +39,16 @@ func NewPDVHandler(lm lifecycle.LifecycleManager) (*PDVHandler, error) {
 		return nil, fmt.Errorf("failed to parse templates: %w", err)
 	}
 
+	// Criar calculadora de preços
+	pricingCalc, err := pricing.NewPricingCalculator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pricing calculator: %w", err)
+	}
+
 	return &PDVHandler{
-		lifecycleManager: lm,
-		tmpl:             tmpl,
+		lifecycleManager:  lm,
+		tmpl:              tmpl,
+		pricingCalculator: pricingCalc,
 	}, nil
 }
 
@@ -47,6 +56,9 @@ func (h *PDVHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/pdv", h.PDVPage)
 	mux.HandleFunc("/api/sale", h.RecordSale)
 	mux.HandleFunc("/api/balance", h.GetBalance)
+
+	// Registrar rotas da calculadora de preços
+	h.pricingCalculator.RegisterRoutes(mux)
 }
 
 func (h *PDVHandler) PDVPage(w http.ResponseWriter, r *http.Request) {

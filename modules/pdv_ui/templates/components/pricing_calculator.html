@@ -1,0 +1,114 @@
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+	<h3 class="text-xl font-semibold text-gray-800 mb-4">Calculadora de Preço Justo</h3>
+	
+	<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+		<div>
+			<label class="block text-sm font-medium text-gray-700 mb-2">
+				Custo do Material (R$)
+			</label>
+			<input type="number" 
+				   name="material_cost" 
+				   value="{{.MaterialCost}}"
+				   hx-get="/pdv/pricing/calculate" 
+				   hx-trigger="keyup changed delay:500ms"
+				   hx-target="#pricing-result"
+				   class="w-full border rounded px-3 py-2"
+				   placeholder="Ex: 1000 (R$ 10,00)">
+			<p class="text-xs text-gray-500 mt-1">Digite em centavos (R$ 10,00 = 1000)</p>
+		</div>
+		
+		<div>
+			<label class="block text-sm font-medium text-gray-700 mb-2">
+				Seu Tempo (minutos)
+			</label>
+			<input type="number" 
+				   name="labor_minutes" 
+				   value="{{.LaborMinutes}}"
+				   hx-get="/pdv/pricing/calculate" 
+				   hx-trigger="keyup changed delay:500ms"
+				   hx-target="#pricing-result"
+				   class="w-full border rounded px-3 py-2"
+				   placeholder="Ex: 60 (1 hora)">
+			<p class="text-xs text-gray-500 mt-1">Quantos minutos você gastou?</p>
+		</div>
+		
+		<div>
+			<label class="block text-sm font-medium text-gray-700 mb-2">
+				Valor da Hora (R$)
+			</label>
+			<input type="number" 
+				   name="labor_rate" 
+				   value="{{.LaborRate}}"
+				   hx-get="/pdv/pricing/calculate" 
+				   hx-trigger="keyup changed delay:500ms"
+				   hx-target="#pricing-result"
+				   class="w-full border rounded px-3 py-2"
+				   placeholder="Ex: 2000 (R$ 20,00/hora)">
+			<p class="text-xs text-gray-500 mt-1">Quanto vale 1 hora do seu trabalho?</p>
+		</div>
+	</div>
+
+	<div id="pricing-result">
+		{{if gt .SuggestedPrice 0}}
+		<div class="border-t pt-6">
+			<h4 class="text-lg font-medium text-gray-800 mb-4">Preço Sugerido: <span class="text-green-600">{{.SuggestedPriceFormatted}}</span></h4>
+			
+			<!-- Gráfico visual -->
+			<div class="mb-6">
+				<div class="flex h-8 rounded-lg overflow-hidden mb-2">
+					<div class="bg-blue-500" style="width: {{.MaterialPercentage}}%"></div>
+					<div class="bg-green-500" style="width: {{.LaborPercentage}}%"></div>
+					<div class="bg-yellow-500" style="width: {{.ReservePercentage}}%"></div>
+				</div>
+				
+				<div class="flex flex-wrap justify-between text-sm gap-2">
+					<div class="flex items-center">
+						<div class="w-3 h-3 bg-blue-500 rounded mr-2"></div>
+						<span>Material: {{.MaterialCostFormatted}}</span>
+					</div>
+					<div class="flex items-center">
+						<div class="w-3 h-3 bg-green-500 rounded mr-2"></div>
+						<span>Seu Trabalho: {{.LaborValueFormatted}}</span>
+					</div>
+					<div class="flex items-center">
+						<div class="w-3 h-3 bg-yellow-500 rounded mr-2"></div>
+						<span>Fundo da Cooperativa: {{.FatesReserveFormatted}}</span>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Detalhamento -->
+			<div class="bg-gray-50 rounded p-4">
+				<h5 class="font-medium text-gray-700 mb-2">Como chegamos nesse valor:</h5>
+				<ul class="space-y-1 text-sm text-gray-600">
+					<li>• Custo do material: <span class="font-medium">{{.MaterialCostFormatted}}</span></li>
+					<li>• Valor do seu trabalho ({{.LaborMinutes}} minutos × {{.LaborRateFormatted}}/hora): <span class="font-medium">{{.LaborValueFormatted}}</span></li>
+					<li>• Contribuição para o fundo da cooperativa (5%): <span class="font-medium">{{.FatesReserveFormatted}}</span></li>
+					<li class="pt-2 border-t font-medium">= Preço justo sugerido: <span class="text-green-600">{{.SuggestedPriceFormatted}}</span></li>
+				</ul>
+			</div>
+			
+			<div class="mt-4 p-3 bg-blue-50 rounded border border-blue-100">
+				<p class="text-sm text-blue-800">
+					<strong>💡 Dica importante:</strong> Este preço garante que:
+				</p>
+				<ul class="text-sm text-blue-700 mt-1 space-y-1">
+					<li>• Seu trabalho seja valorizado corretamente</li>
+					<li>• Você cubra todos os custos do material</li>
+					<li>• Sua cooperativa tenha recursos para crescer e se fortalecer</li>
+				</ul>
+			</div>
+		</div>
+		{{else}}
+		<div class="text-center py-8 text-gray-500">
+			<div class="mb-4">
+				<svg class="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+				</svg>
+			</div>
+			<p class="text-lg">Preencha os campos acima para calcular o preço justo do seu produto.</p>
+			<p class="text-sm mt-2">💡 Lembre-se: seu tempo e trabalho têm valor!</p>
+		</div>
+		{{end}}
+	</div>
+</div>

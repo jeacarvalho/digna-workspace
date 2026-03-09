@@ -95,8 +95,13 @@
             </button>
         </div>
 
-        <div class="text-center text-gray-500 text-sm">
+        <div class="text-center text-gray-500 text-sm mb-6">
             Use os botões para inserir o valor da venda
+        </div>
+
+        <!-- Calculadora de Preço Justo -->
+        <div id="pricing-calculator-container" hx-get="/pdv/pricing/calculate" hx-trigger="load">
+            <!-- O conteúdo será carregado dinamicamente via HTMX -->
         </div>
     </main>
 
