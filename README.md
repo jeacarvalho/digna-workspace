@@ -149,12 +149,18 @@ A documentação segue o padrão PKM (Personal Knowledge Management) de alta int
 
 ```text
 docs/
-├── 01_project/      # Visão, Escopo, Stakeholders, Riscos
-├── 02_product/      # Requisitos, Modelos de Domínio, Algoritmos
-├── 03_architecture/ # Arquitetura Técnica, Protocolos, Melhorias, ADRs
-├── 04_governance/   # Fundação, PMC, Regras de Contribuição, Licença
-├── 05_ai/           # Constituição de IA, Agentes, Padrões de Sessão
-└── 06_roadmap/      # Estratégia, Roadmap, Backlog, Status
+├── 01_project/              # Visão, Escopo, Stakeholders, Riscos
+├── 02_product/              # Requisitos, Modelos de Domínio, Algoritmos
+├── 03_architecture/         # Arquitetura Técnica, Protocolos, Melhorias, ADRs
+├── 04_governance/           # Fundação, PMC, Regras de Contribuição, Licença
+├── 05_ai/                   # Constituição de IA, Agentes, Padrões de Sessão
+├── 06_roadmap/              # Estratégia, Roadmap, Backlog, Status
+│   └── sprints/             # Documentação histórica de sprints
+├── 07_testing/              # Estratégia de testes, padrões, scripts
+├── 08_references/           # Referências externas e legais
+│   ├── external/            # Documentos de orientadores externos
+│   └── legal/               # Legislação sobre economia solidária
+└── Providentia Foundation.md # Documento fundacional completo
 ```
 
 ### **Links Rápidos**
