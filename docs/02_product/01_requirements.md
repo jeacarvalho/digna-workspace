@@ -3,8 +3,8 @@
 ```markdown
 #### title: Requisitos do Projeto Digna
 status: implemented
-version: 1.3
-last_updated: 2026-03-08
+version: 1.4
+last_updated: 2026-03-09
 
 ### Requisitos - Projeto Digna
 **Referência Legal:** Lei nº 15.068/2024 (Lei Paul Singer) / ITG 2002 (CFC)
@@ -57,6 +57,24 @@ last_updated: 2026-03-08
 **Regra de Negócio:**
 * Ofertas entre entidades registradas mantendo o isolamento dos dados.
 **Prioridade:** Média
+
+##### RF-07: Gestão de Compras (Contabilidade Invisível) [NOVO]
+**Descrição:** Registro simplificado de compras de materiais com contabilidade automática em segundo plano.
+**Regra de Negócio:**
+* Usuário informa apenas "Comprei X de Y por Z reais" - sistema cuida da contabilidade
+* Geração automática de partidas dobradas: Débito em Estoque/Despesa, Crédito em Caixa/Fornecedores
+* Categorização de itens: INSUMO (matéria-prima), PRODUTO (acabado), MERCADORIA (revenda)
+* Pagamento à vista (Caixa) ou a prazo (Fornecedores/Contas a Pagar)
+**Prioridade:** Alta (Fase 3)
+
+##### RF-08: Controle de Estoque (Categorização Básica) [NOVO]
+**Descrição:** Gestão simplificada de estoque com diferenciação básica para interface e contabilidade.
+**Regra de Negócio:**
+* Interface PDV: mostrar apenas "Produto Acabado" na tela de venda
+* Contabilidade: comprar "Insumo" → despesa/estoque matéria-prima; saída "Produto" → receita de vendas
+* Quantidade mínima para alertas de reabastecimento
+* Atualização automática ao registrar compras
+**Prioridade:** Alta (Fase 3)
 
 ##### RF-11: Painel do Contador Social e Exportação Fiscal [NOVO]
 **Descrição:** Interface web segregada (Multi-tenant) para contadores parceiros auditarem a conformidade e exportarem obrigações acessórias.
@@ -112,7 +130,7 @@ last_updated: 2026-03-08
 | Operação | Gatilho | Impacto no Ledger | Requisito |
 | ------ | ------ | ------ | ------ |
 | Venda no Balcão | PDV Submit | D: Ativo / C: Receita | RF-01 |
-| Registro de Compra | Entrada Mercadoria | D: Despesa / C: Fornecedor | RF-07 |
+| Registro de Compra | Entrada Mercadoria | D: Estoque / C: Caixa/Fornecedor | RF-07 |
 | Fim de Turno | Log Horas | Registro de Cota-Trabalho | RF-02 |
 | Fechamento Mês | Batch Job | Cálculo de Reservas (15%) + Gráfico Social | RF-03 |
 | Assembleia | Decisão | Hash em decisions_log | RF-04 |
@@ -127,6 +145,8 @@ last_updated: 2026-03-08
 * **UC-03:** Rateio de Sobras (Aprovação visual e democrática em Assembleia).
 * **UC-04:** Formalização Gradual (DREAM -> FORMALIZED via aprovação de atas).
 * **UC-05:** Auditoria e Exportação Contábil (Contador Social acessa painel multi-tenant, valida a ITG 2002 e exporta lote fiscal para a Receita/Sistemas terceiros).
+* **UC-06:** Registro de Compra (Usuário informa "comprei X de Y por Z", sistema cuida da contabilidade).
+* **UC-07:** Controle de Estoque (Gestão simplificada com categorização básica).
 
 --------------------------------------------------------------------------------
 

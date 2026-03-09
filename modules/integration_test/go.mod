@@ -3,6 +3,7 @@ module github.com/providentia/digna/integration_test
 go 1.25.4
 
 require (
+	digna/accountant_dashboard v0.0.0
 	github.com/providentia/digna/cash_flow v0.0.0
 	github.com/providentia/digna/core_lume v0.0.0
 	github.com/providentia/digna/legal_facade v0.0.0
@@ -15,6 +16,7 @@ require (
 require github.com/mattn/go-sqlite3 v1.14.34 // indirect
 
 replace (
+	digna/accountant_dashboard => ../accountant_dashboard
 	github.com/providentia/digna/cash_flow => ../cash_flow
 	github.com/providentia/digna/core_lume => ../core_lume
 	github.com/providentia/digna/legal_facade => ../legal_facade

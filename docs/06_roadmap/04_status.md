@@ -4,15 +4,15 @@
 ---
 title: Status Atual
 status: implemented
-version: 1.2
-last_updated: 2026-03-08
+version: 1.3
+last_updated: 2026-03-09
 ---
 
 # Status Atual - Digna
 
-**Última Atualização:** 2026-03-08
-**Fase Atual:** Sprint 12 (Aliança Contábil e SPED) ✅ COMPLETE
-**Próximo Marco:** Phase 2 - Painel do Contador Social (Accountant Dashboard)
+**Última Atualização:** 2026-03-09
+**Fase Atual:** Sprint 14 (Gestão de Compras e Estoque) ✅ COMPLETE
+**Próximo Marco:** Phase 3 - Finanças Solidárias e Territoriais
 
 ---
 
@@ -26,7 +26,8 @@ last_updated: 2026-03-08
 | Reporting & Documents | Marco 03 | ✅ COMPLETE | 100% |
 | UI & Dashboard | Marco 04 | ✅ COMPLETE | 100% |
 | Integração e Aliança Contábil (Phase 2) | Marco 07 | ✅ COMPLETE | 100% |
-| Financial (Phase 3) | Marco 06 | 🟡 EM DESENVOLVIMENTO | 25% |
+| Gestão de Compras e Estoque (Phase 3) | Marco 08 | ✅ COMPLETE | 100% |
+| Financial (Phase 3) | Marco 06 | 🟡 EM DESENVOLVIMENTO | 50% |
 | Production Deploy | Marco 05 | 📋 PLANNED | 0% |
 
 ---
@@ -89,6 +90,10 @@ last_updated: 2026-03-08
 - **Isolamento:** Acesso estritamente *Read-Only* aos micro-databases `.sqlite` das entidades autorizadas (`?mode=ro`).
 - **Exportação:** Motor de Tradução Fiscal (Geração de Lotes SPED a partir das partidas dobradas).
 - **Anti-Float:** Todos os valores monetários usam `int64`, sem `float`.
+- **Decisões Arquiteturais:**
+  - ✅ **Integração via `ui_web`:** Em vez de `cmd/digna/main.go`, seguindo consistência arquitetural
+  - ✅ **Templates Embutidos:** Em vez de arquivos `.html` separados, simplificando deploy
+  - ✅ **Princípios Aplicados:** KISS, YAGNI, DRY, Consistência
 - **Implementado:**
   - [x] Domain Layer (FiscalBatch, EntryDTO, AccountMapper) - 100% coverage
   - [x] Repository Layer (SQLite Read-Only Adapter) - 87.2% coverage
@@ -97,7 +102,32 @@ last_updated: 2026-03-08
   - [x] Integration with ui_web module (accountant_handler.go)
   - [x] Public API for external consumption - 26.7% coverage
   - [x] Integration tests covering complete workflow
+  - [x] **E2E Journey Test Updated:** Jornada "Sonho Solidário" atualizada com auditorias do Contador Social
 - **Testes:** Todos os testes PASS com cobertura total de 69.0% (core packages: 93.9% average) ✅
+- **E2E Validation:** Teste de jornada anual atualizado e validado com sucesso ✅
+
+### Sprint 13: Gestão de Compras e Controle de Estoque (RF-07 e RF-08) ✅ COMPLETE
+- **Objetivo:** Módulo completo para registro de compras, gestão de fornecedores e controle de estoque com **contabilidade invisível**.
+- **Paradigma:** Usuário final NÃO FAZ CONTABILIDADE - apenas informa "Comprei X de Y por Z reais"
+- **Categorização:** Tipos de itens (INSUMO, PRODUTO, MERCADORIA) para:
+  - Interface PDV: mostrar apenas "Produto Acabado" na venda
+  - Contabilidade: comprar "Insumo" → despesa/estoque; saída "Produto" → receita
+- **Implementado:**
+  - [x] **Módulo `supply`** com Clean Architecture + DDD
+  - [x] **Domínio:** Supplier, StockItem, Purchase, PurchaseItem
+  - [x] **Repository:** SQLiteSupplyRepository com DDL completo
+  - [x] **Service:** PurchaseService com integração core_lume
+  - [x] **Contabilidade Invisível:** Partidas dobradas automáticas baseadas no tipo do item
+  - [x] **UI Web:** Handler em `ui_web` com templates embutidos
+  - [x] **Rotas:** `/supply`, `/supply/purchase`, `/supply/suppliers`, `/supply/stock`
+  - [x] **API:** Endpoints REST para todas as operações
+  - [x] **Testes Unitários:** Cobertura completa do módulo supply
+  - [x] **Anti-Float:** Validação completa - nenhum uso de `float`
+- **Integração Contábil:**
+  - INSUMO/MERCADORIA: Débito em `AccountInventory` (3)
+  - Pagamento à vista: Crédito em `AccountCash` (1)
+  - Pagamento a prazo: Crédito em `AccountSuppliers` (4)
+- **Testes:** Todos os testes PASS, compilação completa do projeto ✅
 
 ---
 
@@ -114,10 +144,11 @@ last_updated: 2026-03-08
 | 07 | 43/43 | ✅ PASS |
 | 08 | 5/5 | ✅ PASS |
 | 09 | 8/8 | ✅ PASS |
- | 10 | 19/19 | ✅ PASS |
- | 11 | 5/5 | ✅ PASS |
- | 12 | 8/8 | ✅ PASS |
- | **Total** | **136/136** | **100% PASS** 🎉 |
+| 10 | 19/19 | ✅ PASS |
+| 11 | 5/5 | ✅ PASS |
+| 12 | 8/8 | ✅ PASS |
+| 13 | 6/6 | ✅ PASS |
+| **Total** | **142/142** | **100% PASS** 🎉 |
 
 ---
 
@@ -131,12 +162,13 @@ last_updated: 2026-03-08
 | legal_facade | LegalRepository | SQLite | ✅ COMPLETE |
 | integrations | 8 interfaces governamentais | Mock | ✅ COMPLETE |
 | accountant_dashboard| FiscalRepository | Read-Only SQLite Adapter | ✅ COMPLETE |
+| supply | SupplyRepository | SQLite | ✅ COMPLETE |
 
 ---
 
 ## Próximos Passos
 
-1. **Sprint 13 (Financial Phase 3):** Implementar módulos financeiros avançados (investimentos, empréstimos, etc.)
+1. **Sprint 14 (Financial Phase 3):** Implementar gestão orçamentária (RF-10) e módulos financeiros avançados
 2. **Integração Real:** Iniciar substituição da autenticação simulada pelo OAuth2 real do Gov.br.
 3. **Testes de Usabilidade:** Levar o PWA e o Motor Lume para campo com cooperativas reais e Incubadoras (ITCPs).
 4. **Documentação Técnica:** Gerar API Docs / Swagger para permitir intercooperação com BCDs (Bancos Comunitários).

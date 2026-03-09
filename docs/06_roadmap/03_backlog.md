@@ -4,8 +4,8 @@
 ---
 title: Product Backlog
 status: proposed
-version: 1.2
-last_updated: 2026-03-08
+version: 1.3
+last_updated: 2026-03-09
 ---
 
 # Product Backlog - Digna
@@ -21,6 +21,8 @@ last_updated: 2026-03-08
 - [x] Dossiê de Formalização (RF-04)
 - [x] Sincronização Offline-First (RF-05)
 - [x] Intercooperação B2B (RF-06)
+- [x] Gestão de Compras (RF-07) ✅ **SPRINT 13**
+- [x] Controle de Estoque (RF-08) ✅ **SPRINT 13**
 - [x] Gestão de Caixa (RF-09)
 
 ### Gestão de Membros (Sprint 10)
@@ -61,8 +63,8 @@ last_updated: 2026-03-08
 ## Funcionalidades Futuras
 
 ### Alta Prioridade (Fase 1: Integração e Aliança Contábil)
-- [ ] **[NOVO] Painel do Contador Social (Accountant Dashboard):** Interface Web Multi-tenant em modo Read-Only para auditores voluntários/parceiros.
-- [ ] **[NOVO] Motor de Exportação Fiscal (SPED):** Mapeamento do `Core Lume` para formatos padrões exigidos pela Receita Federal e sistemas contábeis comerciais.
+- [x] **[NOVO] Painel do Contador Social (Accountant Dashboard):** Interface Web Multi-tenant em modo Read-Only para auditores voluntários/parceiros. ✅ **SPRINT 12 COMPLETE**
+- [x] **[NOVO] Motor de Exportação Fiscal (SPED):** Mapeamento do `Core Lume` para formatos padrões exigidos pela Receita Federal e sistemas contábeis comerciais. ✅ **SPRINT 12 COMPLETE**
 - [ ] **[NOVO] Plataforma de Mutirão:** Módulo de gerenciamento para o "Imposto de Renda Solidário" em parceria com Universidades/CRCs.
 - [ ] Autenticação Gov.br (Realização do fluxo OAuth2)
 - [ ] Exportação CADSOL completa
@@ -72,9 +74,9 @@ last_updated: 2026-03-08
 ### Média Prioridade
 - [ ] **[NOVO] Módulos educativos embutidos:** UI com auxílio visual na formação de preço no PDV (Custo vs. Hora trabalhada).
 - [ ] Gestão de membros (UI)
-- [ ] Gestão de compras (RF-07)
-- [ ] Gestão de fornecedores
-- [ ] Controle de estoque (RF-08)
+- [x] Gestão de compras (RF-07) ✅ **SPRINT 13**
+- [x] Gestão de fornecedores ✅ **SPRINT 13**
+- [x] Controle de estoque (RF-08) ✅ **SPRINT 13**
 - [ ] Gestão orçamentária (RF-10)
 - [ ] Múltiplas moedas sociais (Preparação para Fase 2)
 

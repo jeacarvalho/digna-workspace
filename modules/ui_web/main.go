@@ -125,6 +125,13 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger) 
 	}
 	accountantHandler.RegisterRoutes(mux)
 
+	// Supply handler
+	supplyHandler, err := handler.NewSupplyHandler(lifecycleMgr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create supply handler: %w", err)
+	}
+	supplyHandler.RegisterRoutes(mux)
+
 	// Health check
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

@@ -38,7 +38,7 @@ A documentação segue o padrão PKM (Personal Knowledge Management) de alta int
 docs/
 ├── 01_project/      # Visão, Escopo, Stakeholders, Riscos
 ├── 02_product/      # Requisitos, Modelos de Domínio, Algoritmos
-├── 03_architecture/ # Arquitetura Técnica, Protocolos, Melhorias
+├── 03_architecture/ # Arquitetura Técnica, Protocolos, Melhorias, ADRs
 ├── 04_governance/   # Fundação, PMC, Regras de Contribuição, Licença
 ├── 05_ai/           # Constituição de IA, Agentes, Padrões de Sessão
 └── 06_roadmap/      # Estratégia, Roadmap, Backlog, Status
@@ -67,6 +67,7 @@ docs/
 | [01_system.md](./03_architecture/01_system.md) | Arquitetura DDD, Clean Architecture e Componentes |
 | [02_protocols.md](./03_architecture/02_protocols.md) | Protocolos de Sincronização, Segurança e Economia |
 | [03_improvements.md](./03_architecture/03_improvements.md) | Radar de dívida técnica, riscos e melhorias futuras |
+| [04_architectural_decisions.md](./03_architecture/04_architectural_decisions.md) | Registro de Decisões Arquiteturais (ADRs) |
 
 ### 04 - Governança
 | Documento | Descrição |
@@ -104,7 +105,7 @@ docs/
 | 08-09 | Integrações (Mocks) | ✅ | 13/13 | APIs Simuladas (Gov.br, CADSOL, Receita Federal) |
 | 10 | Gestão de Membros | ✅ | 19/19 | Perfis de acesso, cooperados e permissões |
 | 11 | Formalização e E2E | ✅ | 5/5 | Jornada completa "Sonho Solidário" testada ponta a ponta |
-| 12 | **Accountant Dashboard** | 🟡 | 0/0 | [ATUAL] Painel do Contador Social e Exportação Fiscal (SPED) |
+| 12 | **Accountant Dashboard** | ✅ | 8/8 + E2E | Painel do Contador Social e Exportação Fiscal (SPED) - COMPLETE |
 
 ---
 
@@ -163,12 +164,12 @@ Sem mudar uma linha de código do Core Lume! (Princípio OCP).
 
 | Métrica | Valor Atualizado |
 |---------|------------------|
-| Total de Módulos | 12 |
-| Total de Testes | 120/120 (100% Pass) |
+| Total de Módulos | 13 (+ accountant_dashboard) |
+| Total de Testes | 136/136 (100% Pass) 🎉 |
 | Cobertura de Código | > 80% |
-| Interfaces de Repositório | 9 |
+| Interfaces de Repositório | 10 (+ FiscalRepository) |
 | Integrações Gov (Mocks) | 8 |
-| Testes E2E Completos | Jornada Anual BDD (1) |
+| Testes E2E Completos | Jornada Anual BDD com Contador Social (1) |
 | Documentação | 100% Sincronizada |
 ```
 

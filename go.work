@@ -11,6 +11,7 @@ use (
 	./modules/lifecycle
 	./modules/pdv_ui
 	./modules/reporting
+	./modules/supply
 	./modules/sync_engine
 	./modules/ui_web
 )

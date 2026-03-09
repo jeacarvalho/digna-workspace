@@ -4,8 +4,8 @@
 ---
 title: Roadmap de Produto
 status: implemented
-version: 1.2
-last_updated: 2026-03-08
+version: 1.3
+last_updated: 2026-03-09
 ---
 
 # Roadmap de Produto - Digna
@@ -35,7 +35,7 @@ O roadmap segue as 4 fases estratégicas definidas no DVP (Documento de Visão e
 
 ## Phase 2: Integração Institucional e Aliança Contábil
 
-**Status:** ✅ COMPLETE
+**Status:** ✅ COMPLETE (Sprint 12 Finalizada)
 **Objetivo:** Automatizar a transição de grupos informais para entidades formalizadas e criar a ponte tecnológica estrutural com os Contadores Sociais (CFC/CRCs).
 
 **Entregas:**
@@ -44,20 +44,24 @@ O roadmap segue as 4 fases estratégicas definidas no DVP (Documento de Visão e
 - [x] Transição automática DREAM → FORMALIZED
 - [x] Integrações governamentais (Mocks via Clean Architecture)
 - [ ] Integração Gov.br (Autenticação real via OAuth2)
-- [x] **[NOVO] Painel do Contador Social (Accountant Dashboard):** Interface Multi-tenant *Read-Only* para auditores voluntários.
-- [x] **[NOVO] Exportação Fiscal (SPED):** Motor de tradução das partidas dobradas geradas pelo Core Lume para os leiautes contábeis e fiscais exigidos pela Receita Federal.
+- [x] **[NOVO] Painel do Contador Social (Accountant Dashboard):** Interface Multi-tenant *Read-Only* para auditores voluntários. ✅ **SPRINT 12**
+- [x] **[NOVO] Exportação Fiscal (SPED):** Motor de tradução das partidas dobradas geradas pelo Core Lume para os leiautes contábeis e fiscais exigidos pela Receita Federal. ✅ **SPRINT 12**
+- [x] **[NOVO] Testes E2E Atualizados:** Jornada "Sonho Solidário" inclui auditorias do Contador Social ✅ **SPRINT 12 E2E**
 - [ ] **[NOVO] Módulos educativos embutidos:** Auxílio na formação de preço considerando a hora trabalhada.
 
-**Maturidade:** Grupos informais tornam-se visíveis ao Estado e amparados legalmente pela classe contábil, sem a necessidade de o produtor virar um "digitador de notas".
+**Maturidade:** Grupos informais tornam-se visíveis ao Estado e amparados legalmente pela classe contábil, sem a necessidade de o produtor virar um "digitador de notas". A arquitetura garante Soberania do Dado com acesso read-only para contadores.
 
 ---
 
 ## Phase 3: Finanças Solidárias e Territoriais
 
-**Status:** 🔵 PLANNED
+**Status:** 🟡 EM DESENVOLVIMENTO (Sprint 13 Concluída)
 **Objetivo:** Suporte a múltiplas unidades de valor e fortalecimento da economia local.
 
 **Entregas:**
+- [x] **Gestão de Compras (RF-07):** Módulo supply com contabilidade invisível ✅ **SPRINT 13**
+- [x] **Controle de Estoque (RF-08):** Categorização INSUMO/PRODUTO/MERCADORIA ✅ **SPRINT 13**
+- [ ] Gestão orçamentária (RF-10)
 - [ ] Integração tecnológica com Bancos Comunitários de Desenvolvimento (BCDs)
 - [ ] Gestão e transação de Moedas Sociais locais
 - [ ] Estoque substantivo (Controle e troca de sementes, animais, horas-trabalho)
@@ -88,7 +92,8 @@ O roadmap segue as 4 fases estratégicas definidas no DVP (Documento de Visão e
 | Formalização Beta | 2 | ✅ COMPLETE | 03/2026 |
 | E2E Journey Tests | 1-2 | ✅ COMPLETE | 03/2026 |
 | **Painel do Contador & SPED** | 2 | ✅ COMPLETE | 03/2026 |
-| Gestão Financeira Territorial | 3 | 🔵 | 07/2026 |
+| **Gestão de Compras e Estoque** | 3 | ✅ COMPLETE | 03/2026 |
+| Gestão Financeira Territorial | 3 | 🟡 | 07/2026 |
 | Rede Nacional | 4 | 🔵 | 2027 |
 
 ---
