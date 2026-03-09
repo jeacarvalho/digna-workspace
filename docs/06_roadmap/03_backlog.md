@@ -4,7 +4,7 @@
 ---
 title: Product Backlog
 status: proposed
-version: 1.3
+version: 1.4
 last_updated: 2026-03-09
 ---
 
@@ -15,15 +15,15 @@ last_updated: 2026-03-09
 ## Funcionalidades Concluídas
 
 ### Core Contábil
-- [x] PDV Operacional (RF-01)
+- [x] PDV Operacional (RF-01) ✅ **CORREÇÕES SPRINT 15**
 - [x] Registro de Trabalho ITG 2002 (RF-02)
 - [x] Motor de Reservas Obrigatórias (RF-03)
 - [x] Dossiê de Formalização (RF-04)
 - [x] Sincronização Offline-First (RF-05)
 - [x] Intercooperação B2B (RF-06)
 - [x] Gestão de Compras (RF-07) ✅ **SPRINT 13**
-- [x] Controle de Estoque (RF-08) ✅ **SPRINT 13**
-- [x] Gestão de Caixa (RF-09)
+- [x] Controle de Estoque (RF-08) ✅ **SPRINT 13 + CORREÇÕES SPRINT 15**
+- [x] Gestão de Caixa (RF-09) ✅ **CORREÇÕES SPRINT 15**
 
 ### Gestão de Membros (Sprint 10)
 - [x] Cadastro de membros
@@ -57,6 +57,7 @@ last_updated: 2026-03-09
 - [x] Testes unitários por módulo
 - [x] Testes E2E Journey (jornada anual)
 - [x] Testes de integrações governamentais
+- [x] Testes E2E com Playwright (PDV → Estoque → Caixa) ✅ **SPRINT 15**
 
 ---
 

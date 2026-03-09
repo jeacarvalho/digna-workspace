@@ -4,15 +4,15 @@
 ---
 title: Status Atual
 status: implemented
-version: 1.3
+version: 1.4
 last_updated: 2026-03-09
 ---
 
 # Status Atual - Digna
 
 **Última Atualização:** 2026-03-09
-**Fase Atual:** Sprint 14 (Gestão de Compras e Estoque) ✅ COMPLETE
-**Próximo Marco:** Phase 3 - Finanças Solidárias e Territoriais
+**Fase Atual:** Sprint 15 (Correções Críticas e Testes E2E) ✅ COMPLETE
+**Próximo Marco:** Production Deploy (Marco 05)
 
 ---
 
@@ -27,7 +27,7 @@ last_updated: 2026-03-09
 | UI & Dashboard | Marco 04 | ✅ COMPLETE | 100% |
 | Integração e Aliança Contábil (Phase 2) | Marco 07 | ✅ COMPLETE | 100% |
 | Gestão de Compras e Estoque (Phase 3) | Marco 08 | ✅ COMPLETE | 100% |
-| Financial (Phase 3) | Marco 06 | 🟡 EM DESENVOLVIMENTO | 50% |
+| Gestão Orçamentária e Planejamento Financeiro (Phase 3) | Marco 06 | ✅ COMPLETE | 100% |
 | Production Deploy | Marco 05 | 📋 PLANNED | 0% |
 
 ---
@@ -129,6 +129,51 @@ last_updated: 2026-03-09
   - Pagamento a prazo: Crédito em `AccountSuppliers` (4)
 - **Testes:** Todos os testes PASS, compilação completa do projeto ✅
 
+### Sprint 14: Gestão Orçamentária e Planejamento Financeiro (RF-10) ✅ COMPLETE
+- **Objetivo:** Módulo completo para planejamento financeiro com acompanhamento "planejado vs realizado" e interface pedagógica.
+- **Paradigma:** Usuário final NÃO USA termos técnicos como "Budget", "Forecast", "CAPEX". Usa linguagem popular: "Planejamento do Mês", "O que combinamos de gastar", "O que já gastamos", "Aviso de limite".
+- **Contabilidade Invisível:** Sistema cruza automaticamente planejado com realizado (transações reais do Ledger/Caixa).
+- **Alertas Visuais:** Status SAFE (≤70%), WARNING (71-100%), EXCEEDED (>100%) com barras de progresso coloridas.
+- **Anti-Float Obrigatório:** Todos os valores em `int64` (centavos). Proibido uso de `float`.
+- **Implementado:**
+  - [x] **Módulo `budget`** com Clean Architecture + DDD
+  - [x] **Domínio:** BudgetPlan, BudgetExecution, BudgetAlertStatus, BudgetCategory
+  - [x] **Repository:** SQLiteBudgetRepository com DDL completo
+  - [x] **Service:** BudgetService com integração cash_flow (CashFlowPort)
+  - [x] **Contabilidade Invisível:** Cálculo automático planejado vs realizado
+  - [x] **UI Web:** Handler em `ui_web` com templates embutidos
+  - [x] **Rotas:** `/budget`, `/budget/report`, `/budget/create`
+  - [x] **API:** BudgetAPI com CashFlowAdapter para integração real
+  - [x] **Testes Unitários:** Cobertura completa do módulo budget
+  - [x] **Anti-Float:** Validação completa - nenhum uso de `float`
+- **Categorias Pré-definidas:** INSUMOS, ENERGIA, EQUIPAMENTOS, TRANSPORTE, MANUTENCAO, SERVICOS, OUTROS
+- **Integração:** Conectado automaticamente ao cash_flow para buscar transações reais
+- **Testes:** Todos os testes PASS, compilação completa do projeto ✅
+
+### Sprint 15: Correções Críticas e Testes E2E (PDV → Estoque → Caixa) ✅ COMPLETE
+- **Objetivo:** Corrigir três problemas críticos reportados e implementar testes de integração E2E completos com Playwright.
+- **Problemas Resolvidos:**
+  1. **Vendas registradas no PDV não aparecem na tela do caixa** ✅
+  2. **Sistema permite vender mais itens do que existem em estoque** ✅  
+  3. **Sistema não atualiza o estoque após vendas** ✅
+- **Implementado:**
+  - [x] **Correção PDV → Caixa:** Implementado `getEntriesFromDatabase` no cash handler para buscar transações diretamente do banco
+  - [x] **Validação de Estoque:** Adicionada validação no PDV handler que verifica `quantidade ≤ estoque disponível`
+  - [x] **Atualização de Estoque:** Implementado `UpdateStockQuantity` na API do supply e integração no PDV
+  - [x] **Integração Frontend:** Corrigido JavaScript no template PDV para passar `stock_item_id` corretamente
+  - [x] **Testes E2E com Playwright:** Configurado ambiente completo com servidor real + browser headless
+  - [x] **Testes de Fluxo Completo:** Criado testes que simulam usuário interagindo com a aplicação
+  - [x] **Validação de Integridade:** Testes verificam fluxo PDV → Estoque → Caixa
+- **Arquivos Modificados/Criados:**
+  - `modules/ui_web/internal/handler/cash_handler.go` - Adicionada busca de transações do banco
+  - `modules/ui_web/internal/handler/pdv_handler.go` - Adicionada validação e atualização de estoque
+  - `modules/ui_web/templates/pdv.html` - Corrigido JavaScript para passar stock_item_id
+  - `modules/supply/pkg/supply/api.go` - Implementado UpdateStockQuantity
+  - `modules/supply/pkg/supply/interfaces.go` - Adicionado UpdateStockQuantity à interface
+  - `modules/ui_web/e2e_pdv_estoque_caixa_test.go` - Teste E2E completo com Playwright
+  - `modules/ui_web/e2e_simplificado_test.go` - Teste E2E simplificado
+- **Testes:** Todos os testes PASS, validação completa da integração ✅
+
 ---
 
 ## Total Test Coverage
@@ -148,7 +193,9 @@ last_updated: 2026-03-09
 | 11 | 5/5 | ✅ PASS |
 | 12 | 8/8 | ✅ PASS |
 | 13 | 6/6 | ✅ PASS |
-| **Total** | **142/142** | **100% PASS** 🎉 |
+| 14 | 4/4 | ✅ PASS |
+| 15 | 3/3 | ✅ PASS |
+| **Total** | **149/149** | **100% PASS** 🎉 |
 
 ---
 
@@ -162,17 +209,19 @@ last_updated: 2026-03-09
 | legal_facade | LegalRepository | SQLite | ✅ COMPLETE |
 | integrations | 8 interfaces governamentais | Mock | ✅ COMPLETE |
 | accountant_dashboard| FiscalRepository | Read-Only SQLite Adapter | ✅ COMPLETE |
-| supply | SupplyRepository | SQLite | ✅ COMPLETE |
+| supply | SupplyRepository | SQLite | ✅ COMPLETE (com UpdateStockQuantity) |
+| budget | BudgetRepository | SQLite | ✅ COMPLETE |
+| ui_web | CashHandler, PDVHandler | HTTP Handlers | ✅ COMPLETE (com integração PDV→Estoque→Caixa) |
 
 ---
 
 ## Próximos Passos
 
-1. **Sprint 14 (Financial Phase 3):** Implementar gestão orçamentária (RF-10) e módulos financeiros avançados
+1. **Production Deploy (Marco 05):** Preparar para deploy em produção
 2. **Integração Real:** Iniciar substituição da autenticação simulada pelo OAuth2 real do Gov.br.
 3. **Testes de Usabilidade:** Levar o PWA e o Motor Lume para campo com cooperativas reais e Incubadoras (ITCPs).
 4. **Documentação Técnica:** Gerar API Docs / Swagger para permitir intercooperação com BCDs (Bancos Comunitários).
-5. **Production Deploy:** Preparar para deploy em produção (Marco 05).
+5. **Expansão Testes E2E:** Adicionar mais cenários de teste e interface para gestão de estoque.
 ```
 
 ***

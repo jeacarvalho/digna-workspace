@@ -47,16 +47,47 @@
         <div class="bg-white rounded-2xl shadow-lg p-6 mb-4">
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Produto</label>
-                <select id="product" class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-amber-500 focus:outline-none">
-                    <option value="Mel">Mel Orgânico - R$ 25,00</option>
-                    <option value="Artesanato">Artesanato - R$ 35,00</option>
-                    <option value="Servicos">Serviços - R$ 50,00</option>
-                    <option value="Outro">Outro</option>
+                <select id="product" class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-amber-500 focus:outline-none" onchange="updateProductPrice()">
+                    {{range .ProductDetails}}
+                    <option value="{{.Name}}" data-unitprice="{{.UnitCost}}" data-stockid="{{.ID}}" data-type="{{.Type}}" data-quantity="{{.Quantity}}">
+                        {{.Name}} - {{.FormattedPrice}} (Estoque: {{.Quantity}})
+                    </option>
+                    {{end}}
+                    <option value="Outro">Outro (valor manual)</option>
                 </select>
             </div>
 
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quantidade</label>
+                    <div class="flex items-center">
+                        <button onclick="changeQuantity(-1)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-l-xl border border-gray-300 flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                            </svg>
+                        </button>
+                        <input type="number" id="quantity" name="quantity" value="1" min="1" max="999" 
+                            class="flex-1 h-10 text-center border-y border-gray-300 focus:outline-none" oninput="updateTotalPrice()">
+                        <button onclick="changeQuantity(1)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-r-xl border border-gray-300 flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Valor Unitário</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
+                        <input type="text" id="unitPriceDisplay" readonly value="0,00" 
+                            class="w-full p-3 pl-10 text-right text-lg font-bold border-2 border-gray-200 rounded-xl bg-gray-50">
+                    </div>
+                </div>
+            </div>
+
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Valor</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Valor Total</label>
                 <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-xl font-bold">R$</span>
                     <input type="text" id="display" readonly value="0,00" 
@@ -65,6 +96,7 @@
             </div>
 
             <input type="hidden" id="amount" name="amount" value="0">
+            <input type="hidden" id="stockItemId" name="stock_item_id" value="">
 
             <div class="grid grid-cols-3 gap-3 mb-3">
                 <button onclick="addDigit('1')" class="keypad-btn bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 active:bg-gray-100">1</button>
@@ -84,15 +116,15 @@
                 <button onclick="addDigit('00')" class="keypad-btn bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 active:bg-gray-100">00</button>
             </div>
 
-            <button hx-post="/api/sale" 
-                hx-include="[name='amount']" 
-                hx-vals='{"entity_id": "cooperativa_demo", "product": "from-js"}'
-                hx-target="#sale-result"
-                hx-on::before-request="updateHxVals()"
-                onclick="return validateSale()"
-                class="w-full bg-amber-500 hover:bg-amber-600 text-white text-xl font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95">
-                REGISTRAR VENDA
-            </button>
+        <button hx-post="/api/sale" 
+            hx-include="[name='amount'], [name='quantity'], [name='stock_item_id']" 
+            hx-vals='{"entity_id": "cooperativa_demo", "product": "from-js"}'
+            hx-target="#sale-result"
+            hx-on::before-request="updateHxVals()"
+            onclick="return validateSale()"
+            class="w-full bg-amber-500 hover:bg-amber-600 text-white text-xl font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95">
+            REGISTRAR VENDA
+        </button>
         </div>
 
         <div class="text-center text-gray-500 text-sm mb-6">
@@ -110,30 +142,65 @@
             const product = document.getElementById('product').value;
             const btn = document.querySelector('button[hx-post]');
             const amount = document.getElementById('amount').value;
+            const quantity = document.getElementById('quantity').value;
+            const stockItemId = document.getElementById('stockItemId').value;
             btn.setAttribute('hx-vals', JSON.stringify({
                 entity_id: 'cooperativa_demo',
                 product: product,
-                amount: amount
+                amount: amount,
+                quantity: quantity,
+                stock_item_id: stockItemId
             }));
         }
+        
         let currentAmount = 0;
+        let currentUnitPrice = 0;
 
-        function addDigit(digit) {
-            const maxAmount = 99999999; // R$ 999.999,99
-            const newAmount = currentAmount * Math.pow(10, digit.length) + parseInt(digit);
+        function updateProductPrice() {
+            const productSelect = document.getElementById('product');
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
             
-            if (newAmount <= maxAmount) {
-                currentAmount = newAmount;
-                updateDisplay();
+            if (selectedOption.value === 'Outro') {
+                // Modo manual - habilitar teclado numérico
+                currentUnitPrice = 0;
+                document.getElementById('unitPriceDisplay').value = '0,00';
+                document.getElementById('stockItemId').value = '';
+                updateTotalPrice();
+                return;
             }
+            
+            const unitPrice = parseInt(selectedOption.getAttribute('data-unitprice')) || 0;
+            const stockId = selectedOption.getAttribute('data-stockid') || '';
+            const maxQuantity = parseInt(selectedOption.getAttribute('data-quantity')) || 999;
+            
+            currentUnitPrice = unitPrice;
+            document.getElementById('stockItemId').value = stockId;
+            document.getElementById('quantity').max = maxQuantity;
+            
+            // Atualizar displays
+            updateUnitPriceDisplay();
+            updateTotalPrice();
         }
 
-        function clearDisplay() {
-            currentAmount = 0;
-            updateDisplay();
+        function updateUnitPriceDisplay() {
+            const formatted = (currentUnitPrice / 100).toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            document.getElementById('unitPriceDisplay').value = formatted;
         }
 
-        function updateDisplay() {
+        function updateTotalPrice() {
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            
+            if (currentUnitPrice > 0) {
+                // Usar preço unitário do produto
+                currentAmount = currentUnitPrice * quantity;
+            } else {
+                // Modo manual - usar teclado numérico
+                // currentAmount já é atualizado pelo teclado
+            }
+            
             const formatted = (currentAmount / 100).toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
@@ -142,38 +209,69 @@
             document.getElementById('amount').value = currentAmount;
         }
 
+        function changeQuantity(delta) {
+            const quantityInput = document.getElementById('quantity');
+            let quantity = parseInt(quantityInput.value) || 1;
+            const maxQuantity = parseInt(quantityInput.max) || 999;
+            
+            quantity += delta;
+            if (quantity < 1) quantity = 1;
+            if (quantity > maxQuantity) quantity = maxQuantity;
+            
+            quantityInput.value = quantity;
+            updateTotalPrice();
+        }
+
+        function addDigit(digit) {
+            // Só funciona no modo "Outro" (valor manual)
+            const productSelect = document.getElementById('product');
+            if (productSelect.value !== 'Outro') return;
+            
+            const maxAmount = 99999999; // R$ 999.999,99
+            const newAmount = currentAmount * Math.pow(10, digit.length) + parseInt(digit);
+            
+            if (newAmount <= maxAmount) {
+                currentAmount = newAmount;
+                updateTotalPrice();
+            }
+        }
+
+        function clearDisplay() {
+            currentAmount = 0;
+            updateTotalPrice();
+        }
+
         function validateSale() {
             if (currentAmount <= 0) {
                 alert('Por favor, insira um valor maior que zero');
                 return false;
             }
             
-            // Update the product value in the request
-            const product = document.getElementById('product').value;
-            const btn = document.querySelector('button[hx-post]');
-            btn.setAttribute('hx-vals', `{"entity_id": "cooperativa_demo", "product": "${product}", "amount": "${currentAmount}"}`);
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            if (quantity <= 0) {
+                alert('Por favor, insira uma quantidade válida');
+                return false;
+            }
+            
+			// Update the product value in the request
+			const product = document.getElementById('product').value;
+			const stockItemId = document.getElementById('stockItemId').value;
+			const btn = document.querySelector('button[hx-post]');
+			btn.setAttribute('hx-vals', `{"entity_id": "cooperativa_demo", "product": "${product}", "amount": "${currentAmount}", "quantity": "${quantity}", "stock_item_id": "${stockItemId}"}`);
             
             // Clear after successful sale
             setTimeout(() => {
                 clearDisplay();
+                document.getElementById('quantity').value = 1;
+                updateTotalPrice();
             }, 500);
             
             return true;
         }
 
-        // Pre-fill based on product selection
-        document.getElementById('product').addEventListener('change', function() {
-            const values = {
-                'Mel': 2500,
-                'Artesanato': 3500,
-                'Servicos': 5000,
-                'Outro': 0
-            };
-            
-            if (values[this.value] > 0) {
-                currentAmount = values[this.value];
-                updateDisplay();
-            }
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProductPrice();
         });
     </script>
 </body>

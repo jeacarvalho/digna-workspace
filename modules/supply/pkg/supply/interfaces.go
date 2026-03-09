@@ -102,6 +102,7 @@ type SupplyAPI interface {
 	RegisterStockItem(ctx context.Context, req StockItemRequest) (*StockItemResponse, error)
 	GetStockItems(ctx context.Context, entityID string) ([]*StockItem, error)
 	GetStockItemsByType(ctx context.Context, entityID string, itemType string) ([]*StockItem, error)
+	UpdateStockQuantity(ctx context.Context, entityID, itemID string, delta int) (*StockItemResponse, error)
 
 	// Purchases
 	RegisterPurchase(ctx context.Context, req PurchaseRequest) (*PurchaseResponse, error)

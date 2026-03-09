@@ -132,5 +132,7 @@ func (s *CashFlowService) GetCashFlow(entityID string, startDate, endDate time.T
 }
 
 func (s *CashFlowService) GetRecentEntries(entityID string, limit int) ([]domain.CashEntry, error) {
+	// Implementação temporária: retornar lista vazia
+	// TODO: Implementar busca real de transações do ledger
 	return []domain.CashEntry{}, nil
 }

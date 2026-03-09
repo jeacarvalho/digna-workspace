@@ -3,8 +3,8 @@
 ```markdown
 # 📚 Documentação do Projeto Digna
 
-**Versão:** 1.2
-**Última Atualização:** 2026-03-08
+**Versão:** 1.3
+**Última Atualização:** 2026-03-09
 **Projeto:** Sistema de Gestão Contábil, Institucional e Pedagógica para Economia Solidária
 **Mantenedor:** Fundação Providentia
 

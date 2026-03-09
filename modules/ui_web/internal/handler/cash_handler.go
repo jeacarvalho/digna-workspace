@@ -1,12 +1,15 @@
 package handler
 
 import (
+	"database/sql"
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/providentia/digna/cash_flow/pkg/cash_flow"
 	"github.com/providentia/digna/lifecycle/pkg/lifecycle"
 )
@@ -25,6 +28,46 @@ func NewCashHandler(lm lifecycle.LifecycleManager) (*CashHandler, error) {
 		},
 		"formatDate": func(t time.Time) string {
 			return t.Format("02/01/2006 15:04")
+		},
+		// Adicionar funções necessárias para templates compartilhados
+		"getAlertStatusLabel": func(status string) string {
+			switch status {
+			case "SAFE":
+				return "Dentro do planejado"
+			case "WARNING":
+				return "Atenção: perto do limite"
+			case "EXCEEDED":
+				return "Ultrapassou o planejado"
+			default:
+				return status
+			}
+		},
+		"getAlertStatusClass": func(status string) string {
+			switch status {
+			case "SAFE":
+				return "bg-green-100 text-green-800 border-green-300"
+			case "WARNING":
+				return "bg-yellow-100 text-yellow-800 border-yellow-300"
+			case "EXCEEDED":
+				return "bg-red-100 text-red-800 border-red-300"
+			default:
+				return "bg-gray-100 text-gray-800 border-gray-300"
+			}
+		},
+		"getCategoryLabel": func(category string) string {
+			labels := map[string]string{
+				"INSUMOS":      "Insumos",
+				"ENERGIA":      "Energia",
+				"EQUIPAMENTOS": "Equipamentos",
+				"TRANSPORTE":   "Transporte",
+				"MANUTENCAO":   "Manutenção",
+				"SERVICOS":     "Serviços",
+				"OUTROS":       "Outros",
+			}
+			if label, ok := labels[category]; ok {
+				return label
+			}
+			return category
 		},
 	}
 
@@ -53,8 +96,15 @@ func (h *CashHandler) CashPage(w http.ResponseWriter, r *http.Request) {
 		entityID = r.URL.Query().Get("entity_id")
 	}
 
-	balance, _ := h.cashAPI.GetBalance(entityID)
-	entries, _ := h.cashAPI.GetRecentEntries(entityID, 20)
+	balanceResp, _ := h.cashAPI.GetBalance(entityID)
+
+	var balance int64
+	if balanceResp != nil {
+		balance = balanceResp.Balance
+	}
+
+	// Sempre buscar do banco diretamente já que a API retorna lista vazia
+	entries := h.getEntriesFromDatabase(entityID, 20)
 
 	data := map[string]interface{}{
 		"Title":      "Caixa - Digna",
@@ -154,4 +204,98 @@ func (h *CashHandler) GetCashFlow(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{"balance": %d, "credit": %d, "debit": %d}`, flow.Balance, flow.TotalCredit, flow.TotalDebit)
+}
+
+// CashEntry representa uma entrada de caixa
+type CashEntry struct {
+	ID          int64
+	EntityID    string
+	Type        string
+	Amount      int64
+	Description string
+	Category    string
+	Date        time.Time
+	CreatedAt   time.Time
+}
+
+// getEntriesFromDatabase busca entradas diretamente do banco de dados
+func (h *CashHandler) getEntriesFromDatabase(entityID string, limit int) []CashEntry {
+	dbPath := fmt.Sprintf("../../data/entities/%s.db", entityID)
+	slog.Info("CashHandler - Buscando entradas do banco", "db_path", dbPath, "entity_id", entityID, "limit", limit)
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		slog.Error("CashHandler - Failed to open database", "error", err, "entity_id", entityID, "db_path", dbPath)
+		return []CashEntry{}
+	}
+	defer db.Close()
+
+	// Testar conexão
+	if err := db.Ping(); err != nil {
+		slog.Error("CashHandler - Failed to ping database", "error", err, "entity_id", entityID)
+		return []CashEntry{}
+	}
+
+	// Buscar vendas (entradas de receita)
+	query := `
+		SELECT 
+			e.id,
+			e.entry_date,
+			e.description,
+			e.reference,
+			p.amount,
+			a.name as account_name
+		FROM entries e
+		JOIN postings p ON e.id = p.entry_id
+		JOIN accounts a ON p.account_id = a.id
+		WHERE a.code LIKE '3.%' AND p.direction = 'CREDIT'
+		AND e.description LIKE 'Venda PDV:%'
+		ORDER BY e.entry_date DESC
+		LIMIT ?
+	`
+
+	slog.Info("CashHandler - Executando query", "query", query, "limit", limit)
+	rows, err := db.Query(query, limit)
+	if err != nil {
+		slog.Error("CashHandler - Failed to query entries", "error", err, "entity_id", entityID, "query", query)
+		return []CashEntry{}
+	}
+	defer rows.Close()
+
+	var entries []CashEntry
+	rowCount := 0
+	for rows.Next() {
+		var id int64
+		var entryDate int64
+		var description, reference string
+		var amount int64
+		var accountName string
+
+		err := rows.Scan(&id, &entryDate, &description, &reference, &amount, &accountName)
+		if err != nil {
+			slog.Error("CashHandler - Failed to scan row", "error", err, "row_count", rowCount)
+			continue
+		}
+
+		entry := CashEntry{
+			ID:          id,
+			EntityID:    entityID,
+			Type:        "CREDIT", // Vendas são créditos (entradas)
+			Amount:      amount,
+			Description: description,
+			Category:    "SALES",
+			Date:        time.Unix(entryDate, 0),
+			CreatedAt:   time.Unix(entryDate, 0),
+		}
+		entries = append(entries, entry)
+		rowCount++
+		slog.Info("CashHandler - Linha processada", "id", id, "description", description, "amount", amount, "date", time.Unix(entryDate, 0))
+	}
+
+	if err := rows.Err(); err != nil {
+		slog.Error("CashHandler - Error iterating rows", "error", err)
+	}
+
+	slog.Info("CashHandler - Entradas recuperadas do banco", "count", len(entries), "entity_id", entityID, "rows_processed", rowCount)
+	return entries
 }

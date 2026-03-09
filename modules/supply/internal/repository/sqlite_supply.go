@@ -13,30 +13,76 @@ import (
 
 type SQLiteSupplyRepository struct {
 	lifecycleManager lifecycle.LifecycleManager
+	dbCache          map[string]*sql.DB // Cache de conexões por entityID
 }
 
 func NewSQLiteSupplyRepository(lm lifecycle.LifecycleManager) *SQLiteSupplyRepository {
 	return &SQLiteSupplyRepository{
 		lifecycleManager: lm,
+		dbCache:          make(map[string]*sql.DB),
 	}
 }
 
 func (r *SQLiteSupplyRepository) initDB(ctx context.Context, entityID string) (*sql.DB, error) {
+	// Verificar cache primeiro
+	if db, ok := r.dbCache[entityID]; ok {
+		// Verificar se a conexão ainda está válida
+		if err := db.PingContext(ctx); err == nil {
+			return db, nil
+		}
+		// Conexão inválida, remover do cache
+		delete(r.dbCache, entityID)
+	}
+
+	// Obter nova conexão
 	db, err := r.lifecycleManager.GetConnection(entityID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get database connection: %w", err)
 	}
 
-	// Executar migrações
+	// Verificar se a conexão está válida
+	if err := db.PingContext(ctx); err != nil {
+		// Não fechar aqui - deixar o lifecycle manager gerenciar
+		return nil, fmt.Errorf("database connection is closed: %w", err)
+	}
+
+	// Executar migrações apenas uma vez por conexão
 	if err := r.runMigrations(db); err != nil {
-		db.Close()
 		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
+
+	// Armazenar no cache
+	r.dbCache[entityID] = db
 
 	return db, nil
 }
 
 func (r *SQLiteSupplyRepository) runMigrations(db *sql.DB) error {
+	// Criar tabela de controle de migrações
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS supply_migrations (
+		name TEXT PRIMARY KEY,
+		applied_at INTEGER NOT NULL
+	)`)
+	if err != nil {
+		return fmt.Errorf("failed to create migrations table: %w", err)
+	}
+
+	// Verificar quais migrações já foram aplicadas
+	rows, err := db.Query("SELECT name FROM supply_migrations")
+	if err != nil {
+		return fmt.Errorf("failed to query applied migrations: %w", err)
+	}
+	defer rows.Close()
+
+	applied := make(map[string]bool)
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return fmt.Errorf("failed to scan migration name: %w", err)
+		}
+		applied[name] = true
+	}
+
 	migrations := []struct {
 		name string
 		sql  string
@@ -89,8 +135,18 @@ func (r *SQLiteSupplyRepository) runMigrations(db *sql.DB) error {
 	}
 
 	for _, migration := range migrations {
-		if _, err := db.Exec(migration.sql); err != nil {
-			return fmt.Errorf("failed to run migration %s: %w", migration.name, err)
+		// Aplicar apenas migrações não aplicadas
+		if !applied[migration.name] {
+			if _, err := db.Exec(migration.sql); err != nil {
+				return fmt.Errorf("failed to run migration %s: %w", migration.name, err)
+			}
+
+			// Registrar migração aplicada
+			_, err = db.Exec("INSERT OR REPLACE INTO supply_migrations (name, applied_at) VALUES (?, ?)",
+				migration.name, time.Now().Unix())
+			if err != nil {
+				return fmt.Errorf("failed to record migration %s: %w", migration.name, err)
+			}
 		}
 	}
 
@@ -103,7 +159,6 @@ func (r *SQLiteSupplyRepository) SaveSupplier(ctx context.Context, entityID stri
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	if supplier.ID == "" {
 		supplier.ID = fmt.Sprintf("supp_%d", time.Now().UnixNano())
@@ -127,7 +182,6 @@ func (r *SQLiteSupplyRepository) GetSupplier(ctx context.Context, entityID, supp
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 
 	query := `SELECT id, name, contact_info, created_at FROM suppliers WHERE id = ?`
 	row := db.QueryRowContext(ctx, query, supplierID)
@@ -151,7 +205,6 @@ func (r *SQLiteSupplyRepository) ListSuppliers(ctx context.Context, entityID str
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 
 	query := `SELECT id, name, contact_info, created_at FROM suppliers ORDER BY name`
 	rows, err := db.QueryContext(ctx, query)
@@ -180,7 +233,6 @@ func (r *SQLiteSupplyRepository) SaveStockItem(ctx context.Context, entityID str
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	if item.ID == "" {
 		item.ID = fmt.Sprintf("item_%d", time.Now().UnixNano())
@@ -207,7 +259,6 @@ func (r *SQLiteSupplyRepository) GetStockItem(ctx context.Context, entityID, ite
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 
 	query := `SELECT id, name, type, quantity, min_quantity, unit_cost, created_at FROM stock_items WHERE id = ?`
 	row := db.QueryRowContext(ctx, query, itemID)
@@ -233,7 +284,6 @@ func (r *SQLiteSupplyRepository) ListStockItems(ctx context.Context, entityID st
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 
 	query := `SELECT id, name, type, quantity, min_quantity, unit_cost, created_at FROM stock_items ORDER BY name`
 	rows, err := db.QueryContext(ctx, query)
@@ -263,7 +313,6 @@ func (r *SQLiteSupplyRepository) ListStockItemsByType(ctx context.Context, entit
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 
 	query := `SELECT id, name, type, quantity, min_quantity, unit_cost, created_at FROM stock_items WHERE type = ? ORDER BY name`
 	rows, err := db.QueryContext(ctx, query, string(itemType))
@@ -293,7 +342,6 @@ func (r *SQLiteSupplyRepository) UpdateStockQuantity(ctx context.Context, entity
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	query := `UPDATE stock_items SET quantity = quantity + ? WHERE id = ?`
 	result, err := db.ExecContext(ctx, query, delta, itemID)
@@ -318,7 +366,6 @@ func (r *SQLiteSupplyRepository) SavePurchase(ctx context.Context, entityID stri
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -385,7 +432,6 @@ func (r *SQLiteSupplyRepository) GetPurchase(ctx context.Context, entityID, purc
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 
 	// Buscar compra
 	query := `SELECT id, supplier_id, total_value, date, created_at FROM purchases WHERE id = ?`
@@ -428,7 +474,6 @@ func (r *SQLiteSupplyRepository) ListPurchases(ctx context.Context, entityID str
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 
 	query := `SELECT id, supplier_id, total_value, date, created_at FROM purchases ORDER BY date DESC`
 	rows, err := db.QueryContext(ctx, query)
@@ -457,7 +502,6 @@ func (r *SQLiteSupplyRepository) ListPurchasesBySupplier(ctx context.Context, en
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 
 	query := `SELECT id, supplier_id, total_value, date, created_at FROM purchases WHERE supplier_id = ? ORDER BY date DESC`
 	rows, err := db.QueryContext(ctx, query, supplierID)

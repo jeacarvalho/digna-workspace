@@ -3,6 +3,7 @@ package supply
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/providentia/digna/lifecycle/pkg/lifecycle"
@@ -280,5 +281,57 @@ func (api *SupplyAPIImpl) GetStockReport(ctx context.Context, entityID string) (
 		TotalValue:    totalValue,
 		LowStockItems: lowStockItems,
 		ItemsByType:   itemsByType,
+	}, nil
+}
+
+// UpdateStockQuantity implementa SupplyAPI.UpdateStockQuantity
+func (api *SupplyAPIImpl) UpdateStockQuantity(ctx context.Context, entityID, itemID string, delta int) (*StockItemResponse, error) {
+	slog.Info("SupplyAPI - UpdateStockQuantity chamado", "entity_id", entityID, "item_id", itemID, "delta", delta)
+
+	// Buscar item atual
+	item, err := api.repo.GetStockItem(ctx, entityID, itemID)
+	if err != nil {
+		slog.Error("SupplyAPI - Erro ao buscar item", "entity_id", entityID, "item_id", itemID, "erro", err)
+		return &StockItemResponse{
+			Success: false,
+			Error:   fmt.Sprintf("erro ao buscar item: %v", err),
+		}, err
+	}
+
+	if item == nil {
+		slog.Error("SupplyAPI - Item não encontrado", "entity_id", entityID, "item_id", itemID)
+		return &StockItemResponse{
+			Success: false,
+			Error:   "item não encontrado",
+		}, nil
+	}
+
+	slog.Info("SupplyAPI - Item encontrado", "entity_id", entityID, "item_id", itemID, "nome", item.Name, "quantidade_atual", item.Quantity, "delta", delta)
+
+	// Validar que não fica negativo
+	newQuantity := item.Quantity + delta
+	if newQuantity < 0 {
+		slog.Error("SupplyAPI - Quantidade ficaria negativa", "entity_id", entityID, "item_id", itemID, "quantidade_atual", item.Quantity, "delta", delta, "nova_quantidade", newQuantity)
+		return &StockItemResponse{
+			Success: false,
+			Error:   fmt.Sprintf("quantidade não pode ficar negativa: %d + %d = %d", item.Quantity, delta, newQuantity),
+		}, nil
+	}
+
+	// Atualizar quantidade
+	slog.Info("SupplyAPI - Chamando repositório para atualizar quantidade", "entity_id", entityID, "item_id", itemID, "delta", delta)
+	err = api.repo.UpdateStockQuantity(ctx, entityID, itemID, delta)
+	if err != nil {
+		slog.Error("SupplyAPI - Erro ao atualizar estoque no repositório", "entity_id", entityID, "item_id", itemID, "delta", delta, "erro", err)
+		return &StockItemResponse{
+			Success: false,
+			Error:   fmt.Sprintf("erro ao atualizar estoque: %v", err),
+		}, err
+	}
+
+	slog.Info("SupplyAPI - Estoque atualizado com sucesso", "entity_id", entityID, "item_id", itemID, "quantidade_anterior", item.Quantity, "nova_quantidade", newQuantity)
+	return &StockItemResponse{
+		StockItemID: itemID,
+		Success:     true,
 	}, nil
 }
