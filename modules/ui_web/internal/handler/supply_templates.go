@@ -438,7 +438,7 @@ const supplyTemplates = `
                     {{if .StockItems}}
                     <div class="space-y-4">
                         {{range .StockItems}}
-                        <div class="border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition {{if .IsBelowMinimum}}border-red-200 bg-red-50{{end}}">
+                        <div class="border border-gray-200 rounded-xl p-4 hover:bg-gray-50 transition {{if isBelowMinimum .Quantity .MinQuantity}}border-red-200 bg-red-50{{end}}">
                             <div class="flex justify-between items-start">
                                 <div>
                                     <div class="flex items-center space-x-2">
@@ -450,7 +450,7 @@ const supplyTemplates = `
                                     <div class="mt-2 grid grid-cols-3 gap-4 text-sm">
                                         <div>
                                             <span class="text-gray-500">Quantidade:</span>
-                                            <span class="font-semibold ml-1 {{if .IsBelowMinimum}}text-red-600{{else}}text-gray-800{{end}}">
+                                            <span class="font-semibold ml-1 {{if isBelowMinimum .Quantity .MinQuantity}}text-red-600{{else}}text-gray-800{{end}}">
                                                 {{.Quantity}}
                                             </span>
                                         </div>
@@ -463,7 +463,7 @@ const supplyTemplates = `
                                             <span class="font-semibold ml-1">R$ {{formatCurrency .UnitCost}}</span>
                                         </div>
                                     </div>
-                                    {{if .IsBelowMinimum}}
+                                    {{if isBelowMinimum .Quantity .MinQuantity}}
                                     <div class="mt-2 text-xs text-red-600 font-medium">
                                         ⚠️ Estoque abaixo do mínimo
                                     </div>

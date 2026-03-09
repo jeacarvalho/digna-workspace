@@ -1,0 +1,1298 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>dashboard: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">digna/accountant_dashboard/cmd/dashboard/main.go (0.0%)</option>
+				
+				<option value="file1">digna/accountant_dashboard/internal/domain/account_mapper.go (100.0%)</option>
+				
+				<option value="file2">digna/accountant_dashboard/internal/handler/dashboard_handler.go (0.0%)</option>
+				
+				<option value="file3">digna/accountant_dashboard/internal/repository/sqlite_fiscal_adapter.go (0.0%)</option>
+				
+				<option value="file4">digna/accountant_dashboard/internal/service/translator_service.go (66.7%)</option>
+				
+				<option value="file5">digna/accountant_dashboard/pkg/dashboard/factory.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "fmt"
+        "log"
+        "net/http"
+
+        "digna/accountant_dashboard/internal/domain"
+        "digna/accountant_dashboard/internal/handler"
+        "digna/accountant_dashboard/internal/repository"
+        "digna/accountant_dashboard/internal/service"
+)
+
+func main() <span class="cov0" title="0">{
+        repo := repository.NewSQLiteFiscalAdapter()
+        mapper := domain.NewDefaultAccountMapper()
+        translator := service.NewTranslatorService(repo, mapper)
+        dashboardHandler := handler.NewDashboardHandler(translator, mapper)
+
+        http.HandleFunc("/accountant/dashboard", dashboardHandler.Dashboard)
+        http.HandleFunc("/accountant/export", dashboardHandler.ExportFiscal)
+
+        fmt.Println("🚀 Accountant Dashboard starting on http://localhost:8081/accountant/dashboard")
+        log.Fatal(http.ListenAndServe(":8081", nil))
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package domain
+
+var defaultAccountMappings = []AccountMapping{
+        {
+                LocalCode:    "1.1.01",
+                LocalName:    "Gaveta / Caixa",
+                StandardCode: "1.1.01.00.00",
+                StandardName: "Disponibilidades - Caixa",
+        },
+        {
+                LocalCode:    "1.1.02",
+                LocalName:    "Banco / Conta",
+                StandardCode: "1.1.02.00.00",
+                StandardName: "Disponibilidades - Bancos Conta Movimento",
+        },
+        {
+                LocalCode:    "1.2.01",
+                LocalName:    "Estoque de Insumos",
+                StandardCode: "1.2.01.00.00",
+                StandardName: "Estoques - Insumos",
+        },
+        {
+                LocalCode:    "2.1.01",
+                LocalName:    "Quem Fornece",
+                StandardCode: "2.1.01.00.00",
+                StandardName: "Fornecedores a Pagar",
+        },
+        {
+                LocalCode:    "2.2.01",
+                LocalName:    "Capital Social",
+                StandardCode: "2.2.01.00.00",
+                StandardName: "Capital Social",
+        },
+        {
+                LocalCode:    "2.2.02",
+                LocalName:    "Fundo FATES",
+                StandardCode: "2.2.02.00.00",
+                StandardName: "Reservas Estatutárias - FATES",
+        },
+        {
+                LocalCode:    "2.2.03",
+                LocalName:    "Reserva Legal",
+                StandardCode: "2.2.03.00.00",
+                StandardName: "Reserva Legal",
+        },
+        {
+                LocalCode:    "3.1.01",
+                LocalName:    "Nossas Vendas",
+                StandardCode: "3.1.01.00.00",
+                StandardName: "Receita Bruta de Vendas",
+        },
+        {
+                LocalCode:    "3.2.01",
+                LocalName:    "Despesa com Insumos",
+                StandardCode: "3.2.01.00.00",
+                StandardName: "Custo dos Insumos Vendidos",
+        },
+        {
+                LocalCode:    "3.2.02",
+                LocalName:    "Despesa com Trabalho",
+                StandardCode: "3.2.02.00.00",
+                StandardName: "Despesas com Mão de Obra",
+        },
+}
+
+type DefaultAccountMapper struct {
+        mappings map[string]AccountMapping
+}
+
+func NewDefaultAccountMapper() *DefaultAccountMapper <span class="cov8" title="1">{
+        mappings := make(map[string]AccountMapping)
+        for _, m := range defaultAccountMappings </span><span class="cov8" title="1">{
+                mappings[m.LocalCode] = m
+        }</span>
+        <span class="cov8" title="1">return &amp;DefaultAccountMapper{mappings: mappings}</span>
+}
+
+func (m *DefaultAccountMapper) GetMapping(localCode string) (AccountMapping, bool) <span class="cov8" title="1">{
+        val, ok := m.mappings[localCode]
+        return val, ok
+}</span>
+
+func (m *DefaultAccountMapper) GetAllMappings() []AccountMapping <span class="cov8" title="1">{
+        return defaultAccountMappings
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package handler
+
+import (
+        "fmt"
+        "html/template"
+        "net/http"
+        "time"
+
+        "digna/accountant_dashboard/internal/domain"
+        "digna/accountant_dashboard/internal/service"
+)
+
+type DashboardHandler struct {
+        translator *service.TranslatorService
+        mapper     domain.AccountMapper
+}
+
+func NewDashboardHandler(translator *service.TranslatorService, mapper domain.AccountMapper) *DashboardHandler <span class="cov0" title="0">{
+        return &amp;DashboardHandler{
+                translator: translator,
+                mapper:     mapper,
+        }
+}</span>
+
+type DashboardPageData struct {
+        Title         string
+        Period        string
+        Entities      []EntityInfo
+        Mappings      []domain.AccountMapping
+        ExportHistory []ExportHistoryItem
+}
+
+type EntityInfo struct {
+        ID           string
+        Name         string
+        Status       string
+        PendingMonth string
+        HasExports   bool
+}
+
+type ExportHistoryItem struct {
+        EntityID   string
+        Period     string
+        ExportedAt string
+        EntryCount int
+        Hash       string
+}
+
+func (h *DashboardHandler) Dashboard(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        period := r.URL.Query().Get("period")
+        if period == "" </span><span class="cov0" title="0">{
+                period = time.Now().Format("2006-01")
+        }</span>
+
+        <span class="cov0" title="0">ctx := r.Context()
+
+        pendingEntities, err := h.translator.ListPendingEntities(ctx, period)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, fmt.Sprintf("failed to list entities: %v", err), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">entities := make([]EntityInfo, len(pendingEntities))
+        for i, entityID := range pendingEntities </span><span class="cov0" title="0">{
+                history, _ := h.translator.GetExportHistory(ctx, entityID, period)
+                entities[i] = EntityInfo{
+                        ID:           entityID,
+                        Name:         entityID,
+                        Status:       "PENDING",
+                        PendingMonth: period,
+                        HasExports:   len(history) &gt; 0,
+                }
+        }</span>
+
+        <span class="cov0" title="0">mappings := h.mapper.GetAllMappings()
+
+        data := DashboardPageData{
+                Title:    "Painel do Contador Social",
+                Period:   period,
+                Entities: entities,
+                Mappings: mappings,
+        }
+
+        tmpl := getDashboardTemplate()
+        if err := tmpl.Execute(w, data); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, fmt.Sprintf("template error: %v", err), http.StatusInternalServerError)
+        }</span>
+}
+
+func (h *DashboardHandler) ExportFiscal(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        entityID := r.URL.Query().Get("entity_id")
+        period := r.URL.Query().Get("period")
+
+        if entityID == "" || period == "" </span><span class="cov0" title="0">{
+                http.Error(w, "entity_id and period are required", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">ctx := r.Context()
+
+        batch, data, err := h.translator.TranslateAndExport(ctx, entityID, period)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, fmt.Sprintf("export failed: %v", err), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">w.Header().Set("Content-Type", "text/csv")
+        w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=fiscal_%s_%s.csv", entityID, period))
+        w.Header().Set("X-Export-Hash", batch.ExportHash)
+        w.Write(data)</span>
+}
+
+func getDashboardTemplate() *template.Template <span class="cov0" title="0">{
+        html := `
+&lt;!DOCTYPE html&gt;
+&lt;html lang="pt-BR"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;{{.Title}}&lt;/title&gt;
+    &lt;script src="https://unpkg.com/htmx.org@1.9.10"&gt;&lt;/script&gt;
+    &lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body class="bg-gray-100 min-h-screen"&gt;
+    &lt;div class="container mx-auto px-4 py-8"&gt;
+        &lt;header class="mb-8"&gt;
+            &lt;h1 class="text-3xl font-bold text-gray-800"&gt;{{.Title}}&lt;/h1&gt;
+            &lt;p class="text-gray-600 mt-2"&gt;Painel Multi-tenant para Contadores Sociais - Digna&lt;/p&gt;
+        &lt;/header&gt;
+
+        &lt;div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"&gt;
+            &lt;div class="bg-white rounded-lg shadow p-6"&gt;
+                &lt;h3 class="text-lg font-semibold text-gray-700"&gt;Empreendimentos&lt;/h3&gt;
+                &lt;p class="text-3xl font-bold text-blue-600"&gt;{{len .Entities}}&lt;/p&gt;
+            &lt;/div&gt;
+            &lt;div class="bg-white rounded-lg shadow p-6"&gt;
+                &lt;h3 class="text-lg font-semibold text-gray-700"&gt;Período&lt;/h3&gt;
+                &lt;p class="text-xl font-medium text-gray-800"&gt;{{.Period}}&lt;/p&gt;
+            &lt;/div&gt;
+            &lt;div class="bg-white rounded-lg shadow p-6"&gt;
+                &lt;h3 class="text-lg font-semibold text-gray-700"&gt;Mapeamentos&lt;/h3&gt;
+                &lt;p class="text-3xl font-bold text-green-600"&gt;{{len .Mappings}}&lt;/p&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;section class="bg-white rounded-lg shadow mb-8"&gt;
+            &lt;div class="p-6 border-b"&gt;
+                &lt;h2 class="text-xl font-semibold text-gray-800"&gt;Entidades com Fechamento Pendente&lt;/h2&gt;
+            &lt;/div&gt;
+            &lt;div class="p-6"&gt;
+                &lt;form method="get" class="mb-4"&gt;
+                    &lt;label class="block text-sm font-medium text-gray-700 mb-2"&gt;Selecione o Período:&lt;/label&gt;
+                    &lt;input type="month" name="period" value="{{.Period}}" 
+                           class="border rounded px-3 py-2 mr-2"&gt;
+                    &lt;button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"&gt;
+                        Filtrar
+                    &lt;/button&gt;
+                &lt;/form&gt;
+
+                {{if .Entities}}
+                &lt;table class="w-full"&gt;
+                    &lt;thead&gt;
+                        &lt;tr class="border-b"&gt;
+                            &lt;th class="text-left py-3 px-4"&gt;ID&lt;/th&gt;
+                            &lt;th class="text-left py-3 px-4"&gt;Nome&lt;/th&gt;
+                            &lt;th class="text-left py-3 px-4"&gt;Status&lt;/th&gt;
+                            &lt;th class="text-left py-3 px-4"&gt;Exportações&lt;/th&gt;
+                            &lt;th class="text-left py-3 px-4"&gt;Ação&lt;/th&gt;
+                        &lt;/tr&gt;
+                    &lt;/thead&gt;
+                    &lt;tbody&gt;
+                        {{range .Entities}}
+                        &lt;tr class="border-b hover:bg-gray-50"&gt;
+                            &lt;td class="py-3 px-4 font-mono"&gt;{{.ID}}&lt;/td&gt;
+                            &lt;td class="py-3 px-4"&gt;{{.Name}}&lt;/td&gt;
+                            &lt;td class="py-3 px-4"&gt;
+                                &lt;span class="px-2 py-1 rounded text-sm {{if eq .Status \"PENDING\"}}bg-yellow-100 text-yellow-800{{else}}bg-green-100 text-green-800{{end}}"&gt;
+                                    {{.Status}}
+                                &lt;/span&gt;
+                            &lt;/td&gt;
+                            &lt;td class="py-3 px-4"&gt;
+                                {{if .HasExports}}
+                                &lt;span class="text-green-600"&gt;✓ Exportado&lt;/span&gt;
+                                {{else}}
+                                &lt;span class="text-red-600"&gt;Pendente&lt;/span&gt;
+                                {{end}}
+                            &lt;/td&gt;
+                            &lt;td class="py-3 px-4"&gt;
+                                &lt;a href="/accountant/export?entity_id={{.ID}}&amp;period={{$.Period}}"
+                                   class="inline-block bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"&gt;
+                                    Exportar SPED
+                                &lt;/a&gt;
+                            &lt;/td&gt;
+                        &lt;/tr&gt;
+                        {{end}}
+                    &lt;/tbody&gt;
+                &lt;/table&gt;
+                {{else}}
+                &lt;p class="text-gray-500 text-center py-4"&gt;Nenhuma entidade com fechamento pendente para este período.&lt;/p&gt;
+                {{end}}
+            &lt;/div&gt;
+        &lt;/section&gt;
+
+        &lt;section class="bg-white rounded-lg shadow"&gt;
+            &lt;div class="p-6 border-b"&gt;
+                &lt;h2 class="text-xl font-semibold text-gray-800"&gt;Mapeamento de Contas (Plano de Contas Referencial)&lt;/h2&gt;
+            &lt;/div&gt;
+            &lt;div class="p-6"&gt;
+                &lt;table class="w-full"&gt;
+                    &lt;thead&gt;
+                        &lt;tr class="border-b"&gt;
+                            &lt;th class="text-left py-2 px-4"&gt;Código Local&lt;/th&gt;
+                            &lt;th class="text-left py-2 px-4"&gt;Nome Local&lt;/th&gt;
+                            &lt;th class="text-left py-2 px-4"&gt;Código Padrão&lt;/th&gt;
+                            &lt;th class="text-left py-2 px-4"&gt;Nome Padrão&lt;/th&gt;
+                        &lt;/tr&gt;
+                    &lt;/thead&gt;
+                    &lt;tbody&gt;
+                        {{range .Mappings}}
+                        &lt;tr class="border-b hover:bg-gray-50"&gt;
+                            &lt;td class="py-2 px-4 font-mono text-sm"&gt;{{.LocalCode}}&lt;/td&gt;
+                            &lt;td class="py-2 px-4"&gt;{{.LocalName}}&lt;/td&gt;
+                            &lt;td class="py-2 px-4 font-mono text-sm"&gt;{{.StandardCode}}&lt;/td&gt;
+                            &lt;td class="py-2 px-4"&gt;{{.StandardName}}&lt;/td&gt;
+                        &lt;/tr&gt;
+                        {{end}}
+                    &lt;/tbody&gt;
+                &lt;/table&gt;
+            &lt;/div&gt;
+        &lt;/section&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+`
+        return template.Must(template.New("dashboard").Parse(html))
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package repository
+
+import (
+        "context"
+        "database/sql"
+        "fmt"
+        "path/filepath"
+        "strings"
+        "time"
+
+        "digna/accountant_dashboard/internal/domain"
+        _ "github.com/mattn/go-sqlite3"
+)
+
+const DataDir = "../../data/entities"
+
+type SQLiteFiscalAdapter struct {
+        basePath string
+}
+
+func NewSQLiteFiscalAdapter() *SQLiteFiscalAdapter <span class="cov0" title="0">{
+        return &amp;SQLiteFiscalAdapter{
+                basePath: DataDir,
+        }
+}</span>
+
+func (r *SQLiteFiscalAdapter) BasePath() string <span class="cov0" title="0">{
+        return r.basePath
+}</span>
+
+func (r *SQLiteFiscalAdapter) SetBasePath(path string) <span class="cov0" title="0">{
+        r.basePath = path
+}</span>
+
+func (r *SQLiteFiscalAdapter) openReadOnly(entityID string) (*sql.DB, error) <span class="cov0" title="0">{
+        dbPath := filepath.Join(r.basePath, fmt.Sprintf("%s.db", entityID))
+
+        dsn := fmt.Sprintf("file:%s?mode=ro", dbPath)
+        db, err := sql.Open("sqlite3", dsn)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to open database in read-only mode: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if err := db.Ping(); err != nil </span><span class="cov0" title="0">{
+                db.Close()
+                return nil, fmt.Errorf("failed to ping database: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return db, nil</span>
+}
+
+func (r *SQLiteFiscalAdapter) LoadEntries(ctx context.Context, entityID string, period string) ([]domain.EntryDTO, error) <span class="cov0" title="0">{
+        db, err := r.openReadOnly(entityID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer db.Close()
+
+        yearMonth := strings.Split(period, "-")
+        if len(yearMonth) != 2 </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("invalid period format: expected YYYY-MM, got %s", period)
+        }</span>
+
+        <span class="cov0" title="0">year := yearMonth[0]
+        month := yearMonth[1]
+        prefix := fmt.Sprintf("%s-%s", year, month)
+
+        query := `
+                SELECT 
+                        e.id, e.entry_date, e.description, e.reference,
+                        p.id as posting_id, p.account_id, a.code as account_code, a.name as account_name,
+                        p.amount, p.direction
+                FROM entries e
+                LEFT JOIN postings p ON e.id = p.entry_id
+                LEFT JOIN accounts a ON p.account_id = a.id
+                WHERE strftime('%Y-%m', e.entry_date, 'unixepoch') = ?
+                ORDER BY e.id, p.id
+        `
+
+        rows, err := db.QueryContext(ctx, query, prefix)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to query entries: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer rows.Close()
+
+        entriesMap := make(map[int64]*domain.EntryDTO)
+
+        for rows.Next() </span><span class="cov0" title="0">{
+                var entryID int64
+                var entryDate int64
+                var description, reference string
+                var postingID, accountID sql.NullInt64
+                var accountCode, accountName sql.NullString
+                var amount int64
+                var direction string
+
+                err := rows.Scan(
+                        &amp;entryID, &amp;entryDate, &amp;description, &amp;reference,
+                        &amp;postingID, &amp;accountID, &amp;accountCode, &amp;accountName,
+                        &amp;amount, &amp;direction,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to scan row: %w", err)
+                }</span>
+
+                <span class="cov0" title="0">entry, exists := entriesMap[entryID]
+                if !exists </span><span class="cov0" title="0">{
+                        entry = &amp;domain.EntryDTO{
+                                ID:          entryID,
+                                EntityID:    entityID,
+                                Date:        time.Unix(entryDate, 0),
+                                Description: description,
+                                Postings:    []domain.PostingDTO{},
+                        }
+                        entriesMap[entryID] = entry
+                }</span>
+
+                <span class="cov0" title="0">if postingID.Valid </span><span class="cov0" title="0">{
+                        posting := domain.PostingDTO{
+                                ID:          postingID.Int64,
+                                EntryID:     entryID,
+                                AccountID:   accountID.Int64,
+                                AccountCode: accountCode.String,
+                                AccountName: accountName.String,
+                                Debit:       0,
+                                Credit:      0,
+                        }
+
+                        if direction == "DEBIT" </span><span class="cov0" title="0">{
+                                posting.Debit = amount
+                                entry.TotalDebit += amount
+                        }</span> else<span class="cov0" title="0"> {
+                                posting.Credit = amount
+                                entry.TotalCredit += amount
+                        }</span>
+
+                        <span class="cov0" title="0">entry.Postings = append(entry.Postings, posting)</span>
+                }
+        }
+
+        <span class="cov0" title="0">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("error iterating rows: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">result := make([]domain.EntryDTO, 0, len(entriesMap))
+        for _, entry := range entriesMap </span><span class="cov0" title="0">{
+                result = append(result, *entry)
+        }</span>
+
+        <span class="cov0" title="0">return result, nil</span>
+}
+
+func (r *SQLiteFiscalAdapter) RegisterExport(ctx context.Context, entityID string, batch *domain.FiscalBatch) error <span class="cov0" title="0">{
+        dbPath := filepath.Join(r.basePath, fmt.Sprintf("%s.db", entityID))
+
+        dsn := fmt.Sprintf("%s?_journal_mode=WAL&amp;_foreign_keys=ON", dbPath)
+        db, err := sql.Open("sqlite3", dsn)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to open database: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer db.Close()
+
+        migrationSQL := `
+                CREATE TABLE IF NOT EXISTS fiscal_exports (
+                        id TEXT PRIMARY KEY,
+                        entity_id TEXT NOT NULL,
+                        period TEXT NOT NULL,
+                        batch_id TEXT NOT NULL,
+                        export_hash TEXT NOT NULL,
+                        total_entries INTEGER NOT NULL,
+                        created_at INTEGER NOT NULL,
+                        UNIQUE(entity_id, period)
+                )
+        `
+        if _, err := db.ExecContext(ctx, migrationSQL); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create fiscal_exports table: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">query := `
+                INSERT OR REPLACE INTO fiscal_exports 
+                (id, entity_id, period, batch_id, export_hash, total_entries, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+        `
+
+        _, err = db.ExecContext(ctx, query,
+                batch.ID,
+                batch.EntityID,
+                batch.Period,
+                batch.ID,
+                batch.ExportHash,
+                batch.TotalEntries,
+                batch.CreatedAt,
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to register export: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (r *SQLiteFiscalAdapter) ListPendingEntities(ctx context.Context, period string) ([]string, error) <span class="cov0" title="0">{
+        entries, err := filepath.Glob(filepath.Join(r.basePath, "*.db"))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to glob database files: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">var pending []string
+
+        for _, entry := range entries </span><span class="cov0" title="0">{
+                entityID := strings.TrimSuffix(filepath.Base(entry), ".db")
+
+                db, err := r.openReadOnly(entityID)
+                if err != nil </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov0" title="0">yearMonth := strings.Split(period, "-")
+                if len(yearMonth) != 2 </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+                <span class="cov0" title="0">prefix := fmt.Sprintf("%s-%s", yearMonth[0], yearMonth[1])
+
+                var count int
+                err = db.QueryRowContext(ctx,
+                        "SELECT COUNT(*) FROM entries WHERE strftime('%Y-%m', entry_date, 'unixepoch') = ?", prefix).Scan(&amp;count)
+                db.Close()
+
+                if err != nil </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov0" title="0">if count &gt; 0 </span><span class="cov0" title="0">{
+                        var exportedCount int
+                        db2, err := r.openReadOnly(entityID)
+                        if err == nil </span><span class="cov0" title="0">{
+                                db2.QueryRowContext(ctx,
+                                        "SELECT COUNT(*) FROM fiscal_exports WHERE period = ?", period).Scan(&amp;exportedCount)
+                                db2.Close()
+                        }</span>
+
+                        <span class="cov0" title="0">if exportedCount == 0 </span><span class="cov0" title="0">{
+                                pending = append(pending, entityID)
+                        }</span>
+                }
+        }
+
+        <span class="cov0" title="0">return pending, nil</span>
+}
+
+func (r *SQLiteFiscalAdapter) GetExportHistory(ctx context.Context, entityID string, period string) ([]domain.FiscalExportLog, error) <span class="cov0" title="0">{
+        db, err := r.openReadOnly(entityID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer db.Close()
+
+        query := `
+                SELECT id, entity_id, period, batch_id, export_hash, created_at
+                FROM fiscal_exports
+                WHERE entity_id = ? AND period = ?
+                ORDER BY created_at DESC
+        `
+
+        rows, err := db.QueryContext(ctx, query, entityID, period)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to query export history: %w", err)
+        }</span>
+        <span class="cov0" title="0">defer rows.Close()
+
+        var logs []domain.FiscalExportLog
+
+        for rows.Next() </span><span class="cov0" title="0">{
+                var log domain.FiscalExportLog
+                err := rows.Scan(
+                        &amp;log.ID,
+                        &amp;log.EntityID,
+                        &amp;log.Period,
+                        &amp;log.BatchID,
+                        &amp;log.ExportHash,
+                        &amp;log.ExportedAt,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to scan export log: %w", err)
+                }</span>
+                <span class="cov0" title="0">logs = append(logs, log)</span>
+        }
+
+        <span class="cov0" title="0">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("error iterating rows: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return logs, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package service
+
+import (
+        "bytes"
+        "context"
+        "crypto/sha256"
+        "encoding/csv"
+        "encoding/hex"
+        "fmt"
+        "time"
+
+        "digna/accountant_dashboard/internal/domain"
+)
+
+type TranslatorService struct {
+        repo   domain.FiscalRepository
+        mapper domain.AccountMapper
+}
+
+func NewTranslatorService(repo domain.FiscalRepository, mapper domain.AccountMapper) *TranslatorService <span class="cov8" title="1">{
+        return &amp;TranslatorService{
+                repo:   repo,
+                mapper: mapper,
+        }
+}</span>
+
+type TranslationResult struct {
+        Data       []byte
+        Hash       string
+        EntryCount int
+}
+
+func (s *TranslatorService) TranslateAndExport(ctx context.Context, entityID string, period string) (*domain.FiscalBatch, []byte, error) <span class="cov0" title="0">{
+        entries, err := s.repo.LoadEntries(ctx, entityID, period)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, nil, fmt.Errorf("failed to load entries: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if len(entries) == 0 </span><span class="cov0" title="0">{
+                return nil, nil, fmt.Errorf("no entries found for period %s", period)
+        }</span>
+
+        <span class="cov0" title="0">if err := s.validateSomaZero(entries); err != nil </span><span class="cov0" title="0">{
+                return nil, nil, fmt.Errorf("audit validation failed: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">data, err := s.TranslateToStandardFormat(entries)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, nil, fmt.Errorf("failed to translate format: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">hash := s.GenerateHash(data)
+
+        batch := &amp;domain.FiscalBatch{
+                ID:           generateBatchID(entityID, period),
+                EntityID:     entityID,
+                Period:       period,
+                TotalEntries: len(entries),
+                ExportHash:   hash,
+                CreatedAt:    time.Now().Unix(),
+        }
+
+        if err := s.repo.RegisterExport(ctx, entityID, batch); err != nil </span><span class="cov0" title="0">{
+                return nil, nil, fmt.Errorf("failed to register export: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return batch, data, nil</span>
+}
+
+func (s *TranslatorService) validateSomaZero(entries []domain.EntryDTO) error <span class="cov8" title="1">{
+        for _, entry := range entries </span><span class="cov8" title="1">{
+                if entry.TotalDebit != entry.TotalCredit </span><span class="cov8" title="1">{
+                        return fmt.Errorf("entry %d has invalid soma zero: debit=%d, credit=%d",
+                                entry.ID, entry.TotalDebit, entry.TotalCredit)
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (s *TranslatorService) TranslateToStandardFormat(entries []domain.EntryDTO) ([]byte, error) <span class="cov8" title="1">{
+        var buf bytes.Buffer
+        writer := csv.NewWriter(&amp;buf)
+
+        header := []string{
+                "Data", "ID_Lancamento", "Conta_Debito", "Nome_Debito", "Conta_Credito", "Nome_Credito",
+                "Valor", "Historico", "Hash_Entry",
+        }
+        if err := writer.Write(header); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to write header: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">for _, entry := range entries </span><span class="cov8" title="1">{
+                entryHash := generateEntryHash(entry)
+
+                debitAccounts := []domain.PostingDTO{}
+                creditAccounts := []domain.PostingDTO{}
+
+                for _, p := range entry.Postings </span><span class="cov8" title="1">{
+                        if p.Debit &gt; 0 </span><span class="cov8" title="1">{
+                                debitAccounts = append(debitAccounts, p)
+                        }</span> else<span class="cov8" title="1"> if p.Credit &gt; 0 </span><span class="cov8" title="1">{
+                                creditAccounts = append(creditAccounts, p)
+                        }</span>
+                }
+
+                <span class="cov8" title="1">maxLen := len(debitAccounts)
+                if len(creditAccounts) &gt; maxLen </span><span class="cov0" title="0">{
+                        maxLen = len(creditAccounts)
+                }</span>
+
+                <span class="cov8" title="1">for i := 0; i &lt; maxLen; i++ </span><span class="cov8" title="1">{
+                        var debitCode, debitName, creditCode, creditName string
+                        var amount int64
+
+                        if i &lt; len(debitAccounts) </span><span class="cov8" title="1">{
+                                mapping := s.getAccountMapping(debitAccounts[i].AccountCode)
+                                debitCode = mapping.StandardCode
+                                debitName = mapping.StandardName
+                                amount = debitAccounts[i].Debit
+                        }</span>
+
+                        <span class="cov8" title="1">if i &lt; len(creditAccounts) </span><span class="cov8" title="1">{
+                                mapping := s.getAccountMapping(creditAccounts[i].AccountCode)
+                                creditCode = mapping.StandardCode
+                                creditName = mapping.StandardName
+                                if amount == 0 </span><span class="cov0" title="0">{
+                                        amount = creditAccounts[i].Credit
+                                }</span>
+                        }
+
+                        <span class="cov8" title="1">row := []string{
+                                entry.Date.Format("2006-01-02"),
+                                fmt.Sprintf("%d", entry.ID),
+                                debitCode,
+                                debitName,
+                                creditCode,
+                                creditName,
+                                fmt.Sprintf("%d", amount),
+                                entry.Description,
+                                entryHash,
+                        }
+
+                        if err := writer.Write(row); err != nil </span><span class="cov0" title="0">{
+                                return nil, fmt.Errorf("failed to write row: %w", err)
+                        }</span>
+                }
+        }
+
+        <span class="cov8" title="1">writer.Flush()
+        if err := writer.Error(); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("flush error: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return buf.Bytes(), nil</span>
+}
+
+func (s *TranslatorService) getAccountMapping(localCode string) domain.AccountMapping <span class="cov8" title="1">{
+        if mapping, ok := s.mapper.GetMapping(localCode); ok </span><span class="cov8" title="1">{
+                return mapping
+        }</span>
+        <span class="cov0" title="0">return domain.AccountMapping{
+                LocalCode:    localCode,
+                LocalName:    "Conta não mapeada",
+                StandardCode: "9.9.99.99.99",
+                StandardName: "Conta não mapeada",
+        }</span>
+}
+
+func (s *TranslatorService) GenerateHash(data []byte) string <span class="cov8" title="1">{
+        hash := sha256.Sum256(data)
+        return hex.EncodeToString(hash[:])
+}</span>
+
+func (s *TranslatorService) ListPendingEntities(ctx context.Context, period string) ([]string, error) <span class="cov0" title="0">{
+        return s.repo.ListPendingEntities(ctx, period)
+}</span>
+
+func (s *TranslatorService) GetExportHistory(ctx context.Context, entityID string, period string) ([]domain.FiscalExportLog, error) <span class="cov0" title="0">{
+        return s.repo.GetExportHistory(ctx, entityID, period)
+}</span>
+
+func generateBatchID(entityID, period string) string <span class="cov8" title="1">{
+        return fmt.Sprintf("%s_%s_%d", entityID, period, time.Now().Unix())
+}</span>
+
+func generateEntryHash(entry domain.EntryDTO) string <span class="cov8" title="1">{
+        data := fmt.Sprintf("%d|%s|%d|%d",
+                entry.ID,
+                entry.Date.Format("2006-01-02"),
+                entry.TotalDebit,
+                entry.TotalCredit)
+        hash := sha256.Sum256([]byte(data))
+        return hex.EncodeToString(hash[:])
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package dashboard
+
+import (
+        "context"
+        "path/filepath"
+        "strings"
+
+        "digna/accountant_dashboard/internal/domain"
+        "digna/accountant_dashboard/internal/repository"
+        "digna/accountant_dashboard/internal/service"
+)
+
+// NewSQLiteRepositoryFactory creates a repository factory for SQLite databases
+func NewSQLiteRepositoryFactory(dataDir string) RepositoryFactory <span class="cov0" title="0">{
+        // Ensure dataDir ends with /entities if it doesn't already
+        entitiesDir := dataDir
+        if !strings.HasSuffix(dataDir, "/entities") &amp;&amp; !strings.HasSuffix(dataDir, "\\entities") </span><span class="cov0" title="0">{
+                entitiesDir = filepath.Join(dataDir, "entities")
+        }</span>
+
+        <span class="cov0" title="0">return &amp;sqliteRepositoryFactory{
+                dataDir: entitiesDir,
+        }</span>
+}
+
+type sqliteRepositoryFactory struct {
+        dataDir string
+}
+
+func (f *sqliteRepositoryFactory) NewRepository(entityID string) (FiscalRepository, error) <span class="cov0" title="0">{
+        // Create internal repository adapter with custom data directory
+        internalRepo := repository.NewSQLiteFiscalAdapter()
+
+        // We need to modify the internal adapter to use our data directory
+        // Since the internal adapter has a private basePath field, we'll create a wrapper
+        // that overrides the openReadOnly method
+        return &amp;customPathRepositoryAdapter{
+                repo:     internalRepo,
+                dataDir:  f.dataDir,
+                entityID: entityID,
+        }, nil
+}</span>
+
+// NewDashboardService creates a new dashboard service with default account mapper
+func NewDashboardService(repo FiscalRepository) DashboardService <span class="cov0" title="0">{
+        // Create internal account mapper
+        internalMapper := domain.NewDefaultAccountMapper()
+
+        // Create internal service
+        internalService := service.NewTranslatorService(
+                &amp;serviceAdapter{repo: repo},
+                internalMapper,
+        )
+
+        // Wrap it in an adapter
+        return &amp;serviceAdapterWrapper{
+                service: internalService,
+                repo:    repo,
+        }
+}</span>
+
+// customPathRepositoryAdapter adapts internal repository with custom data directory
+type customPathRepositoryAdapter struct {
+        repo     *repository.SQLiteFiscalAdapter
+        dataDir  string
+        entityID string
+}
+
+func (a *customPathRepositoryAdapter) LoadEntries(ctx context.Context, entityID string, period string) ([]EntryDTO, error) <span class="cov0" title="0">{
+        // Temporarily override the base path
+        originalBasePath := a.repo.BasePath()
+        a.repo.SetBasePath(a.dataDir)
+        defer a.repo.SetBasePath(originalBasePath)
+
+        internalEntries, err := a.repo.LoadEntries(ctx, entityID, period)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        // Convert internal entries to public entries
+        <span class="cov0" title="0">entries := make([]EntryDTO, len(internalEntries))
+        for i, ie := range internalEntries </span><span class="cov0" title="0">{
+                entries[i] = convertEntryToPublic(ie)
+        }</span>
+        <span class="cov0" title="0">return entries, nil</span>
+}
+
+func (a *customPathRepositoryAdapter) RegisterExport(ctx context.Context, entityID string, batch *FiscalBatch) error <span class="cov0" title="0">{
+        // Temporarily override the base path
+        originalBasePath := a.repo.BasePath()
+        a.repo.SetBasePath(a.dataDir)
+        defer a.repo.SetBasePath(originalBasePath)
+
+        internalBatch := convertBatchToInternal(batch)
+        return a.repo.RegisterExport(ctx, entityID, internalBatch)
+}</span>
+
+func (a *customPathRepositoryAdapter) ListPendingEntities(ctx context.Context, period string) ([]string, error) <span class="cov0" title="0">{
+        // Temporarily override the base path
+        originalBasePath := a.repo.BasePath()
+        a.repo.SetBasePath(a.dataDir)
+        defer a.repo.SetBasePath(originalBasePath)
+
+        return a.repo.ListPendingEntities(ctx, period)
+}</span>
+
+func (a *customPathRepositoryAdapter) GetExportHistory(ctx context.Context, entityID string, period string) ([]FiscalExportLog, error) <span class="cov0" title="0">{
+        // Temporarily override the base path
+        originalBasePath := a.repo.BasePath()
+        a.repo.SetBasePath(a.dataDir)
+        defer a.repo.SetBasePath(originalBasePath)
+
+        internalLogs, err := a.repo.GetExportHistory(ctx, entityID, period)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">logs := make([]FiscalExportLog, len(internalLogs))
+        for i, il := range internalLogs </span><span class="cov0" title="0">{
+                logs[i] = convertLogToPublic(il)
+        }</span>
+        <span class="cov0" title="0">return logs, nil</span>
+}
+
+// repositoryAdapter adapts internal repository to public interface
+type repositoryAdapter struct {
+        repo domain.FiscalRepository
+}
+
+func (a *repositoryAdapter) LoadEntries(ctx context.Context, entityID string, period string) ([]EntryDTO, error) <span class="cov0" title="0">{
+        internalEntries, err := a.repo.LoadEntries(ctx, entityID, period)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        // Convert internal entries to public entries
+        <span class="cov0" title="0">entries := make([]EntryDTO, len(internalEntries))
+        for i, ie := range internalEntries </span><span class="cov0" title="0">{
+                entries[i] = convertEntryToPublic(ie)
+        }</span>
+        <span class="cov0" title="0">return entries, nil</span>
+}
+
+func (a *repositoryAdapter) RegisterExport(ctx context.Context, entityID string, batch *FiscalBatch) error <span class="cov0" title="0">{
+        internalBatch := convertBatchToInternal(batch)
+        return a.repo.RegisterExport(ctx, entityID, internalBatch)
+}</span>
+
+func (a *repositoryAdapter) ListPendingEntities(ctx context.Context, period string) ([]string, error) <span class="cov0" title="0">{
+        return a.repo.ListPendingEntities(ctx, period)
+}</span>
+
+func (a *repositoryAdapter) GetExportHistory(ctx context.Context, entityID string, period string) ([]FiscalExportLog, error) <span class="cov0" title="0">{
+        internalLogs, err := a.repo.GetExportHistory(ctx, entityID, period)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">logs := make([]FiscalExportLog, len(internalLogs))
+        for i, il := range internalLogs </span><span class="cov0" title="0">{
+                logs[i] = convertLogToPublic(il)
+        }</span>
+        <span class="cov0" title="0">return logs, nil</span>
+}
+
+// serviceAdapter adapts public repository to internal interface
+type serviceAdapter struct {
+        repo FiscalRepository
+}
+
+func (a *serviceAdapter) LoadEntries(ctx context.Context, entityID string, period string) ([]domain.EntryDTO, error) <span class="cov0" title="0">{
+        publicEntries, err := a.repo.LoadEntries(ctx, entityID, period)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">entries := make([]domain.EntryDTO, len(publicEntries))
+        for i, pe := range publicEntries </span><span class="cov0" title="0">{
+                entries[i] = convertEntryToInternal(pe)
+        }</span>
+        <span class="cov0" title="0">return entries, nil</span>
+}
+
+func (a *serviceAdapter) RegisterExport(ctx context.Context, entityID string, batch *domain.FiscalBatch) error <span class="cov0" title="0">{
+        publicBatch := convertBatchToPublic(batch)
+        return a.repo.RegisterExport(ctx, entityID, publicBatch)
+}</span>
+
+func (a *serviceAdapter) ListPendingEntities(ctx context.Context, period string) ([]string, error) <span class="cov0" title="0">{
+        return a.repo.ListPendingEntities(ctx, period)
+}</span>
+
+func (a *serviceAdapter) GetExportHistory(ctx context.Context, entityID string, period string) ([]domain.FiscalExportLog, error) <span class="cov0" title="0">{
+        publicLogs, err := a.repo.GetExportHistory(ctx, entityID, period)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">logs := make([]domain.FiscalExportLog, len(publicLogs))
+        for i, pl := range publicLogs </span><span class="cov0" title="0">{
+                logs[i] = convertLogToInternal(pl)
+        }</span>
+        <span class="cov0" title="0">return logs, nil</span>
+}
+
+// serviceAdapterWrapper wraps internal service with public interface
+type serviceAdapterWrapper struct {
+        service *service.TranslatorService
+        repo    FiscalRepository
+}
+
+func (w *serviceAdapterWrapper) TranslateAndExport(ctx context.Context, entityID string, period string) (*FiscalBatch, []byte, error) <span class="cov0" title="0">{
+        internalBatch, data, err := w.service.TranslateAndExport(ctx, entityID, period)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, nil, err
+        }</span>
+
+        <span class="cov0" title="0">publicBatch := convertBatchToPublic(internalBatch)
+        return publicBatch, data, nil</span>
+}
+
+func (w *serviceAdapterWrapper) ListPendingEntities(ctx context.Context, period string) ([]string, error) <span class="cov0" title="0">{
+        return w.service.ListPendingEntities(ctx, period)
+}</span>
+
+func (w *serviceAdapterWrapper) GetExportHistory(ctx context.Context, entityID string, period string) ([]FiscalExportLog, error) <span class="cov0" title="0">{
+        internalLogs, err := w.service.GetExportHistory(ctx, entityID, period)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">logs := make([]FiscalExportLog, len(internalLogs))
+        for i, il := range internalLogs </span><span class="cov0" title="0">{
+                logs[i] = convertLogToPublic(il)
+        }</span>
+        <span class="cov0" title="0">return logs, nil</span>
+}
+
+// Conversion functions
+func convertEntryToPublic(internal domain.EntryDTO) EntryDTO <span class="cov0" title="0">{
+        postings := make([]PostingDTO, len(internal.Postings))
+        for i, p := range internal.Postings </span><span class="cov0" title="0">{
+                postings[i] = PostingDTO{
+                        ID:          p.ID,
+                        EntryID:     p.EntryID,
+                        AccountID:   p.AccountID,
+                        AccountCode: p.AccountCode,
+                        AccountName: p.AccountName,
+                        Debit:       p.Debit,
+                        Credit:      p.Credit,
+                }
+        }</span>
+
+        <span class="cov0" title="0">return EntryDTO{
+                ID:          internal.ID,
+                EntityID:    internal.EntityID,
+                Date:        internal.Date,
+                Description: internal.Description,
+                Postings:    postings,
+                TotalDebit:  internal.TotalDebit,
+                TotalCredit: internal.TotalCredit,
+        }</span>
+}
+
+func convertEntryToInternal(public EntryDTO) domain.EntryDTO <span class="cov0" title="0">{
+        postings := make([]domain.PostingDTO, len(public.Postings))
+        for i, p := range public.Postings </span><span class="cov0" title="0">{
+                postings[i] = domain.PostingDTO{
+                        ID:          p.ID,
+                        EntryID:     p.EntryID,
+                        AccountID:   p.AccountID,
+                        AccountCode: p.AccountCode,
+                        AccountName: p.AccountName,
+                        Debit:       p.Debit,
+                        Credit:      p.Credit,
+                }
+        }</span>
+
+        <span class="cov0" title="0">return domain.EntryDTO{
+                ID:          public.ID,
+                EntityID:    public.EntityID,
+                Date:        public.Date,
+                Description: public.Description,
+                Postings:    postings,
+                TotalDebit:  public.TotalDebit,
+                TotalCredit: public.TotalCredit,
+        }</span>
+}
+
+func convertBatchToPublic(internal *domain.FiscalBatch) *FiscalBatch <span class="cov0" title="0">{
+        if internal == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov0" title="0">return &amp;FiscalBatch{
+                ID:           internal.ID,
+                EntityID:     internal.EntityID,
+                Period:       internal.Period,
+                TotalEntries: internal.TotalEntries,
+                ExportHash:   internal.ExportHash,
+                CreatedAt:    internal.CreatedAt,
+        }</span>
+}
+
+func convertBatchToInternal(public *FiscalBatch) *domain.FiscalBatch <span class="cov0" title="0">{
+        if public == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov0" title="0">return &amp;domain.FiscalBatch{
+                ID:           public.ID,
+                EntityID:     public.EntityID,
+                Period:       public.Period,
+                TotalEntries: public.TotalEntries,
+                ExportHash:   public.ExportHash,
+                CreatedAt:    public.CreatedAt,
+        }</span>
+}
+
+func convertLogToPublic(internal domain.FiscalExportLog) FiscalExportLog <span class="cov0" title="0">{
+        return FiscalExportLog{
+                ID:         internal.ID,
+                EntityID:   internal.EntityID,
+                Period:     internal.Period,
+                BatchID:    internal.BatchID,
+                ExportHash: internal.ExportHash,
+                FilePath:   internal.FilePath,
+                ExportedAt: internal.ExportedAt,
+        }
+}</span>
+
+func convertLogToInternal(public FiscalExportLog) domain.FiscalExportLog <span class="cov0" title="0">{
+        return domain.FiscalExportLog{
+                ID:         public.ID,
+                EntityID:   public.EntityID,
+                Period:     public.Period,
+                BatchID:    public.BatchID,
+                ExportHash: public.ExportHash,
+                FilePath:   public.FilePath,
+                ExportedAt: public.ExportedAt,
+        }
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

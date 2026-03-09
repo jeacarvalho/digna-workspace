@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	DefaultPort     = "8080"
+	DefaultPort     = "8088"
 	ShutdownTimeout = 10 * time.Second
 )
 
@@ -102,8 +102,10 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger) 
 	// Handlers
 	pdvHandler, err := handler.NewPDVHandler(lifecycleMgr)
 	if err != nil {
+		fmt.Printf("DEBUG: Erro ao criar PDV handler: %v\n", err)
 		return nil, fmt.Errorf("failed to create PDV handler: %w", err)
 	}
+	fmt.Printf("DEBUG: PDV handler criado com sucesso\n")
 	pdvHandler.RegisterRoutes(mux)
 
 	dashboardHandler, err := handler.NewDashboardHandler(lifecycleMgr)
@@ -131,6 +133,13 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger) 
 		return nil, fmt.Errorf("failed to create supply handler: %w", err)
 	}
 	supplyHandler.RegisterRoutes(mux)
+
+	// Budget handler
+	budgetHandler, err := handler.NewBudgetHandler(lifecycleMgr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create budget handler: %w", err)
+	}
+	budgetHandler.RegisterRoutes(mux)
 
 	// Health check
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

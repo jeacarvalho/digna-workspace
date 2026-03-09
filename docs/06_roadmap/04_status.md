@@ -164,14 +164,21 @@ last_updated: 2026-03-09
   - [x] **Testes E2E com Playwright:** Configurado ambiente completo com servidor real + browser headless
   - [x] **Testes de Fluxo Completo:** Criado testes que simulam usuário interagindo com a aplicação
   - [x] **Validação de Integridade:** Testes verificam fluxo PDV → Estoque → Caixa
+  - [x] **Interface Gestão de Estoque:** Dashboard atualizado com link para `/supply`
+  - [x] **Testes Otimizados:** Criados testes mais rápidos sem browser (API-only)
+  - [x] **Testes de Validação:** Testes específicos para validação de estoque insuficiente
 - **Arquivos Modificados/Criados:**
   - `modules/ui_web/internal/handler/cash_handler.go` - Adicionada busca de transações do banco
   - `modules/ui_web/internal/handler/pdv_handler.go` - Adicionada validação e atualização de estoque
   - `modules/ui_web/templates/pdv.html` - Corrigido JavaScript para passar stock_item_id
+  - `modules/ui_web/templates/dashboard.html` - Adicionado link para gestão de estoque
   - `modules/supply/pkg/supply/api.go` - Implementado UpdateStockQuantity
   - `modules/supply/pkg/supply/interfaces.go` - Adicionado UpdateStockQuantity à interface
   - `modules/ui_web/e2e_pdv_estoque_caixa_test.go` - Teste E2E completo com Playwright
   - `modules/ui_web/e2e_simplificado_test.go` - Teste E2E simplificado
+  - `modules/ui_web/e2e_otimizado_test.go` - Testes E2E otimizados (mais rápidos)
+  - `modules/ui_web/test_fluxo_completo_test.go` - Teste de fluxo completo PDV→Estoque→Caixa
+  - `modules/ui_web/test_validacao_estoque_test.go` - Teste específico de validação de estoque
 - **Testes:** Todos os testes PASS, validação completa da integração ✅
 
 ---

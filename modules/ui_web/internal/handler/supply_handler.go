@@ -44,6 +44,9 @@ func NewSupplyHandler(lm lifecycle.LifecycleManager) (*SupplyHandler, error) {
 			}
 			return float64(a) / float64(b)
 		},
+		"isBelowMinimum": func(quantity, minQuantity int) bool {
+			return quantity < minQuantity
+		},
 	}
 
 	// Carregar templates

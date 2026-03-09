@@ -58,6 +58,46 @@ func NewDashboardHandler(lm lifecycle.LifecycleManager) (*DashboardHandler, erro
 		"formatDate": func(t time.Time) string {
 			return t.Format("02/01/2006 15:04")
 		},
+		// Adicionar funções necessárias para templates compartilhados
+		"getAlertStatusLabel": func(status string) string {
+			switch status {
+			case "SAFE":
+				return "Dentro do planejado"
+			case "WARNING":
+				return "Atenção: perto do limite"
+			case "EXCEEDED":
+				return "Ultrapassou o planejado"
+			default:
+				return status
+			}
+		},
+		"getAlertStatusClass": func(status string) string {
+			switch status {
+			case "SAFE":
+				return "bg-green-100 text-green-800 border-green-300"
+			case "WARNING":
+				return "bg-yellow-100 text-yellow-800 border-yellow-300"
+			case "EXCEEDED":
+				return "bg-red-100 text-red-800 border-red-300"
+			default:
+				return "bg-gray-100 text-gray-800 border-gray-300"
+			}
+		},
+		"getCategoryLabel": func(category string) string {
+			labels := map[string]string{
+				"INSUMOS":      "Insumos",
+				"ENERGIA":      "Energia",
+				"EQUIPAMENTOS": "Equipamentos",
+				"TRANSPORTE":   "Transporte",
+				"MANUTENCAO":   "Manutenção",
+				"SERVICOS":     "Serviços",
+				"OUTROS":       "Outros",
+			}
+			if label, ok := labels[category]; ok {
+				return label
+			}
+			return category
+		},
 	}
 
 	tmpl, err := template.New("templates").Funcs(funcMap).ParseGlob("templates/*.html")
@@ -176,7 +216,14 @@ func (h *DashboardHandler) RecordWork(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := sgHandler.RecordWork(workReq); err != nil {
-		http.Error(w, fmt.Sprintf("Failed to record work: %v", err), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `
+			<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+				<p class="font-bold">Erro ao registrar horas!</p>
+				<p>%v</p>
+				<p class="text-sm mt-2">Verifique se o módulo core_lume está funcionando.</p>
+			</div>
+		`, err)
 		return
 	}
 

@@ -3,7 +3,7 @@
 ```markdown
 # 📚 Documentação do Projeto Digna
 
-**Versão:** 1.3
+**Versão:** 1.4
 **Última Atualização:** 2026-03-09
 **Projeto:** Sistema de Gestão Contábil, Institucional e Pedagógica para Economia Solidária
 **Mantenedor:** Fundação Providentia
@@ -106,6 +106,9 @@ docs/
 | 10 | Gestão de Membros | ✅ | 19/19 | Perfis de acesso, cooperados e permissões |
 | 11 | Formalização e E2E | ✅ | 5/5 | Jornada completa "Sonho Solidário" testada ponta a ponta |
 | 12 | **Accountant Dashboard** | ✅ | 8/8 + E2E | Painel do Contador Social e Exportação Fiscal (SPED) - COMPLETE |
+| 13 | **Gestão de Compras e Estoque** | ✅ | 6/6 | Módulo completo com contabilidade invisível - COMPLETE |
+| 14 | **Gestão Orçamentária** | ✅ | 4/4 | Planejamento financeiro com alertas visuais - COMPLETE |
+| 15 | **Correções Críticas + Testes E2E** | ✅ | 3/3 + E2E | Validação PDV→Estoque→Caixa + Playwright - COMPLETE |
 
 ---
 
