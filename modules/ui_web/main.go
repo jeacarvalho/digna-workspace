@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	DefaultPort     = "8088"
+	DefaultPort     = "8090"
 	ShutdownTimeout = 10 * time.Second
 )
 
@@ -99,7 +99,14 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger) 
 	// Static files (PWA)
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	// Handlers
+	// Auth handler (deve ser o primeiro)
+	authHandler, err := handler.NewAuthHandler(lifecycleMgr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create auth handler: %w", err)
+	}
+	authHandler.RegisterRoutes(mux)
+
+	// Handlers protegidos por autenticação
 	pdvHandler, err := handler.NewPDVHandler(lifecycleMgr)
 	if err != nil {
 		fmt.Printf("DEBUG: Erro ao criar PDV handler: %v\n", err)
@@ -153,9 +160,12 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger) 
 		fmt.Fprintln(w, `{"ready":true}`)
 	})
 
-	// Adicionar middleware de logging
+	// Adicionar middlewares (auth primeiro, depois logging)
+	authMiddleware := middleware.NewAuthMiddleware(authHandler)
 	loggerMiddleware := middleware.NewLoggerMiddleware(logger)
-	handler := loggerMiddleware.Handler(mux)
+
+	// Encadeamento: auth -> logging -> mux
+	handler := authMiddleware.Handler(loggerMiddleware.Handler(mux))
 
 	// Configure server with timeouts
 	server := &http.Server{

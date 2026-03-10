@@ -112,9 +112,15 @@ func (h *SupplyHandler) SupplyDashboard(w http.ResponseWriter, r *http.Request) 
 		"EntityID": "cooperativa_demo",
 	}
 
-	if err := h.tmpl.ExecuteTemplate(w, "supply_dashboard.html", data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// Carregar template simples do disco
+	tmpl, err := template.New("supply_dashboard_simple.html").ParseFiles("templates/supply_dashboard_simple.html")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
 		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -186,9 +192,15 @@ func (h *SupplyHandler) StockPage(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	if err := h.tmpl.ExecuteTemplate(w, "supply_stock.html", data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// Carregar template simples do disco
+	tmpl, err := template.New("supply_stock_simple.html").ParseFiles("templates/supply_stock_simple.html")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
 		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 

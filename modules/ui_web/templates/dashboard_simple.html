@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2A5CAA">
+    <title>{{.Title}} - Digna</title>
+    
+    <!-- Configuração do Tailwind com paleta Digna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'digna-primary': '#2A5CAA',    // Azul soberania
+              'digna-secondary': '#4A7F3E',  // Verde suor
+              'digna-accent': '#F57F17',     // Laranja energia
+              'digna-bg': '#F9F9F6',         // Fundo claro
+              'digna-text': '#212121',       // Texto escuro
+            },
+            fontFamily: {
+              'sans': ['Inter', 'Ubuntu', 'system-ui', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Ubuntu:wght@300;400;500;700&display=swap');
+      
+      body {
+        background-color: #F9F9F6;
+        font-family: 'Inter', sans-serif;
+      }
+      
+      .digna-gradient {
+        background: linear-gradient(135deg, #2A5CAA 0%, #4A7F3E 100%);
+      }
+      
+      .digna-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(42, 92, 170, 0.1);
+        border: 1px solid rgba(42, 92, 170, 0.1);
+      }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Cabeçalho -->
+    <header class="digna-gradient text-white">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <!-- Logo -->
+                    <img src="/static/Digna_logo_v2.png" 
+                         alt="Logotipo Digna" 
+                         class="h-10 w-10">
+                    <div>
+                        <h1 class="text-xl font-bold">DIGNA</h1>
+                        <p class="text-sm opacity-90">Soberania e Suor</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium">{{.EntityID}}</p>
+                    <p class="text-sm opacity-90">Dashboard</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegação -->
+    <nav class="bg-white border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 py-2">
+                <a href="/dashboard?entity_id={{.EntityID}}" class="px-4 py-2 bg-digna-primary text-white rounded-lg font-medium">
+                    Dashboard
+                </a>
+                <a href="/pdv?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    PDV
+                </a>
+                <a href="/cash?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Caixa
+                </a>
+                <a href="/supply?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Compras
+                </a>
+                <a href="/supply/stock?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Estoque
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo principal -->
+    <main class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-digna-text mb-8">{{.Title}}</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Saldo em Caixa -->
+            <div class="digna-card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-digna-text">Saldo em Caixa</h2>
+                    <div class="p-2 bg-blue-100 rounded-full">
+                        <span class="text-blue-600 font-bold">R$</span>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-blue-600">R$ {{printf "%.2f" .CashBalance}}</p>
+                <p class="text-sm text-gray-600 mt-2">Disponível para operações</p>
+            </div>
+
+            <!-- Excedente Social -->
+            <div class="digna-card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-digna-text">Excedente Social</h2>
+                    <div class="p-2 bg-green-100 rounded-full">
+                        <span class="text-green-600 font-bold">R$</span>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-green-600">R$ {{printf "%.2f" .TotalSurplus}}</p>
+                <p class="text-sm text-gray-600 mt-2">{{.TotalHours}} horas trabalhadas</p>
+            </div>
+
+            <!-- Membros Ativos -->
+            <div class="digna-card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-digna-text">Membros Ativos</h2>
+                    <div class="p-2 bg-purple-100 rounded-full">
+                        <span class="text-purple-600 font-bold">{{.MemberCount}}</span>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-purple-600">{{.MemberCount}}</p>
+                <p class="text-sm text-gray-600 mt-2">Participantes ativos</p>
+            </div>
+        </div>
+
+        <!-- Mensagem de boas-vindas -->
+        <div class="digna-card p-8 text-center">
+            <h2 class="text-2xl font-bold text-digna-text mb-4">Bem-vindo ao Digna!</h2>
+            <p class="text-gray-600 mb-6">
+                Sistema de gestão para cooperativas e pequenos produtores.
+                Aqui você pode gerenciar finanças, estoque e acompanhar o excedente social.
+            </p>
+            <div class="flex justify-center space-x-4">
+                <a href="/cash?entity_id={{.EntityID}}" class="px-6 py-3 bg-digna-primary text-white rounded-lg font-semibold hover:opacity-90 transition">
+                    Caixa
+                </a>
+                <a href="/pdv?entity_id={{.EntityID}}" class="px-6 py-3 bg-digna-secondary text-white rounded-lg font-semibold hover:opacity-90 transition">
+                    PDV
+                </a>
+                <a href="/social?entity_id={{.EntityID}}" class="px-6 py-3 bg-digna-accent text-white rounded-lg font-semibold hover:opacity-90 transition">
+                    Ponto Social
+                </a>
+            </div>
+        </div>
+
+        <!-- Informações da sessão -->
+        <div class="mt-8 digna-card p-6">
+            <h3 class="text-lg font-semibold text-digna-text mb-4">Informações da Sessão</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-gray-600">Empresa</p>
+                    <p class="font-medium">{{.EntityID}}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Data/Hora</p>
+                    <p class="font-medium" id="current-time">Carregando...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="mt-12 border-t border-gray-200 py-6">
+        <div class="container mx-auto px-4 text-center text-gray-600">
+            <p>© 2024 Digna - Tecnologia para Economia Solidária</p>
+            <p class="mt-1 text-sm">v.0 MVP | <a href="/logout" class="text-digna-primary hover:underline">Sair</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // Atualizar hora atual
+        function updateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('current-time').textContent = 
+                now.toLocaleDateString('pt-BR', options);
+        }
+        
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>

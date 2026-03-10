@@ -1,0 +1,40 @@
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          // Paleta de Cores Oficial Digna - "Soberania e Suor"
+          'digna-green': '#2E7D32',    // Verde Trabalho
+          'digna-ocher': '#F57F17',    // Ocre Comunidade  
+          'digna-blue': '#1565C0',     // Azul Soberania
+          'digna-bg': '#F9F9F6',       // Fundo Off-white
+          'digna-text': '#212121',     // Texto Principal
+          
+          // Cores semânticas
+          'primary': '#2E7D32',
+          'secondary': '#F57F17',
+          'accent': '#1565C0',
+        },
+        fontFamily: {
+          'sans': ['Inter', 'Ubuntu', 'system-ui', 'sans-serif'],
+        },
+        spacing: {
+          'touch': '44px',
+        },
+        minHeight: {
+          'touch': '44px',
+        },
+      }
+    }
+  }
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Ubuntu:wght@300;400;500;700&display=swap');
+  
+  body {
+    font-family: 'Inter', 'Ubuntu', system-ui, sans-serif;
+    background-color: #F9F9F6;
+    color: #212121;
+  }
+</style>

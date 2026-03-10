@@ -34,8 +34,13 @@
                     </div>
                     <span class="text-xl font-bold">Digna</span>
                 </div>
-                <div class="text-sm opacity-90">
-                    ID: {{.EntityID}}
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm opacity-90">
+                        <span id="currentCompany">Carregando...</span>
+                    </div>
+                    <button onclick="logout()" class="text-sm bg-emerald-700 hover:bg-emerald-800 px-3 py-1 rounded transition">
+                        Sair
+                    </button>
                 </div>
             </div>
         </div>
@@ -88,11 +93,44 @@
     </main>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/static/sw.js')
-                .then(reg => console.log('SW registered'))
-                .catch(err => console.log('SW error:', err));
+        // Mapear entity_id para nomes de empresas
+        const companyNames = {
+            'cafe_digna': 'Café Digna',
+            'queijaria_digna': 'Queijaria Digna',
+            'cooperativa_demo': 'Cooperativa Demo'
+        };
+
+        // Carregar empresa atual
+        async function loadCurrentCompany() {
+            try {
+                const response = await fetch('/api/check-session');
+                const result = await response.json();
+                
+                if (result.valid) {
+                    const companyName = companyNames[result.entity_id] || result.entity_id;
+                    document.getElementById('currentCompany').textContent = companyName;
+                } else {
+                    // Sessão expirada, redirecionar para login
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('Erro ao verificar sessão:', error);
+            }
         }
+
+        // Função de logout
+        async function logout() {
+            try {
+                await fetch('/logout', { method: 'GET' });
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        // Carregar empresa ao iniciar
+        document.addEventListener('DOMContentLoaded', loadCurrentCompany);
     </script>
 </body>
 </html>

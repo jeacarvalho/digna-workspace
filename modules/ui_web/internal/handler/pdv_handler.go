@@ -78,11 +78,8 @@ func NewPDVHandler(lm lifecycle.LifecycleManager) (*PDVHandler, error) {
 		},
 	}
 
-	// Carregar apenas o template PDV
-	tmpl, err := template.New("pdv.html").Funcs(funcMap).ParseFiles("templates/pdv.html")
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse pdv template: %w", err)
-	}
+	// Criar template simples para evitar problemas de cache
+	tmpl := template.New("pdv_simple.html").Funcs(funcMap)
 
 	// Criar calculadora de preços
 	pricingCalc, err := pricing.NewPricingCalculator()
@@ -176,7 +173,14 @@ func (h *PDVHandler) PDVPage(w http.ResponseWriter, r *http.Request) {
 		"ProductDetails": productDetails,
 	}
 
-	if err := h.tmpl.ExecuteTemplate(w, "pdv.html", data); err != nil {
+	// Carregar template do disco para evitar problemas de cache
+	tmpl, err := template.New("pdv_simple.html").ParseFiles("templates/pdv_simple.html")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

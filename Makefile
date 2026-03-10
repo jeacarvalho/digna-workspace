@@ -16,6 +16,8 @@ MODULES := modules/core_lume modules/ui_web modules/distribution modules/lifecyc
 help:
 	@echo "$(BLUE)Digna Workspace - Comandos disponíveis:$(NC)"
 	@echo ""
+	@echo "  $(GREEN)make init$(NC)          - Inicializa empresas de teste"
+	@echo "  $(GREEN)make run$(NC)           - Inicia servidor web (porta 8088)"
 	@echo "  $(GREEN)make test$(NC)          - Roda testes em todos os módulos"
 	@echo "  $(GREEN)make test-core$(NC)     - Roda testes do core_lume"
 	@echo "  $(GREEN)make test-integration$(NC) - Roda testes de integração"
@@ -81,3 +83,18 @@ test-quick:
 	@for module in $(MODULES); do \
 		cd $(ROOT_DIR)/$$module && go test ./... 2>&1 | grep -E "(ok|FAIL)" || true; \
 	done
+
+# Inicializar empresas de teste
+init:
+	@echo "$(BLUE)🔧 Inicializando empresas de teste...$(NC)"
+	@./init_test_companies.sh
+
+# Executar servidor web
+run:
+	@echo "$(BLUE)🚀 Iniciando servidor Digna...$(NC)"
+	@echo "$(YELLOW)📱 Acesse: http://localhost:8088/login$(NC)"
+	@echo "$(YELLOW)👥 Empresas de teste:$(NC)"
+	@echo "   • Café Digna (usuário: cafe_digna, senha: cd0123)"
+	@echo "   • Queijaria Digna (usuário: queijaria_digna, senha: qd321)"
+	@echo ""
+	@cd modules/ui_web && go run main.go

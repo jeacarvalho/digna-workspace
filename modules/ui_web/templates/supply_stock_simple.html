@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2A5CAA">
+    <title>Estoque - Digna</title>
+    
+    <!-- Configuração do Tailwind com paleta Digna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'digna-primary': '#2A5CAA',    // Azul soberania
+              'digna-secondary': '#4A7F3E',  // Verde suor
+              'digna-accent': '#F57F17',     // Laranja energia
+              'digna-bg': '#F9F9F6',         // Fundo claro
+              'digna-text': '#212121',       // Texto escuro
+            },
+            fontFamily: {
+              'sans': ['Inter', 'Ubuntu', 'system-ui', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Ubuntu:wght@300;400;500;700&display=swap');
+      
+      body {
+        background-color: #F9F9F6;
+        font-family: 'Inter', sans-serif;
+      }
+      
+      .digna-gradient {
+        background: linear-gradient(135deg, #2A5CAA 0%, #4A7F3E 100%);
+      }
+      
+      .digna-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(42, 92, 170, 0.1);
+        border: 1px solid rgba(42, 92, 170, 0.1);
+      }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Cabeçalho -->
+    <header class="digna-gradient text-white">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <!-- Logo -->
+                    <img src="/static/Digna_logo_v2.png" 
+                         alt="Logotipo Digna" 
+                         class="h-10 w-10">
+                    <div>
+                        <h1 class="text-xl font-bold">DIGNA ESTOQUE</h1>
+                        <p class="text-sm opacity-90">Controle de Inventário</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium">{{.EntityID}}</p>
+                    <p class="text-sm opacity-90">
+                        <a href="/dashboard?entity_id={{.EntityID}}" class="hover:underline">Voltar ao Dashboard</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegação -->
+    <nav class="bg-white border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 py-2">
+                <a href="/dashboard?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Dashboard
+                </a>
+                <a href="/pdv?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    PDV
+                </a>
+                <a href="/cash?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Caixa
+                </a>
+                <a href="/supply?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Compras
+                </a>
+                <a href="/supply/stock?entity_id={{.EntityID}}" class="px-4 py-2 bg-digna-primary text-white rounded-lg font-medium">
+                    Estoque
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo principal -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-digna-text mb-2">Gestão de Estoque</h1>
+            <p class="text-gray-600">Controle de itens em estoque</p>
+        </div>
+
+        <!-- Botão para nova compra -->
+        <div class="mb-6">
+            <a href="/supply/purchase?entity_id={{.EntityID}}" 
+               class="inline-flex items-center digna-gradient text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Nova Compra para Estoque
+            </a>
+        </div>
+
+        <!-- Lista de itens em estoque -->
+        <div class="digna-card p-6">
+            <h2 class="text-xl font-semibold text-digna-text mb-4">Itens em Estoque</h2>
+            {{if .StockItems}}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantidade</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unidade</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Custo Unitário</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor Total</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {{range .StockItems}}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                                <div>
+                                    <p class="font-medium text-gray-900">{{.Name}}</p>
+                                    {{if .Description}}
+                                    <p class="text-xs text-gray-500">{{.Description}}</p>
+                                    {{end}}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 text-xs rounded-full 
+                                    {{if eq .Type "PRODUTO"}}bg-blue-100 text-blue-800
+                                    {{else if eq .Type "MERCADORIA"}}bg-green-100 text-green-800
+                                    {{else}}bg-gray-100 text-gray-800{{end}}">
+                                    {{if eq .Type "PRODUTO"}}Produto
+                                    {{else if eq .Type "MERCADORIA"}}Mercadoria
+                                    {{else}}Insumo{{end}}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    <span class="font-medium {{if lt .Quantity .MinQuantity}}text-red-600{{else}}text-gray-900{{end}}">
+                                        {{.Quantity}}
+                                    </span>
+                                    {{if lt .Quantity .MinQuantity}}
+                                    <span class="ml-2 text-xs text-red-500" title="Abaixo do mínimo">
+                                        ⚠️
+                                    </span>
+                                    {{end}}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900">
+                                {{if eq .Unit "UNIDADE"}}unid.
+                                {{else if eq .Unit "KG"}}kg
+                                {{else if eq .Unit "G"}}g
+                                {{else if eq .Unit "L"}}L
+                                {{else}}{{.Unit}}{{end}}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-900">
+                                R$ {{printf "%.2f" (fdiv .UnitCost 100.0)}}
+                            </td>
+                            <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                                R$ {{printf "%.2f" (fdiv (multiply .UnitCost .Quantity) 100.0)}}
+                            </td>
+                            <td class="px-4 py-3">
+                                {{if lt .Quantity .MinQuantity}}
+                                <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+                                    Baixo
+                                </span>
+                                {{else if lt .Quantity (multiply .MinQuantity 2)}}
+                                <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+                                    Atenção
+                                </span>
+                                {{else}}
+                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                                    OK
+                                </span>
+                                {{end}}
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{else}}
+            <div class="text-center py-12">
+                <div class="text-gray-400 mb-4">
+                    <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    </svg>
+                </div>
+                <p class="text-gray-600 mb-2">Estoque vazio</p>
+                <p class="text-sm text-gray-500">
+                    <a href="/supply/purchase?entity_id={{.EntityID}}" class="text-digna-primary hover:underline">
+                        Registre uma compra para adicionar itens ao estoque
+                    </a>
+                </p>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Resumo -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <div class="digna-card p-6">
+                <h3 class="font-semibold text-digna-text mb-2">Total de Itens</h3>
+                <p class="text-3xl font-bold text-blue-600">{{len .StockItems}}</p>
+                <p class="text-sm text-gray-600 mt-1">itens diferentes</p>
+            </div>
+            
+            <div class="digna-card p-6">
+                <h3 class="font-semibold text-digna-text mb-2">Valor Total</h3>
+                <p class="text-3xl font-bold text-green-600">
+                    R$ {{printf "%.2f" (fdiv .TotalValue 100.0)}}
+                </p>
+                <p class="text-sm text-gray-600 mt-1">em estoque</p>
+            </div>
+            
+            <div class="digna-card p-6">
+                <h3 class="font-semibold text-digna-text mb-2">Itens Baixos</h3>
+                <p class="text-3xl font-bold text-red-600">{{.LowStockCount}}</p>
+                <p class="text-sm text-gray-600 mt-1">abaixo do mínimo</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="mt-12 border-t border-gray-200 py-6">
+        <div class="container mx-auto px-4 text-center text-gray-600">
+            <p>© 2024 Digna - Gestão de Estoque para Economia Solidária</p>
+            <p class="mt-1 text-sm">v.0 MVP | <a href="/dashboard?entity_id={{.EntityID}}" class="text-digna-primary hover:underline">Voltar ao Dashboard</a></p>
+        </div>
+    </footer>
+</body>
+</html>

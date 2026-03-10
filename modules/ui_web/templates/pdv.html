@@ -1,45 +1,23 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDV - Digna</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <style>
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            touch-action: manipulation;
-        }
-        .keypad-btn {
-            min-height: 72px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            user-select: none;
-        }
-        .keypad-btn:active {
-            transform: scale(0.95);
-        }
-    </style>
-</head>
-<body class="bg-gray-100 min-h-screen">
-    <nav class="bg-amber-500 text-white shadow-lg sticky top-0 z-50">
+{{define "content"}}
+<div class="min-h-screen bg-digna-bg">
+    <!-- Cabeçalho específico do PDV -->
+    <div class="bg-digna-ocher text-white shadow-lg sticky top-0 z-40">
         <div class="container mx-auto px-4 py-3">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
-                    <a href="/" class="text-white hover:text-amber-100">
+                    <a href="/" class="text-white hover:text-white/80">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
                     </a>
-                    <span class="text-xl font-bold">PDV - Vendas</span>
+                    <span class="text-xl font-bold">PDV</span>
                 </div>
                 <div class="text-sm">
-                    Saldo: <span id="balance" hx-get="/api/balance" hx-trigger="load, every 5s" class="font-bold">R$ 0,00</span>
+                    <span id="currentCompany">Carregando...</span>
                 </div>
             </div>
         </div>
-    </nav>
+    </div>
 
     <main class="container mx-auto px-4 py-4 max-w-md">
         <div id="sale-result" class="mb-4"></div>
@@ -274,5 +252,5 @@
             updateProductPrice();
         });
     </script>
-</body>
-</html>
+</div>
+{{end}}

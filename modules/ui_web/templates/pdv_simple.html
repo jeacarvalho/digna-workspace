@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2A5CAA">
+    <title>PDV - Ponto de Venda - Digna</title>
+    
+    <!-- Configuração do Tailwind com paleta Digna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'digna-primary': '#2A5CAA',    // Azul soberania
+              'digna-secondary': '#4A7F3E',  // Verde suor
+              'digna-accent': '#F57F17',     // Laranja energia
+              'digna-bg': '#F9F9F6',         // Fundo claro
+              'digna-text': '#212121',       // Texto escuro
+            },
+            fontFamily: {
+              'sans': ['Inter', 'Ubuntu', 'system-ui', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Ubuntu:wght@300;400;500;700&display=swap');
+      
+      body {
+        background-color: #F9F9F6;
+        font-family: 'Inter', sans-serif;
+      }
+      
+      .digna-gradient {
+        background: linear-gradient(135deg, #2A5CAA 0%, #4A7F3E 100%);
+      }
+      
+      .digna-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(42, 92, 170, 0.1);
+        border: 1px solid rgba(42, 92, 170, 0.1);
+      }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Cabeçalho -->
+    <header class="digna-gradient text-white">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <!-- Logo -->
+                    <img src="/static/Digna_logo_v2.png" 
+                         alt="Logotipo Digna" 
+                         class="h-10 w-10">
+                    <div>
+                        <h1 class="text-xl font-bold">DIGNA PDV</h1>
+                        <p class="text-sm opacity-90">Ponto de Venda</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium">{{.EntityID}}</p>
+                    <p class="text-sm opacity-90">
+                        <a href="/dashboard?entity_id={{.EntityID}}" class="hover:underline">Voltar ao Dashboard</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegação -->
+    <nav class="bg-white border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 py-2">
+                <a href="/dashboard?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Dashboard
+                </a>
+                <a href="/pdv?entity_id={{.EntityID}}" class="px-4 py-2 bg-digna-primary text-white rounded-lg font-medium">
+                    PDV
+                </a>
+                <a href="/cash?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Caixa
+                </a>
+                <a href="/supply?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Compras
+                </a>
+                <a href="/supply/stock?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Estoque
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo principal -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-digna-text mb-2">Ponto de Venda</h1>
+            <p class="text-gray-600">Selecione produtos para venda</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Lista de produtos -->
+            <div class="lg:col-span-2">
+                <div class="digna-card p-6">
+                    <h2 class="text-xl font-semibold text-digna-text mb-4">Produtos Disponíveis</h2>
+                    
+                    {{if .Products}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{range .ProductDetails}}
+                        <div class="border rounded-lg p-4 hover:border-digna-primary transition">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-medium text-digna-text">{{.Name}}</h3>
+                                <span class="font-bold text-digna-primary">{{.FormattedPrice}}</span>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-3">
+                                <span class="bg-gray-100 px-2 py-1 rounded">Estoque: {{.Quantity}}</span>
+                                <span class="bg-gray-100 px-2 py-1 rounded ml-2">{{.Type}}</span>
+                            </div>
+                            <button class="w-full bg-digna-primary text-white py-2 rounded-lg font-medium hover:opacity-90 transition"
+                                    onclick="addToCart('{{.ID}}', '{{.Name}}', {{.UnitCost}}, {{.Quantity}})">
+                                Adicionar à Venda
+                            </button>
+                        </div>
+                        {{end}}
+                    </div>
+                    {{else}}
+                    <div class="text-center py-12">
+                        <div class="text-gray-400 mb-4">
+                            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                            </svg>
+                        </div>
+                        <p class="text-gray-600 mb-2">Nenhum produto disponível no estoque</p>
+                        <p class="text-sm text-gray-500">
+                            <a href="/supply/purchase?entity_id={{.EntityID}}" class="text-digna-primary hover:underline">
+                                Adicione produtos através do módulo de Compras
+                            </a>
+                        </p>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+
+            <!-- Carrinho de compras -->
+            <div>
+                <div class="digna-card p-6 sticky top-4">
+                    <h2 class="text-xl font-semibold text-digna-text mb-4">Carrinho de Venda</h2>
+                    
+                    <div id="cart-items" class="mb-6 max-h-64 overflow-y-auto">
+                        <!-- Itens do carrinho aparecerão aqui -->
+                        <div class="text-center py-8 text-gray-500">
+                            <p>Nenhum item no carrinho</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-4">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Total:</span>
+                            <span id="cart-total" class="text-2xl font-bold text-digna-primary">R$ 0,00</span>
+                        </div>
+                        
+                        <div class="space-y-3 mt-6">
+                            <button id="checkout-btn" 
+                                    class="w-full digna-gradient text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled>
+                                Finalizar Venda
+                            </button>
+                            <button onclick="clearCart()" 
+                                    class="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition">
+                                Limpar Carrinho
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Link para compras -->
+                <div class="mt-6 digna-card p-6">
+                    <h3 class="font-semibold text-digna-text mb-3">Módulo de Compras</h3>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Para adicionar novos produtos ao estoque, acesse o módulo de compras:
+                    </p>
+                    <div class="space-y-2">
+                        <a href="/supply/purchase?entity_id={{.EntityID}}" 
+                           class="block w-full text-center bg-digna-secondary text-white py-2 rounded-lg font-medium hover:opacity-90 transition">
+                            Nova Compra
+                        </a>
+                        <a href="/supply/suppliers?entity_id={{.EntityID}}" 
+                           class="block w-full text-center border border-digna-secondary text-digna-secondary py-2 rounded-lg font-medium hover:bg-digna-secondary/10 transition">
+                            Fornecedores
+                        </a>
+                        <a href="/supply/stock?entity_id={{.EntityID}}" 
+                           class="block w-full text-center border border-gray-300 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-50 transition">
+                            Gestão de Estoque
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="mt-12 border-t border-gray-200 py-6">
+        <div class="container mx-auto px-4 text-center text-gray-600">
+            <p>© 2024 Digna - PDV para Economia Solidária</p>
+            <p class="mt-1 text-sm">v.0 MVP | <a href="/dashboard?entity_id={{.EntityID}}" class="text-digna-primary hover:underline">Voltar ao Dashboard</a></p>
+        </div>
+    </footer>
+
+    <script>
+        let cart = [];
+        let cartTotal = 0;
+
+        function addToCart(productId, productName, unitPrice, availableQty) {
+            // Verificar se já está no carrinho
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                if (existingItem.quantity >= availableQty) {
+                    alert(`Limite de estoque atingido para ${productName}. Disponível: ${availableQty}`);
+                    return;
+                }
+                existingItem.quantity += 1;
+                existingItem.total = existingItem.quantity * existingItem.unitPrice;
+            } else {
+                cart.push({
+                    id: productId,
+                    name: productName,
+                    unitPrice: unitPrice,
+                    quantity: 1,
+                    total: unitPrice
+                });
+            }
+            
+            updateCartDisplay();
+        }
+
+        function updateCartDisplay() {
+            const cartItemsEl = document.getElementById('cart-items');
+            const cartTotalEl = document.getElementById('cart-total');
+            const checkoutBtn = document.getElementById('checkout-btn');
+            
+            // Calcular total
+            cartTotal = cart.reduce((sum, item) => sum + item.total, 0);
+            
+            // Atualizar display do total
+            cartTotalEl.textContent = 'R$ ' + (cartTotal / 100).toFixed(2).replace('.', ',');
+            
+            // Atualizar lista de itens
+            if (cart.length === 0) {
+                cartItemsEl.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <p>Nenhum item no carrinho</p>
+                    </div>
+                `;
+                checkoutBtn.disabled = true;
+            } else {
+                let itemsHtml = '';
+                cart.forEach((item, index) => {
+                    itemsHtml += `
+                        <div class="flex justify-between items-center mb-3 pb-3 border-b">
+                            <div>
+                                <p class="font-medium">${item.name}</p>
+                                <p class="text-sm text-gray-600">
+                                    ${item.quantity} × R$ ${(item.unitPrice / 100).toFixed(2)} = R$ ${(item.total / 100).toFixed(2)}
+                                </p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="updateQuantity(${index}, -1)" class="w-8 h-8 rounded-full border text-gray-600 hover:bg-gray-100">−</button>
+                                <span class="w-8 text-center">${item.quantity}</span>
+                                <button onclick="updateQuantity(${index}, 1)" class="w-8 h-8 rounded-full border text-gray-600 hover:bg-gray-100">+</button>
+                                <button onclick="removeFromCart(${index})" class="ml-2 text-red-500 hover:text-red-700">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                cartItemsEl.innerHTML = itemsHtml;
+                checkoutBtn.disabled = false;
+            }
+        }
+
+        function updateQuantity(index, change) {
+            // Implementar verificação de estoque aqui
+            cart[index].quantity += change;
+            
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            } else {
+                cart[index].total = cart[index].quantity * cart[index].unitPrice;
+            }
+            
+            updateCartDisplay();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartDisplay();
+        }
+
+        function clearCart() {
+            if (cart.length === 0) return;
+            
+            if (confirm('Tem certeza que deseja limpar o carrinho?')) {
+                cart = [];
+                updateCartDisplay();
+            }
+        }
+
+        // Inicializar
+        updateCartDisplay();
+    </script>
+</body>
+</html>

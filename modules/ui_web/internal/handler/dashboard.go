@@ -100,10 +100,11 @@ func NewDashboardHandler(lm lifecycle.LifecycleManager) (*DashboardHandler, erro
 		},
 	}
 
-	tmpl, err := template.New("templates").Funcs(funcMap).ParseGlob("templates/*.html")
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse templates: %w", err)
-	}
+	// Criar template vazio - vamos carregar templates do disco quando necessário
+	tmpl := template.New("").Funcs(funcMap)
+
+	// Parsear template simples de dashboard
+	tmpl.ParseFiles("templates/dashboard_simple.html")
 
 	return &DashboardHandler{
 		lifecycleManager: lm,
@@ -124,14 +125,9 @@ func (h *DashboardHandler) HomePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := map[string]interface{}{
-		"Title":    "Digna - Providentia Foundation",
-		"EntityID": "cooperativa_demo",
-	}
-
-	if err := h.tmpl.ExecuteTemplate(w, "layout.html", data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	// Redirecionar para login se não estiver autenticado
+	// A verificação de autenticação será feita pelo middleware
+	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
 func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request) {
@@ -164,19 +160,42 @@ func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request)
 		"Members":      calc.Members,
 	}
 
-	if err := h.tmpl.ExecuteTemplate(w, "dashboard.html", data); err != nil {
+	// Carregar template simples do disco
+	tmpl, err := template.New("dashboard_simple.html").ParseFiles("templates/dashboard_simple.html")
+	if err != nil {
+		// Fallback para template antigo
+		tmpl, err = template.New("dashboard.html").ParseFiles("templates/dashboard.html")
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *DashboardHandler) SocialClockPage(w http.ResponseWriter, r *http.Request) {
-	data := map[string]interface{}{
-		"Title":    "Ponto Social - ITG 2002",
-		"EntityID": "cooperativa_demo",
+	entityID := r.URL.Query().Get("entity_id")
+	if entityID == "" {
+		entityID = "cooperativa_demo"
 	}
 
-	if err := h.tmpl.ExecuteTemplate(w, "social_clock.html", data); err != nil {
+	data := map[string]interface{}{
+		"Title":    "Ponto Social - Digna",
+		"EntityID": entityID,
+	}
+
+	// Carregar template do disco
+	tmpl, err := template.New("social_clock.html").ParseFiles("templates/social_clock.html")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

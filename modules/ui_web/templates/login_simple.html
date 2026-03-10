@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2A5CAA">
+    <title>{{.Title}} - Digna v2</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- Configuração do Tailwind com paleta Digna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'digna-primary': '#2A5CAA',    // Azul soberania
+              'digna-secondary': '#4A7F3E',  // Verde suor
+              'digna-accent': '#F57F17',     // Laranja energia
+              'digna-bg': '#F9F9F6',         // Fundo claro
+              'digna-text': '#212121',       // Texto escuro
+            },
+            fontFamily: {
+              'sans': ['Inter', 'Ubuntu', 'system-ui', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Ubuntu:wght@300;400;500;700&display=swap');
+      
+      body {
+        background-color: #F9F9F6;
+        font-family: 'Inter', sans-serif;
+      }
+      
+      .digna-gradient {
+        background: linear-gradient(135deg, #2A5CAA 0%, #4A7F3E 100%);
+      }
+      
+      .digna-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(42, 92, 170, 0.1);
+        border: 1px solid rgba(42, 92, 170, 0.1);
+      }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full">
+        <!-- Cabeçalho -->
+        <div class="text-center mb-8">
+            <div class="digna-gradient text-white rounded-2xl p-6 mb-6">
+                <!-- Logo -->
+                <img src="/static/Digna_logo_v2.png" 
+                     alt="Logotipo Digna" 
+                     class="h-16 w-16 mx-auto mb-4">
+                <h1 class="text-3xl font-bold mb-2">DIGNA</h1>
+                <p class="opacity-90">Soberania e Suor</p>
+            </div>
+            <h2 class="text-2xl font-semibold text-digna-text mb-2">Acesso ao Sistema</h2>
+            <p class="text-gray-600">Selecione sua empresa para continuar</p>
+        </div>
+
+        <!-- Card de login -->
+        <div class="digna-card p-8">
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Empresa
+                    </label>
+                    <select id="entity_id" name="entity_id" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-digna-primary focus:border-transparent transition">
+                        {{range .Companies}}
+                        <option value="{{.id}}">{{.name}}</option>
+                        {{end}}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Senha
+                    </label>
+                    <input type="password" id="password" name="password" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-digna-primary focus:border-transparent transition"
+                           placeholder="Digite sua senha" required value="cd0123">
+                </div>
+
+                <button type="submit" 
+                        class="w-full digna-gradient text-white py-3 px-4 rounded-lg font-semibold hover:opacity-90 transition duration-200">
+                    Entrar
+                </button>
+            </form>
+
+            <div class="mt-6 pt-6 border-t border-gray-100">
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                    <p class="text-sm text-yellow-800 font-medium">Credenciais de teste:</p>
+                    <ul class="mt-1 text-xs text-yellow-700 space-y-1">
+                        <li>• Café Digna: usuário <code class="bg-yellow-100 px-1 rounded">cafe_digna</code> | senha <code class="bg-yellow-100 px-1 rounded">cd0123</code></li>
+                        <li>• Queijaria Digna: usuário <code class="bg-yellow-100 px-1 rounded">queijaria_digna</code> | senha <code class="bg-yellow-100 px-1 rounded">qd321</code></li>
+                    </ul>
+                </div>
+                <p class="text-center text-sm text-gray-500">
+                    Sistema de gestão para cooperativas e pequenos produtores
+                </p>
+            </div>
+        </div>
+
+        <!-- Rodapé -->
+        <div class="mt-8 text-center text-sm text-gray-500">
+            <p>© 2024 Digna - Tecnologia para Economia Solidária</p>
+            <p class="mt-1 text-xs">v.0 MVP</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const entityId = document.getElementById('entity_id').value;
+            const password = document.getElementById('password').value;
+            
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.textContent;
+            button.textContent = 'Entrando...';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        entity_id: entityId,
+                        password: password
+                    })
+                });
+                
+                // Verificar se a resposta é JSON válido
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    throw new Error(`Resposta não é JSON: ${text.substring(0, 100)}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    alert('Erro: ' + data.message);
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }
+            } catch (error) {
+                alert('Erro: ' + error.message);
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        });
+        
+        // Auto-focus no campo de senha
+        document.getElementById('password').focus();
+    </script>
+</body>
+</html>

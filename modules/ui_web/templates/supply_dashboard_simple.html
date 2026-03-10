@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2A5CAA">
+    <title>Compras - Digna</title>
+    
+    <!-- Configuração do Tailwind com paleta Digna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'digna-primary': '#2A5CAA',    // Azul soberania
+              'digna-secondary': '#4A7F3E',  // Verde suor
+              'digna-accent': '#F57F17',     // Laranja energia
+              'digna-bg': '#F9F9F6',         // Fundo claro
+              'digna-text': '#212121',       // Texto escuro
+            },
+            fontFamily: {
+              'sans': ['Inter', 'Ubuntu', 'system-ui', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Ubuntu:wght@300;400;500;700&display=swap');
+      
+      body {
+        background-color: #F9F9F6;
+        font-family: 'Inter', sans-serif;
+      }
+      
+      .digna-gradient {
+        background: linear-gradient(135deg, #2A5CAA 0%, #4A7F3E 100%);
+      }
+      
+      .digna-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(42, 92, 170, 0.1);
+        border: 1px solid rgba(42, 92, 170, 0.1);
+      }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Cabeçalho -->
+    <header class="digna-gradient text-white">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <!-- Logo -->
+                    <img src="/static/Digna_logo_v2.png" 
+                         alt="Logotipo Digna" 
+                         class="h-10 w-10">
+                    <div>
+                        <h1 class="text-xl font-bold">DIGNA COMPRAS</h1>
+                        <p class="text-sm opacity-90">Gestão de Suprimentos</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium">{{.EntityID}}</p>
+                    <p class="text-sm opacity-90">
+                        <a href="/dashboard?entity_id={{.EntityID}}" class="hover:underline">Voltar ao Dashboard</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegação -->
+    <nav class="bg-white border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 py-2">
+                <a href="/dashboard?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Dashboard
+                </a>
+                <a href="/pdv?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    PDV
+                </a>
+                <a href="/cash?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Caixa
+                </a>
+                <a href="/supply?entity_id={{.EntityID}}" class="px-4 py-2 bg-digna-primary text-white rounded-lg font-medium">
+                    Compras
+                </a>
+                <a href="/supply/stock?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Estoque
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo principal -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-digna-text mb-2">Gestão de Compras e Suprimentos</h1>
+            <p class="text-gray-600">Gerencie fornecedores, compras e estoque</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Card Nova Compra -->
+            <a href="/supply/purchase?entity_id={{.EntityID}}" class="digna-card p-6 hover:shadow-lg transition">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-digna-text">Nova Compra</h2>
+                    <div class="p-2 bg-green-100 rounded-full">
+                        <span class="text-green-600 font-bold">+</span>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm">Registre uma nova compra de insumos ou produtos</p>
+            </a>
+
+            <!-- Card Fornecedores -->
+            <a href="/supply/suppliers?entity_id={{.EntityID}}" class="digna-card p-6 hover:shadow-lg transition">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-digna-text">Fornecedores</h2>
+                    <div class="p-2 bg-blue-100 rounded-full">
+                        <span class="text-blue-600 font-bold">🏢</span>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm">Gerencie seus fornecedores e parceiros</p>
+            </a>
+
+            <!-- Card Estoque -->
+            <a href="/supply/stock?entity_id={{.EntityID}}" class="digna-card p-6 hover:shadow-lg transition">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-digna-text">Estoque</h2>
+                    <div class="p-2 bg-purple-100 rounded-full">
+                        <span class="text-purple-600 font-bold">📦</span>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm">Controle de itens em estoque</p>
+            </a>
+        </div>
+
+        <!-- Últimas Compras -->
+        <div class="digna-card p-6">
+            <h2 class="text-xl font-semibold text-digna-text mb-4">Últimas Compras</h2>
+            {{if .Purchases}}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fornecedor</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Itens</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {{range .Purchases}}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm text-gray-900">{{.Date.Format "02/01/2006"}}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{.SupplierName}}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900">{{len .Items}} itens</td>
+                            <td class="px-4 py-3 text-sm font-medium text-gray-900">R$ {{printf "%.2f" (fdiv .TotalAmount 100.0)}}</td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 text-xs rounded-full {{if eq .Status "PAGO"}}bg-green-100 text-green-800{{else}}bg-yellow-100 text-yellow-800{{end}}">
+                                    {{if eq .Status "PAGO"}}Pago{{else}}Pendente{{end}}
+                                </span>
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{else}}
+            <div class="text-center py-12">
+                <div class="text-gray-400 mb-4">
+                    <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                </div>
+                <p class="text-gray-600 mb-2">Nenhuma compra registrada</p>
+                <p class="text-sm text-gray-500">
+                    <a href="/supply/purchase?entity_id={{.EntityID}}" class="text-digna-primary hover:underline">
+                        Registre sua primeira compra
+                    </a>
+                </p>
+            </div>
+            {{end}}
+        </div>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="mt-12 border-t border-gray-200 py-6">
+        <div class="container mx-auto px-4 text-center text-gray-600">
+            <p>© 2024 Digna - Gestão de Suprimentos para Economia Solidária</p>
+            <p class="mt-1 text-sm">v.0 MVP | <a href="/dashboard?entity_id={{.EntityID}}" class="text-digna-primary hover:underline">Voltar ao Dashboard</a></p>
+        </div>
+    </footer>
+</body>
+</html>

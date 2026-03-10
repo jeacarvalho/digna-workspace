@@ -23,7 +23,6 @@ type CashHandler struct {
 
 func NewCashHandler(lm lifecycle.LifecycleManager) (*CashHandler, error) {
 	funcMap := template.FuncMap{
-		"divide": divide,
 		"formatCurrency": func(amount int64) string {
 			return fmt.Sprintf("R$ %.2f", float64(amount)/100)
 		},
@@ -72,10 +71,8 @@ func NewCashHandler(lm lifecycle.LifecycleManager) (*CashHandler, error) {
 		},
 	}
 
-	tmpl, err := template.New("templates").Funcs(funcMap).ParseGlob("templates/*.html")
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse templates: %w", err)
-	}
+	// Criar template vazio - vamos carregar templates do disco quando necessário
+	tmpl := template.New("").Funcs(funcMap)
 
 	return &CashHandler{
 		lifecycleManager: lm,
@@ -115,7 +112,24 @@ func (h *CashHandler) CashPage(w http.ResponseWriter, r *http.Request) {
 		"Categories": []string{"VENDAS", "DESPESAS", "FORNECEDORES", "BANCO", "OUTRAS ENTRADAS", "OUTRAS SAÍDAS"},
 	}
 
-	if err := h.tmpl.ExecuteTemplate(w, "cash.html", data); err != nil {
+	// Criar função de divisão para templates
+	funcMap := template.FuncMap{
+		"fdiv": func(a, b float64) float64 {
+			if b == 0 {
+				return 0
+			}
+			return a / b
+		},
+	}
+
+	// Carregar template simples do disco com funções
+	tmpl, err := template.New("cash_simple.html").Funcs(funcMap).ParseFiles("templates/cash_simple.html")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

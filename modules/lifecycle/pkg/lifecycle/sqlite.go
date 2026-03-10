@@ -126,3 +126,49 @@ func (m *SQLiteManager) CloseAll() error {
 
 	return nil
 }
+
+// EntityExists verifica se o banco de dados da entidade já existe
+func (m *SQLiteManager) EntityExists(entityID string) (bool, error) {
+	dbPath := filepath.Join(DataDir, fmt.Sprintf("%s.db", entityID))
+
+	// Verificar se o arquivo existe
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		return false, nil
+	} else if err != nil {
+		return false, fmt.Errorf("erro ao verificar arquivo do banco: %w", err)
+	}
+
+	return true, nil
+}
+
+// CreateEntity cria uma nova entidade com banco de dados inicializado
+func (m *SQLiteManager) CreateEntity(entityID, entityName string) error {
+	// Verificar se já existe
+	exists, err := m.EntityExists(entityID)
+	if err != nil {
+		return fmt.Errorf("erro ao verificar existência da entidade: %w", err)
+	}
+
+	if exists {
+		return nil // Já existe, não precisa criar
+	}
+
+	// Obter conexão (isso criará o banco se não existir)
+	db, err := m.GetConnection(entityID)
+	if err != nil {
+		return fmt.Errorf("erro ao criar conexão para nova entidade: %w", err)
+	}
+
+	// Aqui poderíamos adicionar dados iniciais específicos da entidade
+	// Por exemplo, criar contas padrão, configurar nome da entidade, etc.
+	// Por enquanto, apenas ping no banco para garantir que está funcionando
+	if err := db.Ping(); err != nil {
+		return fmt.Errorf("erro ao conectar com banco da nova entidade: %w", err)
+	}
+
+	// Para agora, apenas garantir que as migrações foram executadas
+	// (já feito pelo GetConnection através do migrator.RunMigrations)
+
+	fmt.Printf("✅ Entidade criada: %s (%s)\n", entityName, entityID)
+	return nil
+}
