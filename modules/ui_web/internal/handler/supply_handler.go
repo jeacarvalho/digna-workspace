@@ -299,6 +299,8 @@ func (h *SupplyHandler) SuppliersPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SupplyHandler) StockPage(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("[DEBUG] StockPage called: %s\n", r.URL.String())
+
 	entityID := r.URL.Query().Get("entity_id")
 	if entityID == "" {
 		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
@@ -306,14 +308,22 @@ func (h *SupplyHandler) StockPage(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 
+	fmt.Printf("[DEBUG] Getting stock items for entity: %s\n", entityID)
 	stockItems, err := h.supplyAPI.GetStockItems(ctx, entityID)
 	if err != nil {
+		fmt.Printf("[DEBUG] Error getting stock items: %v\n", err)
 		http.Error(w, fmt.Sprintf("Erro ao buscar estoque: %v", err), http.StatusInternalServerError)
 		return
 	}
+	fmt.Printf("[DEBUG] Got %d stock items\n", len(stockItems))
 
 	// Gerar relatório de estoque
-	report, _ := h.supplyAPI.GetStockReport(ctx, entityID)
+	fmt.Printf("[DEBUG] Getting stock report\n")
+	report, reportErr := h.supplyAPI.GetStockReport(ctx, entityID)
+	if reportErr != nil {
+		fmt.Printf("[DEBUG] Error getting stock report (continuing): %v\n", reportErr)
+		// Continuar mesmo com erro no relatório
+	}
 
 	// Preparar dados para o template com conversões necessárias
 	// Respeitando Anti-Float: conversão int64 -> float64 apenas no handler
@@ -534,6 +544,94 @@ func (h *SupplyHandler) RegisterSupplier(w http.ResponseWriter, r *http.Request)
 			</div>
 		</div>
 	`, name, resp.SupplierID)
+}
+
+// renderStockItemsList renderiza a lista de itens de estoque em HTML
+func renderStockItemsList(w http.ResponseWriter, entityID string, stockItems []*supply.StockItem, newItemName string) {
+	// Preparar dados para o template com conversões necessárias
+	var templateStockItems []map[string]interface{}
+	totalValue := int64(0)
+	lowStockCount := 0
+
+	for _, item := range stockItems {
+		// Calcular valor total deste item
+		itemTotalValue := item.UnitCost * int64(item.Quantity)
+		totalValue += itemTotalValue
+
+		// Verificar se está abaixo do mínimo
+		if item.Quantity < item.MinQuantity {
+			lowStockCount++
+		}
+
+		// Criar item para template com campos convertidos
+		templateItem := map[string]interface{}{
+			"ID":          item.ID,
+			"Name":        item.Name,
+			"Type":        item.Type,
+			"Unit":        item.Unit,
+			"Quantity":    item.Quantity,
+			"MinQuantity": item.MinQuantity,
+			"UnitCost":    item.UnitCost,
+			"CreatedAt":   item.CreatedAt,
+			// Campos convertidos para float64 (para uso com fdiv no template)
+			"UnitCostFloat":   float64(item.UnitCost),
+			"TotalValueFloat": float64(itemTotalValue),
+			// Usar MinQuantity como int para comparações
+			"MinQuantityInt": item.MinQuantity,
+		}
+		templateStockItems = append(templateStockItems, templateItem)
+	}
+
+	data := map[string]interface{}{
+		"Title":      "Meu Estoque - Digna",
+		"EntityID":   entityID,
+		"StockItems": templateStockItems,
+		"ItemTypes": []string{
+			"INSUMO",
+			"PRODUTO",
+			"MERCADORIA",
+		},
+		"TotalValueFloat": float64(totalValue),
+		"LowStockCount":   lowStockCount,
+	}
+
+	// Carregar template do disco
+	tmpl, err := loadSupplyTemplate("supply_stock_simple.html")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Retornar HTML completo da lista de itens (para HTMX outerHTML)
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+
+	// Executar template
+	if err := tmpl.Execute(w, data); err != nil {
+		fmt.Printf("[DEBUG] Template execution error: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Adicionar mensagem de sucesso se for um novo item
+	if newItemName != "" {
+		fmt.Fprintf(w, `
+			<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded" role="alert" id="successMessage">
+				<div class="flex">
+					<div class="flex-shrink-0">
+						<svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+						</svg>
+					</div>
+					<div class="ml-3">
+						<p class="font-bold">✅ Item de estoque registrado com sucesso!</p>
+						<p class="text-sm mt-1">Nome: <span class="font-semibold text-green-800">%s</span></p>
+						<p class="text-sm mt-1">Item adicionado à lista acima.</p>
+					</div>
+				</div>
+			</div>
+		`, newItemName)
+	}
 }
 
 func (h *SupplyHandler) GetStockItemsAPI(w http.ResponseWriter, r *http.Request) {
@@ -784,180 +882,12 @@ func (h *SupplyHandler) RegisterStockItem(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// DEBUG: Log item count
+	// DEBUG: Log item count and names
 	fmt.Printf("[DEBUG] Retrieved %d stock items after registration\n", len(stockItems))
-
-	// Retornar HTML completo da lista de itens (para HTMX outerHTML)
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
-
-	// Renderizar a lista completa de itens
-	if len(stockItems) == 0 {
-		fmt.Fprintf(w, `
-			<div id="stockItemsList" class="digna-card p-6">
-				<h2 class="text-xl font-semibold text-digna-text mb-4">Itens em Estoque</h2>
-				<div class="text-center py-12">
-					<div class="text-gray-400 mb-4">
-						<svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-						</svg>
-					</div>
-					<p class="text-gray-600 mb-2">Estoque vazio</p>
-					<p class="text-sm text-gray-500">
-						<a href="/supply/purchase?entity_id=%s" class="text-digna-primary hover:underline">
-							Registre uma compra para adicionar itens ao estoque
-						</a>
-					</p>
-				</div>
-			</div>
-		`, entityID)
-		return
+	for i, item := range stockItems {
+		fmt.Printf("[DEBUG] Item %d: %s (Qty: %d, Cost: %d)\n", i+1, item.Name, item.Quantity, item.UnitCost)
 	}
 
-	// Iniciar a div com id para HTMX
-	fmt.Fprintf(w, `<div id="stockItemsList" class="digna-card p-6">
-		<h2 class="text-xl font-semibold text-digna-text mb-4">Itens em Estoque</h2>
-		<div class="overflow-x-auto">
-			<table class="min-w-full divide-y divide-gray-200">
-				<thead>
-					<tr>
-						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
-						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantidade</th>
-						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unidade</th>
-						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Custo Unitário</th>
-						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor Total</th>
-						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-					</tr>
-				</thead>
-				<tbody class="divide-y divide-gray-200">`)
-
-	// Renderizar cada item
-	for _, item := range stockItems {
-		// Calcular valor total do item
-		itemTotalValue := item.UnitCost * int64(item.Quantity)
-
-		fmt.Fprintf(w, `
-			<tr class="hover:bg-gray-50">
-				<td class="px-4 py-3">
-					<div>
-						<p class="font-medium text-gray-900">%s</p>
-					</div>
-				</td>
-				<td class="px-4 py-3">
-					<span class="px-2 py-1 text-xs rounded-full 
-						%s">
-						%s
-					</span>
-				</td>
-				<td class="px-4 py-3">
-					<div class="flex items-center">
-						<span class="font-medium %s">
-							%d
-						</span>
-						%s
-					</div>
-				</td>
-				<td class="px-4 py-3 text-sm text-gray-900">
-					%s
-				</td>
-				<td class="px-4 py-3 text-sm text-gray-900">
-					R$ %.2f
-				</td>
-				<td class="px-4 py-3 text-sm font-medium text-gray-900">
-					R$ %.2f
-				</td>
-				<td class="px-4 py-3">
-					%s
-				</td>
-			</tr>`,
-			item.Name,
-			// Tipo com cor
-			func() string {
-				switch item.Type {
-				case "PRODUTO":
-					return "bg-blue-100 text-blue-800"
-				case "MERCADORIA":
-					return "bg-green-100 text-green-800"
-				default:
-					return "bg-gray-100 text-gray-800"
-				}
-			}(),
-			func() string {
-				switch item.Type {
-				case "PRODUTO":
-					return "Produto"
-				case "MERCADORIA":
-					return "Mercadoria"
-				default:
-					return "Insumo"
-				}
-			}(),
-			// Cor da quantidade se abaixo do mínimo
-			func() string {
-				if item.Quantity < item.MinQuantity {
-					return "text-red-600"
-				}
-				return "text-gray-900"
-			}(),
-			item.Quantity,
-			// Ícone de alerta se abaixo do mínimo
-			func() string {
-				if item.Quantity < item.MinQuantity {
-					return `<span class="ml-2 text-xs text-red-500" title="Abaixo do mínimo">⚠️</span>`
-				}
-				return ""
-			}(),
-			// Unidade formatada
-			func() string {
-				switch item.Unit {
-				case "UNIDADE":
-					return "unid."
-				case "KG":
-					return "kg"
-				case "G":
-					return "g"
-				case "L":
-					return "L"
-				default:
-					return item.Unit
-				}
-			}(),
-			// Custo unitário
-			float64(item.UnitCost)/100,
-			// Valor total
-			float64(itemTotalValue)/100,
-			// Status
-			func() string {
-				if item.Quantity < item.MinQuantity {
-					return `<span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Baixo</span>`
-				} else if item.Quantity < item.MinQuantity*2 {
-					return `<span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Atenção</span>`
-				} else {
-					return `<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">OK</span>`
-				}
-			}(),
-		)
-	}
-
-	// Fechar tabela e div
-	fmt.Fprintf(w, `</tbody></table></div></div>`)
-
-	// Adicionar mensagem de sucesso no topo (opcional)
-	fmt.Fprintf(w, `
-		<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded" role="alert" id="successMessage">
-			<div class="flex">
-				<div class="flex-shrink-0">
-					<svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-					</svg>
-				</div>
-				<div class="ml-3">
-					<p class="font-bold">✅ Item de estoque registrado com sucesso!</p>
-					<p class="text-sm mt-1">Nome: <span class="font-semibold text-green-800">%s</span></p>
-					<p class="text-sm mt-1">Item adicionado à lista acima.</p>
-				</div>
-			</div>
-		</div>
-	`, name)
+	// Usar função auxiliar para renderizar a lista de itens
+	renderStockItemsList(w, entityID, stockItems, name)
 }

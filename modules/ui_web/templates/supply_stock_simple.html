@@ -8,6 +8,8 @@
     
     <!-- Configuração do Tailwind com paleta Digna -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTMX para interações assíncronas -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script>
       tailwind.config = {
         theme: {
@@ -260,7 +262,7 @@
                                 <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
                                     Baixo
                                 </span>
-                                 {{else if lt .Quantity .MinQuantityDouble}}
+                                 {{else if lt .Quantity .MinQuantityInt}}
                                 <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
                                     Atenção
                                 </span>
