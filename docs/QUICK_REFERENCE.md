@@ -1,6 +1,6 @@
 # 🚀 Quick Reference - Projeto Digna
 
-**Última atualização:** 10/03/2026 (Sprint 16 completa, Sprint 17 em andamento)
+**Última atualização:** 10/03/2026
 **Status:** ✅ PRODUCTION READY (149/149 testes passando)
 
 ---
@@ -98,12 +98,15 @@ modules/
 └── ui_web/             # Interface web principal
 ```
 
-
 ---
 
 ## 🆕 Nova Sessão
 
-**Sessão iniciada em:** 
+**Sessão iniciada em:** 10/03/2026 20:20
 **Status:** ✅ PRONTO PARA NOVA IMPLEMENTAÇÃO
 
 Use `./start_session.sh` para contexto completo ou `./process_task.sh` para começar.
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, member_handler, pdv_handler, supply_handler, supply_templates
