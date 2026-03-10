@@ -1,6 +1,4 @@
-***
 
-```markdown
 #### title: Requisitos do Projeto Digna
 status: implemented
 version: 1.4

@@ -1,10 +1,3 @@
----
-title: Padrão de Sessão
-status: implemented
-version: 1.0
-last_updated: 2026-03-07
----
-
 # Padrão de Sessão - Digna
 
 ---

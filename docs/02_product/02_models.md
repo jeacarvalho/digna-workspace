@@ -1,6 +1,4 @@
-***
 
-```markdown
 #### title: Modelos de Domínio e Dados
 status: implemented
 version: 1.3

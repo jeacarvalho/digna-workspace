@@ -1,13 +1,3 @@
-***
-
-```markdown
----
-title: Status Atual
-status: implemented
-version: 1.5
-last_updated: 2026-03-09 (Sessão Crítica)
----
-
 # Status Atual - Digna
 
 **Última Atualização:** 2026-03-09 (Sessão de Correções Críticas)

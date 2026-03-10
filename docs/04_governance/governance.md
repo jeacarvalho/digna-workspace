@@ -1,12 +1,3 @@
-***
-
-```markdown
----
-title: Governança do Projeto Digna
-status: implemented
-version: 1.1
-last_updated: 2026-03-08
----
 
 # Governança - Projeto Digna
 

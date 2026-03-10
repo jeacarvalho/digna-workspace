@@ -1,6 +1,4 @@
-***
 
-```markdown
 #### title: Escopo do Produto
 status: implemented
 version: 1.1

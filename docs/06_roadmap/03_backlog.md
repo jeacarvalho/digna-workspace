@@ -1,13 +1,3 @@
-***
-
-```markdown
----
-title: Product Backlog
-status: proposed
-version: 1.4
-last_updated: 2026-03-09
----
-
 # Product Backlog - Digna
 
 ---

@@ -1,6 +1,4 @@
-***
 
-```markdown
 #### title: Arquitetura do Sistema Digna
 status: implemented
 version: 1.5

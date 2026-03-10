@@ -1,13 +1,3 @@
-***
-
-```markdown
----
-title: Melhorias e Riscos
-status: draft
-version: 1.1
-last_updated: 2026-03-08
----
-
 # Melhorias e Riscos - Digna
 
 ## 1. Melhorias Implementadas

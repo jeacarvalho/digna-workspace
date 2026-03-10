@@ -1,10 +1,3 @@
----
-title: Architectural Decisions Record (ADR) - Sprint 12
-status: implemented
-version: 1.0
-last_updated: 2026-03-08
----
-
 # Architectural Decisions Record - Sprint 12
 
 ## ADR-001: Integration via ui_web/main.go

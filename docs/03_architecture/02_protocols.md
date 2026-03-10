@@ -1,12 +1,3 @@
-***
-
-```markdown
----
-title: Protocolos Técnicos
-status: implemented
-version: 1.1
-last_updated: 2026-03-08
----
 
 # Protocolos Técnicos - Digna
 

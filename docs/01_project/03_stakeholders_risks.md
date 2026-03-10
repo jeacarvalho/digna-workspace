@@ -1,6 +1,3 @@
-***
-
-```markdown
 #### title: Stakeholders e Riscos
 status: implemented
 version: 1.1

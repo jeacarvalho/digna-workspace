@@ -1,13 +1,3 @@
-***
-
-```markdown
----
-title: Roadmap de Produto
-status: implemented
-version: 1.3
-last_updated: 2026-03-09
----
-
 # Roadmap de Produto - Digna
 
 O roadmap segue as 4 fases estratégicas definidas no DVP (Documento de Visão e Escopo) e incorpora a aliança com a classe contábil para ganho de escala na Economia Solidária.

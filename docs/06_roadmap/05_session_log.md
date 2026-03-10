@@ -1,10 +1,3 @@
----
-title: Session Log
-status: implemented
-version: 1.2
-last_updated: 2026-03-09 (Sessão Crítica)
----
-
 # Session Log - Digna
 
 ---

@@ -1,6 +1,3 @@
-***
-
-```markdown
 #### title: Visão Estratégica
 status: implemented
 version: 1.4

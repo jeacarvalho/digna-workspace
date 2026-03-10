@@ -1,11 +1,3 @@
-***
-
-```markdown
-#### title: Estratégia de Release
-status: implemented
-version: 1.3
-last_updated: 2026-03-08
-
 ### Estratégia de Release - Digna
 
 --------------------------------------------------------------------------------
