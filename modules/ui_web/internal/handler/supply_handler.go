@@ -888,6 +888,88 @@ func (h *SupplyHandler) RegisterStockItem(w http.ResponseWriter, r *http.Request
 		fmt.Printf("[DEBUG] Item %d: %s (Qty: %d, Cost: %d)\n", i+1, item.Name, item.Quantity, item.UnitCost)
 	}
 
-	// Usar função auxiliar para renderizar a lista de itens
-	renderStockItemsList(w, entityID, stockItems, name)
+	// Retornar APENAS a div #stockItemsList para HTMX
+	// (não o template completo que causa duplicação)
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+
+	// Iniciar com a div que será substituída
+	fmt.Fprintf(w, `<div id="stockItemsList" class="digna-card p-6">`)
+
+	// Mensagem de sucesso
+	fmt.Fprintf(w, `
+		<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
+			<div class="flex">
+				<div class="flex-shrink-0">
+					<svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+					</svg>
+				</div>
+				<div class="ml-3">
+					<p class="font-bold">✅ Item registrado com sucesso!</p>
+					<p class="text-sm mt-1">Nome: <span class="font-semibold text-green-800">%s</span></p>
+				</div>
+			</div>
+		</div>
+	`, name)
+
+	// Tabela de itens
+	if len(stockItems) == 0 {
+		fmt.Fprintf(w, `
+			<h2 class="text-xl font-semibold text-digna-text mb-4">Itens em Estoque</h2>
+			<div class="text-center py-12">
+				<p class="text-gray-600">Estoque vazio</p>
+			</div>
+		`)
+	} else {
+		fmt.Fprintf(w, `
+			<h2 class="text-xl font-semibold text-digna-text mb-4">Itens em Estoque</h2>
+			<div class="overflow-x-auto">
+				<table class="min-w-full divide-y divide-gray-200">
+					<thead>
+						<tr>
+							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantidade</th>
+							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Custo Unitário</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-gray-200">`)
+
+		for _, item := range stockItems {
+			typeText := "Insumo"
+			if item.Type == "PRODUTO" {
+				typeText = "Produto"
+			} else if item.Type == "MERCADORIA" {
+				typeText = "Mercadoria"
+			}
+
+			fmt.Fprintf(w, `
+				<tr class="hover:bg-gray-50">
+					<td class="px-4 py-3">
+						<p class="font-medium text-gray-900">%s</p>
+					</td>
+					<td class="px-4 py-3">
+						<span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+							%s
+						</span>
+					</td>
+					<td class="px-4 py-3">
+						<span class="font-medium">%d</span>
+					</td>
+					<td class="px-4 py-3 text-sm text-gray-900">
+						R$ %.2f
+					</td>
+				</tr>`,
+				item.Name,
+				typeText,
+				item.Quantity,
+				float64(item.UnitCost)/100)
+		}
+
+		fmt.Fprintf(w, `</tbody></table></div>`)
+	}
+
+	// Fechar a div
+	fmt.Fprintf(w, `</div>`)
 }
