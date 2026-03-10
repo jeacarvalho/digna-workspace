@@ -127,7 +127,7 @@
         <!-- Formulário para cadastrar novo item (inicialmente oculto) -->
         <div id="newItemForm" class="hidden digna-card p-6 mb-8">
             <h2 class="text-xl font-semibold text-digna-text mb-4">Cadastrar Novo Item</h2>
-            <form hx-post="/supply/stock/item" hx-target="#stockItemsList" hx-swap="outerHTML">
+            <form hx-post="/api/supply/stock-item" hx-target="#stockItemsList" hx-swap="outerHTML">
                 <input type="hidden" name="entity_id" value="{{.EntityID}}">
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -196,7 +196,7 @@
         </div>
 
         <!-- Lista de itens em estoque -->
-        <div class="digna-card p-6">
+        <div id="stockItemsList" class="digna-card p-6">
             <h2 class="text-xl font-semibold text-digna-text mb-4">Itens em Estoque</h2>
             {{if .StockItems}}
             <div class="overflow-x-auto">
@@ -216,12 +216,9 @@
                         {{range .StockItems}}
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3">
-                                <div>
-                                    <p class="font-medium text-gray-900">{{.Name}}</p>
-                                    {{if .Description}}
-                                    <p class="text-xs text-gray-500">{{.Description}}</p>
-                                    {{end}}
-                                </div>
+                                 <div>
+                                     <p class="font-medium text-gray-900">{{.Name}}</p>
+                                 </div>
                             </td>
                             <td class="px-4 py-3">
                                 <span class="px-2 py-1 text-xs rounded-full 
@@ -253,17 +250,17 @@
                                 {{else}}{{.Unit}}{{end}}
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-900">
-                                R$ {{printf "%.2f" (fdiv .UnitCost 100.0)}}
+                                 R$ {{printf "%.2f" (fdiv .UnitCostFloat 100.0)}}
                             </td>
                             <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                                R$ {{printf "%.2f" (fdiv (multiply .UnitCost .Quantity) 100.0)}}
+                                 R$ {{printf "%.2f" (fdiv .TotalValueFloat 100.0)}}
                             </td>
                             <td class="px-4 py-3">
                                 {{if lt .Quantity .MinQuantity}}
                                 <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
                                     Baixo
                                 </span>
-                                {{else if lt .Quantity (multiply .MinQuantity 2)}}
+                                 {{else if lt .Quantity .MinQuantityDouble}}
                                 <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
                                     Atenção
                                 </span>
@@ -306,7 +303,7 @@
             <div class="digna-card p-6">
                 <h3 class="font-semibold text-digna-text mb-2">Valor Total</h3>
                 <p class="text-3xl font-bold text-green-600">
-                    R$ {{printf "%.2f" (fdiv .TotalValue 100.0)}}
+                     R$ {{printf "%.2f" (fdiv .TotalValueFloat 100.0)}}
                 </p>
                 <p class="text-sm text-gray-600 mt-1">em estoque</p>
             </div>

@@ -315,16 +315,54 @@ func (h *SupplyHandler) StockPage(w http.ResponseWriter, r *http.Request) {
 	// Gerar relatório de estoque
 	report, _ := h.supplyAPI.GetStockReport(ctx, entityID)
 
+	// Preparar dados para o template com conversões necessárias
+	// Respeitando Anti-Float: conversão int64 -> float64 apenas no handler
+	// Criar uma versão dos stockItems com campos convertidos para o template
+	var templateStockItems []map[string]interface{}
+	totalValue := int64(0)
+	lowStockCount := 0
+
+	for _, item := range stockItems {
+		// Calcular valor total deste item
+		itemTotalValue := item.UnitCost * int64(item.Quantity)
+		totalValue += itemTotalValue
+
+		// Verificar se está abaixo do mínimo
+		if item.Quantity < item.MinQuantity {
+			lowStockCount++
+		}
+
+		// Criar item para template com campos convertidos
+		templateItem := map[string]interface{}{
+			"ID":          item.ID,
+			"Name":        item.Name,
+			"Type":        item.Type,
+			"Unit":        item.Unit,
+			"Quantity":    item.Quantity,
+			"MinQuantity": item.MinQuantity,
+			"UnitCost":    item.UnitCost,
+			"CreatedAt":   item.CreatedAt,
+			// Campos convertidos para float64 (para uso com fdiv no template)
+			"UnitCostFloat":     float64(item.UnitCost),
+			"TotalValueFloat":   float64(itemTotalValue),
+			"MinQuantityDouble": float64(item.MinQuantity * 2), // para a comparação no template
+		}
+		templateStockItems = append(templateStockItems, templateItem)
+	}
+
 	data := map[string]interface{}{
 		"Title":       "Meu Estoque - Digna",
 		"EntityID":    entityID,
-		"StockItems":  stockItems,
+		"StockItems":  templateStockItems, // Usar versão com campos convertidos
 		"StockReport": report,
 		"ItemTypes": []string{
 			"INSUMO",
 			"PRODUTO",
 			"MERCADORIA",
 		},
+		// Campos convertidos para o template
+		"TotalValueFloat": float64(totalValue),
+		"LowStockCount":   lowStockCount,
 	}
 
 	// Carregar template do disco (cache-proof) com funções
@@ -645,6 +683,8 @@ func (h *SupplyHandler) GetStockItemsAPI(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *SupplyHandler) RegisterStockItem(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("[DEBUG] RegisterStockItem called: %s %s\n", r.Method, r.URL.Path)
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
 		return
@@ -656,6 +696,9 @@ func (h *SupplyHandler) RegisterStockItem(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// DEBUG: Log all form values
+	fmt.Printf("[DEBUG] Form values: %v\n", r.Form)
+
 	entityID := r.FormValue("entity_id")
 	if entityID == "" {
 		// Tentar da query string também
@@ -665,6 +708,8 @@ func (h *SupplyHandler) RegisterStockItem(w http.ResponseWriter, r *http.Request
 		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
 		return
 	}
+
+	fmt.Printf("[DEBUG] Entity ID: %s\n", entityID)
 
 	ctx := r.Context()
 
@@ -676,11 +721,20 @@ func (h *SupplyHandler) RegisterStockItem(w http.ResponseWriter, r *http.Request
 	unitCostStr := r.FormValue("unit_cost")
 
 	quantity, _ := strconv.Atoi(quantityStr)
+	if quantity <= 0 {
+		quantity = 0 // Default to 0 if not provided
+	}
 	minQuantity, _ := strconv.Atoi(minQuantityStr)
-	unitCost, err := strconv.ParseInt(unitCostStr, 10, 64)
-	if err != nil || unitCost <= 0 {
-		http.Error(w, "Valor unitário inválido", http.StatusBadRequest)
-		return
+
+	// Parse unit cost as float and convert to cents (int64)
+	var unitCost int64
+	if unitCostStr != "" {
+		costFloat, err := strconv.ParseFloat(unitCostStr, 64)
+		if err != nil || costFloat < 0 {
+			http.Error(w, "Valor unitário inválido", http.StatusBadRequest)
+			return
+		}
+		unitCost = int64(costFloat * 100) // Convert to cents
 	}
 
 	// Converter string para tipo de item
@@ -720,46 +774,178 @@ func (h *SupplyHandler) RegisterStockItem(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Retornar sucesso com HTML amigável
+	// DEBUG: Log success
+	fmt.Printf("[DEBUG] Stock item registered successfully: %s\n", name)
+
+	// Buscar lista atualizada de itens
+	stockItems, err := h.supplyAPI.GetStockItems(ctx, entityID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao buscar itens atualizados: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// DEBUG: Log item count
+	fmt.Printf("[DEBUG] Retrieved %d stock items after registration\n", len(stockItems))
+
+	// Retornar HTML completo da lista de itens (para HTMX outerHTML)
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 
-	// Função auxiliar para traduzir tipo de item
-	typeLabel := itemTypeEnum
-	switch itemTypeEnum {
-	case "INSUMO":
-		typeLabel = "Insumo/Matéria-prima"
-	case "PRODUTO":
-		typeLabel = "Produto Acabado"
-	case "MERCADORIA":
-		typeLabel = "Mercadoria para Revenda"
+	// Renderizar a lista completa de itens
+	if len(stockItems) == 0 {
+		fmt.Fprintf(w, `
+			<div id="stockItemsList" class="digna-card p-6">
+				<h2 class="text-xl font-semibold text-digna-text mb-4">Itens em Estoque</h2>
+				<div class="text-center py-12">
+					<div class="text-gray-400 mb-4">
+						<svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+						</svg>
+					</div>
+					<p class="text-gray-600 mb-2">Estoque vazio</p>
+					<p class="text-sm text-gray-500">
+						<a href="/supply/purchase?entity_id=%s" class="text-digna-primary hover:underline">
+							Registre uma compra para adicionar itens ao estoque
+						</a>
+					</p>
+				</div>
+			</div>
+		`, entityID)
+		return
 	}
 
-	// Função auxiliar para unidade
-	unitLabel := unit
-	switch unit {
-	case "UNIDADE":
-		unitLabel = "unidades"
-	case "KG":
-		unitLabel = "kg"
-	case "G":
-		unitLabel = "g"
-	case "L":
-		unitLabel = "litros"
-	case "M":
-		unitLabel = "metros"
-	case "CM":
-		unitLabel = "cm"
-	case "PACOTE":
-		unitLabel = "pacotes"
-	case "CAIXA":
-		unitLabel = "caixas"
-	case "SACO":
-		unitLabel = "sacos"
+	// Iniciar a div com id para HTMX
+	fmt.Fprintf(w, `<div id="stockItemsList" class="digna-card p-6">
+		<h2 class="text-xl font-semibold text-digna-text mb-4">Itens em Estoque</h2>
+		<div class="overflow-x-auto">
+			<table class="min-w-full divide-y divide-gray-200">
+				<thead>
+					<tr>
+						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantidade</th>
+						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unidade</th>
+						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Custo Unitário</th>
+						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor Total</th>
+						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-gray-200">`)
+
+	// Renderizar cada item
+	for _, item := range stockItems {
+		// Calcular valor total do item
+		itemTotalValue := item.UnitCost * int64(item.Quantity)
+
+		fmt.Fprintf(w, `
+			<tr class="hover:bg-gray-50">
+				<td class="px-4 py-3">
+					<div>
+						<p class="font-medium text-gray-900">%s</p>
+					</div>
+				</td>
+				<td class="px-4 py-3">
+					<span class="px-2 py-1 text-xs rounded-full 
+						%s">
+						%s
+					</span>
+				</td>
+				<td class="px-4 py-3">
+					<div class="flex items-center">
+						<span class="font-medium %s">
+							%d
+						</span>
+						%s
+					</div>
+				</td>
+				<td class="px-4 py-3 text-sm text-gray-900">
+					%s
+				</td>
+				<td class="px-4 py-3 text-sm text-gray-900">
+					R$ %.2f
+				</td>
+				<td class="px-4 py-3 text-sm font-medium text-gray-900">
+					R$ %.2f
+				</td>
+				<td class="px-4 py-3">
+					%s
+				</td>
+			</tr>`,
+			item.Name,
+			// Tipo com cor
+			func() string {
+				switch item.Type {
+				case "PRODUTO":
+					return "bg-blue-100 text-blue-800"
+				case "MERCADORIA":
+					return "bg-green-100 text-green-800"
+				default:
+					return "bg-gray-100 text-gray-800"
+				}
+			}(),
+			func() string {
+				switch item.Type {
+				case "PRODUTO":
+					return "Produto"
+				case "MERCADORIA":
+					return "Mercadoria"
+				default:
+					return "Insumo"
+				}
+			}(),
+			// Cor da quantidade se abaixo do mínimo
+			func() string {
+				if item.Quantity < item.MinQuantity {
+					return "text-red-600"
+				}
+				return "text-gray-900"
+			}(),
+			item.Quantity,
+			// Ícone de alerta se abaixo do mínimo
+			func() string {
+				if item.Quantity < item.MinQuantity {
+					return `<span class="ml-2 text-xs text-red-500" title="Abaixo do mínimo">⚠️</span>`
+				}
+				return ""
+			}(),
+			// Unidade formatada
+			func() string {
+				switch item.Unit {
+				case "UNIDADE":
+					return "unid."
+				case "KG":
+					return "kg"
+				case "G":
+					return "g"
+				case "L":
+					return "L"
+				default:
+					return item.Unit
+				}
+			}(),
+			// Custo unitário
+			float64(item.UnitCost)/100,
+			// Valor total
+			float64(itemTotalValue)/100,
+			// Status
+			func() string {
+				if item.Quantity < item.MinQuantity {
+					return `<span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Baixo</span>`
+				} else if item.Quantity < item.MinQuantity*2 {
+					return `<span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Atenção</span>`
+				} else {
+					return `<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">OK</span>`
+				}
+			}(),
+		)
 	}
 
+	// Fechar tabela e div
+	fmt.Fprintf(w, `</tbody></table></div></div>`)
+
+	// Adicionar mensagem de sucesso no topo (opcional)
 	fmt.Fprintf(w, `
-		<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded" role="alert">
+		<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded" role="alert" id="successMessage">
 			<div class="flex">
 				<div class="flex-shrink-0">
 					<svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -769,13 +955,9 @@ func (h *SupplyHandler) RegisterStockItem(w http.ResponseWriter, r *http.Request
 				<div class="ml-3">
 					<p class="font-bold">✅ Item de estoque registrado com sucesso!</p>
 					<p class="text-sm mt-1">Nome: <span class="font-semibold text-green-800">%s</span></p>
-					<p class="text-sm mt-1">Tipo: <span class="font-semibold text-green-800">%s</span></p>
-					<p class="text-sm mt-1">Unidade: <span class="font-semibold text-green-800">%s</span></p>
-					<p class="text-sm mt-1">Quantidade: <span class="font-semibold text-green-800">%d %s</span></p>
-					<p class="text-sm mt-1">Custo unitário: <span class="font-semibold text-green-800">R$ %.2f/%s</span></p>
-					<p class="text-sm mt-1">ID: <span class="font-mono text-green-800">%s</span></p>
+					<p class="text-sm mt-1">Item adicionado à lista acima.</p>
 				</div>
 			</div>
 		</div>
-	`, name, typeLabel, unitLabel, quantity, unitLabel, float64(unitCost)/100, unitLabel, resp.StockItemID)
+	`, name)
 }
