@@ -63,8 +63,8 @@ fi
 
 # 3. Verificar template (se aplicável)
 echo -e "${BLUE}3. Verificando template...${NC}"
-# Extrair nome do template da rota (ex: /members -> members_simple.html)
-TEMPLATE_NAME=$(echo "$MAIN_ROUTE" | sed 's|^/||' | sed 's|/$||')_simple.html
+# Extrair nome do template da rota (ex: /members -> members_simple.html, /supply/stock -> supply_stock_simple.html)
+TEMPLATE_NAME=$(echo "$MAIN_ROUTE" | sed 's|^/||' | sed 's|/$||' | sed 's|/|_|g')_simple.html
 TEMPLATE_PATH="modules/ui_web/templates/$TEMPLATE_NAME"
 
 if [ -f "$TEMPLATE_PATH" ]; then
