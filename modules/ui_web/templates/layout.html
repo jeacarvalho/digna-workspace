@@ -100,44 +100,42 @@
     </main>
 
     <script>
-        // Mapear entity_id para nomes de empresas
-        const companyNames = {
-            'cafe_digna': 'Café Digna',
-            'queijaria_digna': 'Queijaria Digna',
-            'cooperativa_demo': 'Cooperativa Demo'
-        };
-
-        // Carregar empresa atual
-        async function loadCurrentCompany() {
-            try {
-                const response = await fetch('/api/check-session');
-                const result = await response.json();
+        // Configuração do PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/static/sw.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+        
+        // Adicionar entity_id a todos os links da navegação
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const entityID = urlParams.get('entity_id');
+            
+            if (entityID) {
+                // Atualizar links de navegação
+                const navLinks = document.querySelectorAll('a[href^="/"]');
+                navLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && !href.includes('entity_id') && !href.includes('://')) {
+                        const separator = href.includes('?') ? '&' : '?';
+                        link.setAttribute('href', `${href}${separator}entity_id=${encodeURIComponent(entityID)}`);
+                    }
+                });
                 
-                if (result.valid) {
-                    const companyName = companyNames[result.entity_id] || result.entity_id;
-                    document.getElementById('currentCompany').textContent = companyName;
-                } else {
-                    // Sessão expirada, redirecionar para login
-                    window.location.href = '/login';
-                }
-            } catch (error) {
-                console.error('Erro ao verificar sessão:', error);
+                // Atualizar forms HTMX
+                document.addEventListener('htmx:configRequest', function(event) {
+                    const detail = event.detail;
+                    if (!detail.parameters.entity_id) {
+                        detail.parameters.entity_id = entityID;
+                    }
+                });
             }
-        }
-
-        // Função de logout
-        async function logout() {
-            try {
-                await fetch('/logout', { method: 'GET' });
-                window.location.href = '/login';
-            } catch (error) {
-                console.error('Erro ao fazer logout:', error);
-                window.location.href = '/login';
-            }
-        }
-
-        // Carregar empresa ao iniciar
-        document.addEventListener('DOMContentLoaded', loadCurrentCompany);
+        });
     </script>
 </body>
 </html>

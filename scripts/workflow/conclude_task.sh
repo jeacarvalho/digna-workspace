@@ -419,7 +419,31 @@ else
     echo "ℹ️  Script update_context.sh não encontrado"
 fi
 
-# 8. Resumo final
+# 8. Atualizar contexto do agente para encerrar tarefa
+echo ""
+echo "🤖 ATUALIZANDO CONTEXTO DO AGENTE..."
+echo "==================================="
+
+if [ -f ".agent_context.md" ]; then
+    # Remover seção de tarefa ativa se existir
+    sed -i '/^## 📋 TAREFA ATIVA/,/^## 🎯 COMO PROCEDER AGORA/d' .agent_context.md
+    
+    # Adicionar status de conclusão
+    sed -i "/^## 🎯 COMO PROCEDER AGORA/i\\
+## 📋 TAREFA CONCLUÍDA\\
+**ID:** ${TASK_ID}\\
+**Feature:** ${FEATURE_NAME}\\
+**Status:** ${STATUS}\\
+**Concluída em:** $(date +%d/%m/%Y %H:%M)\\
+**Duração:** ${DURATION_MIN} minutos\\
+**Aprendizados:** \`${LEARNINGS_FILE}\`\\
+\\
+**INSTRUÇÃO PARA AGENTE:** Esta tarefa foi concluída. Consulte os aprendizados para próxima implementação." .agent_context.md
+    
+    echo "✅ Contexto do agente atualizado com conclusão"
+fi
+
+# 9. Resumo final
 echo ""
 echo "✅ CONCLUSÃO DA TAREFA COMPLETA!"
 echo "================================"
@@ -436,14 +460,20 @@ echo "-------------------"
 echo "1. Aprendizados: ${LEARNINGS_FILE}"
 echo "2. Próximos passos: ${NEXT_STEPS_FILE}"
 echo "3. Checklists atualizados"
+echo "4. Contexto do agente atualizado"
 echo ""
 echo "🚀 PRÓXIMA SESSÃO:"
 echo "-----------------"
-echo "1. Iniciar: ./start_session.sh"
+echo "1. Iniciar: ./start_session.sh (atualizará contexto)"
 echo "2. Escolher próxima tarefa do backlog"
 echo "3. Revisar aprendizados: cat ${LEARNINGS_FILE}"
 echo ""
 echo "💡 Dica: Os aprendizados desta tarefa serão usados para melhorar"
 echo "       o processo da próxima implementação!"
+echo ""
+echo "🤖 INSTRUÇÃO PARA OPENCODE:"
+echo "---------------------------"
+echo "Leia .agent_context.md para ver status atual."
+echo "Use ./start_session.sh para nova sessão."
 
 exit 0

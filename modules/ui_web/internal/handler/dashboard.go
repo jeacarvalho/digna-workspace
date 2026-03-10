@@ -142,7 +142,8 @@ func (h *DashboardHandler) HomePage(w http.ResponseWriter, r *http.Request) {
 func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request) {
 	entityID := r.URL.Query().Get("entity_id")
 	if entityID == "" {
-		entityID = "cooperativa_demo"
+		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
+		return
 	}
 
 	calculator := surplus.NewCalculator(h.lifecycleManager)
@@ -186,7 +187,8 @@ func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request)
 func (h *DashboardHandler) SocialClockPage(w http.ResponseWriter, r *http.Request) {
 	entityID := r.URL.Query().Get("entity_id")
 	if entityID == "" {
-		entityID = "cooperativa_demo"
+		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
+		return
 	}
 
 	data := map[string]interface{}{

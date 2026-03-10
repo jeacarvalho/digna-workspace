@@ -39,9 +39,10 @@ func (h *CashHandler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (h *CashHandler) CashPage(w http.ResponseWriter, r *http.Request) {
-	entityID := "cooperativa_demo"
-	if r.URL.Query().Get("entity_id") != "" {
-		entityID = r.URL.Query().Get("entity_id")
+	entityID := r.URL.Query().Get("entity_id")
+	if entityID == "" {
+		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
+		return
 	}
 
 	balanceResp, _ := h.cashAPI.GetBalance(entityID)

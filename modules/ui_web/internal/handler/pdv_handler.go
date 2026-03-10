@@ -132,9 +132,10 @@ func (h *PDVHandler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (h *PDVHandler) PDVPage(w http.ResponseWriter, r *http.Request) {
-	entityID := "cooperativa_demo"
-	if r.URL.Query().Get("entity_id") != "" {
-		entityID = r.URL.Query().Get("entity_id")
+	entityID := r.URL.Query().Get("entity_id")
+	if entityID == "" {
+		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
+		return
 	}
 
 	// Buscar produtos do estoque (apenas produtos acabados)

@@ -27,6 +27,7 @@ const (
 type StockItem struct {
 	ID          string
 	Name        string
+	Description string        // Descrição opcional do item
 	Type        StockItemType // INSUMO|PRODUTO|MERCADORIA
 	Unit        StockItemUnit // UNIDADE|KG|G|L|M|CM|PACOTE|CAIXA|SACO
 	Quantity    int           // Quantidade atual em estoque

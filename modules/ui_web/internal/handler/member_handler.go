@@ -118,7 +118,7 @@ func NewMemberHandler(lm lifecycle.LifecycleManager) (*MemberHandler, error) {
 		}
 	})
 
-	// Criar template vazio para compatibilidade (será removido posteriormente)
+	// Criar template vazio - será carregado em tempo de execução
 	tmpl := template.New("")
 
 	return &MemberHandler{
@@ -144,7 +144,8 @@ func (h *MemberHandler) MembersPage(w http.ResponseWriter, r *http.Request) {
 
 	entityID := r.URL.Query().Get("entity_id")
 	if entityID == "" {
-		entityID = "cooperativa_demo" // Default para desenvolvimento
+		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
+		return
 	}
 
 	// TODO: Buscar membros reais do serviço
@@ -205,8 +206,76 @@ func (h *MemberHandler) MembersPage(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	// Renderizar template usando BaseHandler
-	h.RenderTemplate(w, "members_simple.html", data)
+	// Carregar template com funções específicas do MemberHandler
+	tmpl, err := template.New("members_simple.html").Funcs(template.FuncMap{
+		"getRoleLabel": func(role MemberRole) string {
+			switch role {
+			case RoleCoordinator:
+				return "Coordenador(a)"
+			case RoleMember:
+				return "Sócio(a)"
+			case RoleAdvisor:
+				return "Conselheiro(a)"
+			default:
+				return string(role)
+			}
+		},
+		"getStatusLabel": func(status MemberStatus) string {
+			switch status {
+			case StatusActive:
+				return "Ativo"
+			case StatusInactive:
+				return "Inativo"
+			default:
+				return string(status)
+			}
+		},
+		"getStatusClass": func(status MemberStatus) string {
+			switch status {
+			case StatusActive:
+				return "bg-green-100 text-green-800"
+			case StatusInactive:
+				return "bg-gray-100 text-gray-800"
+			default:
+				return "bg-gray-100 text-gray-800"
+			}
+		},
+		"getRoleClass": func(role MemberRole) string {
+			switch role {
+			case RoleCoordinator:
+				return "bg-blue-100 text-blue-800"
+			case RoleMember:
+				return "bg-green-100 text-green-800"
+			case RoleAdvisor:
+				return "bg-purple-100 text-purple-800"
+			default:
+				return "bg-gray-100 text-gray-800"
+			}
+		},
+		"joinSkills": func(skills []string) string {
+			return strings.Join(skills, ", ")
+		},
+		"formatDate": func(t interface{}) string {
+			switch v := t.(type) {
+			case time.Time:
+				return v.Format("02/01/2006")
+			case string:
+				return v
+			default:
+				return fmt.Sprintf("%v", t)
+			}
+		},
+	}).ParseFiles("templates/members_simple.html")
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // CreateMember processa a criação de um novo membro via POST

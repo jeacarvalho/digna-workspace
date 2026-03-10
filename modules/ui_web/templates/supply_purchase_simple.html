@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        function calculateTotal() {
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            const unitCost = parseInt(document.getElementById('unit_cost').value) || 0;
+            const total = quantity * unitCost;
+            document.getElementById('total_cost').value = total;
+            document.getElementById('total_display').textContent = 'R$ ' + (total / 100).toFixed(2).replace('.', ',');
+            
+            // Validação: mostrar alerta se cálculo parece errado
+            if (quantity > 0 && unitCost > 0 && total <= 0) {
+                console.error('Erro no cálculo: quantidade=', quantity, 'unitCost=', unitCost, 'total=', total);
+            }
+        }
+        
+        function formatCurrency(value) {
+            // Garantir que o valor seja tratado como centavos
+            if (value < 100 && value > 0) {
+                // Se o usuário digitar "45" (R$ 0,45), converter para centavos
+                return value;
+            }
+            return value;
+        }
+        
+        function submitPurchase() {
+            const form = document.getElementById('purchase-form');
+            
+            // Validar cálculo antes de enviar
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            const unitCost = parseInt(document.getElementById('unit_cost').value) || 0;
+            const calculatedTotal = quantity * unitCost;
+            
+            if (calculatedTotal <= 0) {
+                alert('Por favor, verifique os valores. O total da compra deve ser maior que zero.');
+                return false;
+            }
+            
+            htmx.ajax('POST', '/api/supply/purchase', {
+                values: htmx.values(form),
+                target: '#purchase-result',
+                swap: 'innerHTML'
+            }).then(() => {
+                form.reset();
+                calculateTotal();
+            });
+            return false;
+        }
+        
+        // Inicializar cálculo ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateTotal();
+        });
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-blue-600 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <a href="/supply?entity_id={{.EntityID}}" class="text-white hover:text-blue-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </a>
+                    <span class="text-xl font-bold">Nova Compra</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-6 max-w-md">
+        <div id="purchase-result" class="mb-4"></div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">O que você comprou?</h2>
+            
+            <form id="purchase-form" onsubmit="return submitPurchase()">
+                <input type="hidden" name="entity_id" value="{{.EntityID}}">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">De quem você comprou?</label>
+                    <select name="supplier_id" required class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-blue-500 focus:outline-none">
+                        <option value="">Selecione um fornecedor</option>
+                        {{range .Suppliers}}
+                        <option value="{{.ID}}">{{.Name}}</option>
+                        {{end}}
+                    </select>
+                    <p class="text-gray-500 text-xs mt-1">Não encontrou? <a href="/supply/suppliers?entity_id={{.EntityID}}" class="text-blue-500 hover:underline">Cadastre um novo fornecedor</a></p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">O que você comprou?</label>
+                    <select name="stock_item_id" required class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-blue-500 focus:outline-none">
+                        <option value="">Selecione um item</option>
+                        {{range .StockItems}}
+                        <option value="{{.ID}}">{{.Name}} ({{stockItemTypeLabel .Type}})</option>
+                        {{end}}
+                    </select>
+                    <p class="text-gray-500 text-xs mt-1">Não encontrou? <a href="/supply/stock?entity_id={{.EntityID}}" class="text-blue-500 hover:underline">Cadastre um novo item</a></p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantidade</label>
+                        <input type="number" id="quantity" name="quantity" min="1" required 
+                               oninput="calculateTotal()"
+                               class="w-full p-3 border-2 border-gray-200 rounded-xl text-lg focus:border-blue-500 focus:outline-none">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Valor unitário (R$)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
+                            <input type="number" id="unit_cost" name="unit_cost" min="1" step="1" required 
+                                   oninput="calculateTotal()"
+                                   class="w-full p-3 pl-10 border-2 border-gray-200 rounded-xl text-lg focus:border-blue-500 focus:outline-none"
+                                   placeholder="0,00">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Forma de pagamento</label>
+                    <div class="flex space-x-4">
+                        <label class="flex items-center">
+                            <input type="radio" name="payment_type" value="CASH" checked class="mr-2">
+                            <span>À vista</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="payment_type" value="CREDIT" class="mr-2">
+                            <span>A prazo</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-6 p-4 bg-blue-50 rounded-xl">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Valor total da compra</label>
+                    <div class="text-3xl font-bold text-blue-600" id="total_display">R$ 0,00</div>
+                    <input type="hidden" id="total_cost" name="total_cost" value="0">
+                </div>
+
+                <button type="submit" 
+                        class="w-full bg-blue-500 hover:bg-blue-600 text-white text-xl font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95">
+                    REGISTRAR COMPRA
+                </button>
+            </form>
+        </div>
+
+        <div class="text-center text-gray-500 text-sm mt-6">
+            <p>O sistema atualizará automaticamente seu estoque e registrará a transação financeira.</p>
+        </div>
+    </main>
+</body>
+</html>

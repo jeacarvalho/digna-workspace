@@ -152,7 +152,111 @@ else
     echo "5. Documente aprendizados com './conclude_task.sh'"
 fi
 
-# 5. Informações da sessão
+# 5. Criar contexto para o agente (opencode)
+echo ""
+echo "🤖 CRIANDO CONTEXTO PARA O AGENTE..."
+echo "==================================="
+
+# Criar arquivo de contexto do agente
+cat > .agent_context.md << 'EOF'
+# 🎯 CONTEXTO DO AGENTE - Projeto Digna
+
+**Sessão iniciada:** $(date +%d/%m/%Y %H:%M:%S)
+**Sessão ID:** ${SESSION_ID}
+**Arquivo:** \`.agent_context.md\` (gerado automaticamente)
+
+---
+
+## 🚀 INSTRUÇÕES PARA O AGENTE (OPENCODE)
+
+Você está trabalhando no **Projeto Digna** - sistema de economia solidária. Siga estas instruções:
+
+### 1. CONTEXTO OBRIGATÓRIO (LER PRIMEIRO)
+- **Leia:** \`docs/QUICK_REFERENCE.md\` - Arquitetura core, padrões, antipadrões
+- **Verifique:** \`docs/NEXT_STEPS.md\` - Tarefas pendentes
+- **Consulte:** \`docs/implementation_plans/\` - Planos existentes
+
+### 2. REGRAS SAGRADAS (NUNCA VIOLAR)
+1. **ANTI-FLOAT:** Nunca use \`float\`, \`float32\`, \`float64\` para valores financeiros/tempo
+2. **SOBERANIA DE DADOS:** Um banco SQLite por entidade, sem JOINs entre bancos
+3. **CACHE-PROOF TEMPLATES:** Use \`*_simple.html\` com \`template.ParseFiles()\` NO HANDLER
+4. **DESIGN SYSTEM:** Cores #2A5CAA (azul soberania), #4A7F3E (verde suor), #F57F17 (laranja)
+
+### 3. PROCESSO DE TRABALHO
+\`\`\`
+1. start_session.sh → Ganha contexto
+2. process_task.sh "descrição" --execute → Gera prompt
+3. Implementar (você agora)
+4. conclude_task.sh "aprendizados" → Documenta
+\`\`\`
+
+### 4. VALIDAÇÕES OBRIGATÓRIAS
+- **Após implementação:** \`./scripts/dev/smoke_test_new_feature.sh\`
+- **Testes:** \`cd modules && ./run_tests.sh\`
+- **Handler no main.go:** Verificar se está registrado
+
+### 5. ESTRUTURA DE ARQUIVOS
+\`\`\`
+modules/ui_web/internal/handler/    # HTTP handlers (HTMX)
+modules/ui_web/templates/           # Templates *_simple.html
+modules/core_lume/                  # Domínio e serviços
+modules/lifecycle/                  # LifecycleManager (banco)
+\`\`\`
+
+### 6. PADRÕES DE CÓDIGO
+- **Handlers:** Estendem \`BaseHandler\` (modules/ui_web/internal/handler/base_handler.go)
+- **Templates:** Usam funções do \`TemplateManager\` (formatCurrency, divide, etc.)
+- **Rotas:** Padrão HTMX (GET para render, POST para ações)
+- **Testes:** >90% cobertura para handlers
+
+### 7. ARQUIVOS DE SESSÃO ATUAL
+- **Sessão:** \`.session_*\` (timestamp)
+- **Tarefa ativa:** \`.task_*\` (se existir)
+- **Prompt atual:** \`.opencode_task_*\` (se process_task.sh --execute foi usado)
+
+---
+
+## 📋 STATUS ATUAL DO PROJETO
+
+**Última atualização:** $(date +%d/%m/%Y)
+**Testes:** ${TEST_COUNT} encontrados
+**Handlers:** ${HANDLER_COUNT} UI handlers
+**Templates:** ${TEMPLATE_COUNT} templates HTML
+
+**Backlog:** Ver \`docs/NEXT_STEPS.md\`
+**Aprendizados recentes:** Ver \`docs/learnings/\`
+
+---
+
+## 🎯 COMO PROCEDER AGORA
+
+1. **Se há \`.task_*\`:** Continue a implementação seguindo o plano em \`docs/implementation_plans/\`
+2. **Se não há tarefa:** Use \`./process_task.sh "nova tarefa" --execute\` para começar
+3. **Sempre:** Siga o checklist pré-implementação correspondente
+4. **Nunca:** Ignore as regras sagradas (anti-float, soberania, cache-proof)
+
+**Referência rápida de comandos:**
+\`\`\`bash
+# Iniciar nova tarefa
+./process_task.sh "Tipo: Feature | Módulo: ui_web | Objetivo: Implementar X" --execute
+
+# Validar implementação
+./scripts/dev/smoke_test_new_feature.sh "Descrição" "/rota"
+
+# Concluir tarefa
+./conclude_task.sh "Aprendizados: item1, item2" --success
+\`\`\`
+
+---
+
+**Este arquivo é atualizado automaticamente por \`start_session.sh\`.**
+**O agente DEVE consultá-lo no início de cada interação.**
+EOF
+
+echo "✅ Contexto do agente criado: .agent_context.md"
+echo "   ℹ️  O opencode deve ler este arquivo primeiro"
+
+# 6. Informações da sessão
 echo ""
 echo "📋 INFORMAÇÕES DA SESSÃO:"
 echo "========================="
@@ -160,11 +264,12 @@ echo "ID: ${SESSION_ID}"
 echo "Data: $(date)"
 echo "Modo: ${QUICK_MODE}"
 echo "Arquivo de sessão: ${SESSION_FILE}"
+echo "Contexto do agente: .agent_context.md"
 echo ""
 echo "✅ Sessão iniciada com sucesso!"
 echo ""
-echo "💡 Dica: Agora use './process_task.sh \"sua descrição de tarefa\"'"
-echo "       ou './process_task.sh --help' para ver opções"
+echo "💡 Instrução para opencode: LEIA .agent_context.md PRIMEIRO"
+echo "💡 Depois: './process_task.sh \"sua tarefa\" --execute'"
 
 # Tornar scripts executáveis se não forem
 chmod +x process_task.sh 2>/dev/null || true

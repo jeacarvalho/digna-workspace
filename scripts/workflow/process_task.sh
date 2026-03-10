@@ -1,39 +1,57 @@
 #!/bin/bash
 # process_task.sh - Processa uma tarefa no projeto Digna
 # Uso: ./process_task.sh "Descrição da tarefa" [--checklist] [--plan] [--execute]
+#      ./process_task.sh --file arquivo.md [OPÇÕES]
 # Ex: ./process_task.sh "Implementar UI para Fornecedores" --checklist
+# Ex: ./process_task.sh --file Prompt_teste_correcos.md --execute
 
 set -e
 
 # Configurações
-TASK_DESCRIPTION="${1}"
 SESSION_FILE=$(ls .session_* 2>/dev/null | head -1)
 TASK_ID=$(date +%Y%m%d_%H%M%S)
 TASK_FILE=".task_${TASK_ID}"
+
+# Variáveis de controle
+TASK_DESCRIPTION=""
+FILE_MODE=false
+FILE_PATH=""
+FILE_NAME=""
 
 # Funções de ajuda
 show_help() {
     cat << EOF
 🎯 process_task.sh - Processador Inteligente de Tarefas Digna
 
-Uso: ./process_task.sh "DESCRIÇÃO DA TAREFA" [OPÇÕES]
+USO:
+  ./process_task.sh "DESCRIÇÃO DA TAREFA" [OPÇÕES]
+  ./process_task.sh --file ARQUIVO.md [OPÇÕES]
+  ./process_task.sh -f ARQUIVO.md [OPÇÕES]
 
 Descrição da tarefa (FORMATO RECOMENDADO):
   "Tipo: Feature | Módulo: ui_web | Objetivo: Implementar X | Decisões: seguir padrão Y"
 
 Opções:
-  --checklist    Apenas gerar checklist pré-implementação
-  --plan         Gerar plano de implementação completo
-  --execute      Executar implementação (interage com opencode)
-  --help         Mostrar esta ajuda
+  --checklist, -c    Apenas gerar checklist pré-implementação
+  --plan, -p         Gerar plano de implementação completo
+  --execute, -e      Executar implementação (interage com opencode)
+  --file, -f         Ler descrição da tarefa de um arquivo
+  --help, -h         Mostrar esta ajuda
 
 Exemplos:
-  ./process_task.sh "Tipo: Feature | Módulo: ui_web | Objetivo: Implementar UI para Fornecedores"
+  # Descrição direta
+  ./process_task.sh "Tipo: Feature | Módulo: ui_web | Objetivo: Implementar UI para Fornecedores" --execute
+  
+  # Ler de arquivo
+  ./process_task.sh --file Prompt_teste_correcos.md --execute
+  ./process_task.sh -f docs/tasks/bug_fix.md -e
+  
+  # Modos diferentes
   ./process_task.sh "Bug no PDV: erro ao adicionar produto" --checklist
   ./process_task.sh "Melhorar performance do dashboard" --plan
 
 O script irá:
-1. Analisar a descrição da tarefa
+1. Analisar a descrição da tarefa (diretamente ou de arquivo)
 2. Verificar contexto existente
 3. Gerar checklists/planos conforme opção
 4. Preparar para execução com opencode
@@ -41,9 +59,65 @@ EOF
     exit 0
 }
 
-# Verificar se tem descrição
-if [ -z "$TASK_DESCRIPTION" ] || [ "$TASK_DESCRIPTION" = "--help" ]; then
+# Processar argumentos
+MODE="analyze"
+NEXT_IS_FILE=false
+
+for arg in "$@"; do
+    if [ "$NEXT_IS_FILE" = true ]; then
+        FILE_PATH="$arg"
+        FILE_MODE=true
+        NEXT_IS_FILE=false
+        continue
+    fi
+    
+    case $arg in
+        --checklist|-c)
+            MODE="checklist"
+            ;;
+        --plan|-p)
+            MODE="plan"
+            ;;
+        --execute|-e)
+            MODE="execute"
+            ;;
+        --file|-f)
+            NEXT_IS_FILE=true
+            ;;
+        --help|-h)
+            show_help
+            ;;
+        *)
+            # Se não é opção e não estamos em modo arquivo, é a descrição
+            if [ "$FILE_MODE" = false ] && [ -z "$TASK_DESCRIPTION" ]; then
+                TASK_DESCRIPTION="$arg"
+            fi
+            ;;
+    esac
+done
+
+# Verificar se temos descrição
+if [ -z "$TASK_DESCRIPTION" ] && [ "$FILE_MODE" = false ]; then
+    echo "❌ Erro: Nenhuma descrição de tarefa fornecida."
+    echo ""
     show_help
+fi
+
+# Se modo arquivo, ler conteúdo
+if [ "$FILE_MODE" = true ]; then
+    if [ -z "$FILE_PATH" ]; then
+        echo "❌ Erro: Modo --file ativado mas nenhum arquivo especificado."
+        show_help
+    fi
+    
+    if [ ! -f "$FILE_PATH" ]; then
+        echo "❌ Erro: Arquivo não encontrado: $FILE_PATH"
+        exit 1
+    fi
+    
+    FILE_NAME="$(basename "$FILE_PATH")"
+    TASK_DESCRIPTION="$(cat "$FILE_PATH")"
+    echo "📄 Lendo tarefa do arquivo: $FILE_NAME"
 fi
 
 # Processar opções
@@ -62,17 +136,66 @@ for arg in "$@"; do
     esac
 done
 
-echo "🔍 Processando tarefa: ${TASK_DESCRIPTION}"
-echo "=========================================="
+echo "🔍 Processando tarefa..."
+echo "========================"
+
+if [ "$FILE_MODE" = true ]; then
+    echo "📄 Fonte: Arquivo '$FILE_NAME'"
+    # Mostrar preview do conteúdo
+    PREVIEW=$(echo "$TASK_DESCRIPTION" | head -10 | sed 's/^/   /')
+    echo "📋 Preview (primeiras 10 linhas):"
+    echo "$PREVIEW"
+    if [ $(echo "$TASK_DESCRIPTION" | wc -l) -gt 10 ]; then
+        echo "   ... ($(echo "$TASK_DESCRIPTION" | wc -l) linhas no total)"
+    fi
+else
+    echo "📝 Fonte: Descrição direta"
+    echo "📋 Conteúdo: ${TASK_DESCRIPTION:0:100}..."
+fi
 
 # 1. Extrair informações da descrição
+echo ""
 echo "📋 Extraindo informações da descrição..."
 
-# Padrões comuns de extração
-TASK_TYPE=$(echo "$TASK_DESCRIPTION" | grep -oi "tipo:\s*[^|]*" | cut -d: -f2 | xargs || echo "Feature")
-MODULE=$(echo "$TASK_DESCRIPTION" | grep -oi "módulo:\s*[^|]*" | cut -d: -f2 | xargs || echo "ui_web")
-OBJECTIVE=$(echo "$TASK_DESCRIPTION" | grep -oi "objetivo:\s*[^|]*" | cut -d: -f2 | xargs || echo "$TASK_DESCRIPTION")
-DECISIONS=$(echo "$TASK_DESCRIPTION" | grep -oi "decisões:\s*[^|]*" | cut -d: -f2 | xargs || echo "Seguir padrões estabelecidos")
+# Função para extrair metadados de arquivos formatados
+extract_metadata() {
+    local content="$1"
+    
+    # Tentar extrair do formato padronizado (com |)
+    local type=$(echo "$content" | grep -oi "tipo:\s*[^|]*" | cut -d: -f2 | xargs)
+    local module=$(echo "$content" | grep -oi "módulo:\s*[^|]*" | cut -d: -f2 | xargs)
+    local objective=$(echo "$content" | grep -oi "objetivo:\s*[^|]*" | cut -d: -f2 | xargs)
+    local decisions=$(echo "$content" | grep -oi "decisões:\s*[^|]*" | cut -d: -f2 | xargs)
+    
+    # Se não encontrou no formato com |, tentar formato simples
+    if [ -z "$type" ]; then
+        type=$(echo "$content" | grep -i "^tipo:" | cut -d: -f2- | xargs)
+    fi
+    if [ -z "$module" ]; then
+        module=$(echo "$content" | grep -i "^módulo:" | cut -d: -f2- | xargs)
+    fi
+    if [ -z "$objective" ]; then
+        objective=$(echo "$content" | grep -i "^objetivo:" | cut -d: -f2- | xargs)
+    fi
+    if [ -z "$decisions" ]; then
+        decisions=$(echo "$content" | grep -i "^decisões:" | cut -d: -f2- | xargs)
+    fi
+    
+    # Valores padrão
+    type="${type:-Feature}"
+    module="${module:-ui_web}"
+    objective="${objective:-$TASK_DESCRIPTION}"
+    decisions="${decisions:-Seguir padrões estabelecidos}"
+    
+    echo "$type|$module|$objective|$decisions"
+}
+
+# Extrair metadados
+METADATA=$(extract_metadata "$TASK_DESCRIPTION")
+TASK_TYPE=$(echo "$METADATA" | cut -d'|' -f1)
+MODULE=$(echo "$METADATA" | cut -d'|' -f2)
+OBJECTIVE=$(echo "$METADATA" | cut -d'|' -f3)
+DECISIONS=$(echo "$METADATA" | cut -d'|' -f4)
 
 # Criar nome da feature (para arquivos)
 FEATURE_NAME=$(echo "$OBJECTIVE" | tr '[:upper:]' '[:lower:]' | sed 's/implementar //g; s/ui para //g; s/ //g; s/\.//g' | cut -c1-20)
@@ -89,12 +212,18 @@ DECISIONS="${DECISIONS}"
 FEATURE_NAME="${FEATURE_NAME}"
 START_TIME=$(date +%s)
 MODE="${MODE}"
+FILE_MODE=${FILE_MODE}
+FILE_PATH="${FILE_PATH}"
+FILE_NAME="${FILE_NAME}"
 EOF
 
 echo "✅ Tarefa registrada: ${TASK_ID}"
 echo "   Tipo: ${TASK_TYPE}"
 echo "   Módulo: ${MODULE}"
 echo "   Objetivo: ${OBJECTIVE}"
+if [ "$FILE_MODE" = true ]; then
+    echo "   Fonte: Arquivo '${FILE_NAME}'"
+fi
 
 # 3. Modo: Checklist pré-implementação
 if [ "$MODE" = "checklist" ] || [ "$MODE" = "plan" ] || [ "$MODE" = "execute" ]; then
@@ -106,11 +235,12 @@ if [ "$MODE" = "checklist" ] || [ "$MODE" = "plan" ] || [ "$MODE" = "execute" ];
     mkdir -p docs/implementation_plans
     
     # Template de checklist
+    CURRENT_DATE=$(date +%d/%m/%Y\ %H:%M:%S)
     cat > ${CHECKLIST_FILE} << EOF
 # 🔍 Checklist de Validação Pré-Implementação: ${FEATURE_NAME}
 
 **Tarefa:** ${TASK_DESCRIPTION}
-**Gerado em:** $(date +%d/%m/%Y %H:%M:%S)
+**Gerado em:** ${CURRENT_DATE}
 **Tarefa ID:** ${TASK_ID}
 
 ---
@@ -228,7 +358,8 @@ if [ "$MODE" = "plan" ] || [ "$MODE" = "execute" ]; then
     echo "📋 GERANDO PLANO DE IMPLEMENTAÇÃO..."
     echo "==================================="
     
-    PLAN_FILE="docs/implementation_plans/${FEATURE_NAME}_implementation_$(date +%Y%m%d).md"
+    PLAN_DATE=$(date +%Y%m%d)
+    PLAN_FILE="docs/implementation_plans/${FEATURE_NAME}_implementation_${PLAN_DATE}.md"
     
     # Verificar se checklist foi preenchido
     if [ ! -f "${CHECKLIST_FILE}" ]; then
@@ -236,12 +367,13 @@ if [ "$MODE" = "plan" ] || [ "$MODE" = "execute" ]; then
     fi
     
     # Template de plano
+    PLAN_DATE_FULL=$(date +%d/%m/%Y\ %H:%M:%S)
     cat > ${PLAN_FILE} << EOF
 # 📋 Plano de Implementação: ${FEATURE_NAME}
 
 **Feature:** ${FEATURE_NAME}
 **Tarefa ID:** ${TASK_ID}
-**Gerado em:** $(date +%d/%m/%Y %H:%M:%S)
+**Gerado em:** ${PLAN_DATE_FULL}
 **Descrição:** ${TASK_DESCRIPTION}
 
 **📌 PRÉ-REQUISITO:** Preencher \`${CHECKLIST_FILE}\` antes de implementar
@@ -400,13 +532,14 @@ if [ "$MODE" = "execute" ]; then
     
     # Criar prompt para opencode
     OPENCODE_PROMPT_FILE=".opencode_task_${TASK_ID}.txt"
+    PROMPT_DATE=$(date +%d/%m/%Y\ %H:%M:%S)
     
     cat > ${OPENCODE_PROMPT_FILE} << EOF
 ## 🎯 TAREFA PARA OPENCODE
 
 **ID:** ${TASK_ID}
-**Data:** $(date +%d/%m/%Y %H:%M:%S)
-**Descrição original:** ${TASK_DESCRIPTION}
+**Data:** ${PROMPT_DATE}
+$(if [ "$FILE_MODE" = true ]; then echo "**Fonte:** Arquivo \`${FILE_NAME}\`"; else echo "**Descrição original:** ${TASK_DESCRIPTION}"; fi)
 
 ## 📋 CONTEXTO EXTRAÍDO
 - **Tipo:** ${TASK_TYPE}
@@ -414,11 +547,13 @@ if [ "$MODE" = "execute" ]; then
 - **Objetivo:** ${OBJECTIVE}
 - **Decisões:** ${DECISIONS}
 - **Feature Name:** ${FEATURE_NAME}
+$(if [ "$FILE_MODE" = true ]; then echo "- **Arquivo fonte:** \`${FILE_PATH}\`"; fi)
 
 ## 📁 ARQUIVOS GERADOS
 1. Checklist pré-implementação: \`${CHECKLIST_FILE}\`
 2. Plano de implementação: \`${PLAN_FILE}\`
 3. Este prompt: \`${OPENCODE_PROMPT_FILE}\`
+$(if [ "$FILE_MODE" = true ]; then echo "4. Arquivo fonte: \`${FILE_PATH}\`"; fi)
 
 ## 🚀 INSTRUÇÕES PARA OPENCODE
 
@@ -431,7 +566,18 @@ if [ "$MODE" = "execute" ]; then
    \`\`\`
    - Se smoke test passar: continuar
    - Se falhar: corrigir antes de prosseguir
-5. **QUINTO:** Documentar aprendizados com \`./conclude_task.sh\`
+5. **QUINTO:** **VALIDAÇÃO E2E OBRIGATÓRIA:** Executar validação end-to-end:
+   \`\`\`bash
+   ./scripts/dev/validate_e2e.sh --basic --headless
+   \`\`\`
+   - ✅ Se passar: documentar resultado
+   - ❌ Se falhar: CORRIGIR antes de marcar como completo
+   - ⚠️  Modos disponíveis:
+     - \`--basic\` (7 passos padrão - recomendado)
+     - \`--full\` (todos testes)
+     - \`--ui\` (com navegador visível para debug)
+     - \`--headless\` (stealth mode - padrão)
+6. **SEXTO:** Documentar aprendizados com \`./conclude_task.sh\`
 
 ## 🔍 ANÁLISE PRÉVIA NECESSÁRIA
 
@@ -440,6 +586,24 @@ Antes de codificar, verificar:
 - [ ] É acessível (não \`internal\`)?
 - [ ] Qual handler é referência (MemberHandler, CashHandler, etc.)?
 - [ ] Quais funções de template são necessárias?
+
+## 🧪 VALIDAÇÃO E2E ESPERADA
+
+**Fluxo de 7 passos que deve funcionar após implementação:**
+1. [ ] Login no sistema (\`cafe_digna\` / \`cd0123\`)
+2. [ ] Acesso à nova feature (\`/${FEATURE_NAME}\`)
+3. [ ] Criação de item (se aplicável)
+4. [ ] Listagem de itens
+5. [ ] Edição/atualização (se aplicável)
+6. [ ] Integração com navegação existente
+7. [ ] Smoke test passa (\`./scripts/dev/smoke_test_new_feature.sh\`)
+
+**Comando de validação E2E (executar APÓS implementação):**
+\`\`\`bash
+./scripts/dev/validate_e2e.sh --basic --headless
+\`\`\`
+
+**Critério de aceite:** Validação E2E deve passar antes de marcar tarefa como completa.
 
 ## 📝 FORMATO DE RESPOSTA ESPERADO
 
@@ -451,6 +615,22 @@ Usar todo o sistema criado (checklists, templates, antipadrões).
 EOF
     
     echo "✅ Prompt para opencode gerado: ${OPENCODE_PROMPT_FILE}"
+    
+    # Atualizar contexto do agente com referência à tarefa
+    if [ -f ".agent_context.md" ]; then
+        sed -i "/^## 🎯 COMO PROCEDER AGORA/i\\
+## 📋 TAREFA ATIVA\\
+**ID:** ${TASK_ID}\\
+**Objetivo:** ${OBJECTIVE}\\
+$(if [ "$FILE_MODE" = true ]; then echo "**Fonte:** Arquivo \`${FILE_NAME}\`\\\\"; fi)\\
+**Plano:** \`${PLAN_FILE}\`\\
+**Prompt:** \`${OPENCODE_PROMPT_FILE}\`\\
+**Status:** AGUARDANDO IMPLEMENTAÇÃO\\
+\\
+**INSTRUÇÃO PARA AGENTE:** Implemente seguindo o plano acima. Use o prompt gerado como guia." .agent_context.md
+        echo "✅ Contexto do agente atualizado com tarefa ativa"
+    fi
+    
     echo ""
     echo "📋 CONTEÚDO DO PROMPT:"
     echo "======================"
@@ -459,6 +639,8 @@ EOF
     echo "🎯 AGORA COPIE E COLE O CONTEÚDO ACIMA NO OPENCODE"
     echo "   ou use: cat ${OPENCODE_PROMPT_FILE} | pbcopy (Mac)"
     echo "   ou: cat ${OPENCODE_PROMPT_FILE} | xclip -selection clipboard (Linux)"
+    echo ""
+    echo "💡 O contexto do agente (.agent_context.md) também foi atualizado"
 fi
 
 # 6. Resumo final

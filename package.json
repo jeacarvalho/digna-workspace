@@ -1,0 +1,32 @@
+{
+  "name": "digna-workspace",
+  "version": "1.0.0",
+  "description": "**Status:** Sprint 16 completa, Sprint 17 em andamento   **Arquitetura:** Clean Architecture + DDD + HTMX   **Banco:** SQLite isolado por entidade (cooperativa)   **Última atualização:** 10/03/2026",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:chrome": "playwright test --project=chromium",
+    "report": "playwright show-report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeacarvalho/digna-workspace.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jeacarvalho/digna-workspace/issues"
+  },
+  "homepage": "https://github.com/jeacarvalho/digna-workspace#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

@@ -11,6 +11,68 @@ import (
 	"github.com/providentia/digna/supply/pkg/supply"
 )
 
+// loadSupplyTemplate carrega um template do disco com funções padrão do supply
+func loadSupplyTemplate(templateName string) (*template.Template, error) {
+	funcMap := template.FuncMap{
+		"formatCurrency": func(amount int64) string {
+			return fmt.Sprintf("R$ %.2f", float64(amount)/100)
+		},
+		"formatDate": func(t time.Time) string {
+			return t.Format("02/01/2006")
+		},
+		"stockItemTypeLabel": func(itemType string) string {
+			switch itemType {
+			case "INSUMO":
+				return "Insumo/Matéria-prima"
+			case "PRODUTO":
+				return "Produto Acabado"
+			case "MERCADORIA":
+				return "Mercadoria para Revenda"
+			default:
+				return itemType
+			}
+		},
+		"stockItemUnitLabel": func(unit string) string {
+			switch unit {
+			case "UNIDADE":
+				return "unid."
+			case "KG":
+				return "kg"
+			case "G":
+				return "g"
+			case "L":
+				return "L"
+			case "M":
+				return "m"
+			case "CM":
+				return "cm"
+			case "PACOTE":
+				return "pct"
+			case "CAIXA":
+				return "cx"
+			case "SACO":
+				return "sc"
+			default:
+				return unit
+			}
+		},
+		"multiply": func(a int64, b int) int64 {
+			return a * int64(b)
+		},
+		"isBelowMinimum": func(quantity, minQuantity int) bool {
+			return quantity < minQuantity
+		},
+		"fdiv": func(a, b float64) float64 {
+			if b == 0 {
+				return 0
+			}
+			return a / b
+		},
+	}
+
+	return template.New(templateName).Funcs(funcMap).ParseFiles("templates/" + templateName)
+}
+
 type SupplyHandler struct {
 	lifecycleManager lifecycle.LifecycleManager
 	tmpl             *template.Template
@@ -147,19 +209,36 @@ func (h *SupplyHandler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (h *SupplyHandler) SupplyDashboard(w http.ResponseWriter, r *http.Request) {
-	data := map[string]interface{}{
-		"Title":    "Gestão de Compras e Estoque - Digna",
-		"EntityID": "cooperativa_demo",
+	entityID := r.URL.Query().Get("entity_id")
+	if entityID == "" {
+		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
+		return
 	}
 
-	// Usar template do handler (que já tem todas as funções incluindo fdiv)
-	if err := h.tmpl.ExecuteTemplate(w, "supply_dashboard_simple.html", data); err != nil {
+	data := map[string]interface{}{
+		"Title":    "Gestão de Compras e Estoque - Digna",
+		"EntityID": entityID,
+	}
+
+	// Carregar template do disco (cache-proof) com funções
+	tmpl, err := loadSupplyTemplate("supply_dashboard_simple.html")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
 func (h *SupplyHandler) PurchasePage(w http.ResponseWriter, r *http.Request) {
-	entityID := "cooperativa_demo"
+	entityID := r.URL.Query().Get("entity_id")
+	if entityID == "" {
+		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
+		return
+	}
 	ctx := r.Context()
 
 	// Buscar fornecedores e itens de estoque para os selects
@@ -173,14 +252,25 @@ func (h *SupplyHandler) PurchasePage(w http.ResponseWriter, r *http.Request) {
 		"StockItems": stockItems,
 	}
 
-	if err := h.tmpl.ExecuteTemplate(w, "supply_purchase.html", data); err != nil {
+	// Carregar template do disco (cache-proof) com funções
+	tmpl, err := loadSupplyTemplate("supply_purchase_simple.html")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *SupplyHandler) SuppliersPage(w http.ResponseWriter, r *http.Request) {
-	entityID := "cooperativa_demo"
+	entityID := r.URL.Query().Get("entity_id")
+	if entityID == "" {
+		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
+		return
+	}
 	ctx := r.Context()
 
 	suppliers, err := h.supplyAPI.GetSuppliers(ctx, entityID)
@@ -195,14 +285,25 @@ func (h *SupplyHandler) SuppliersPage(w http.ResponseWriter, r *http.Request) {
 		"Suppliers": suppliers,
 	}
 
-	if err := h.tmpl.ExecuteTemplate(w, "supply_suppliers.html", data); err != nil {
+	// Carregar template do disco (cache-proof) com funções
+	tmpl, err := loadSupplyTemplate("supply_suppliers_simple.html")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *SupplyHandler) StockPage(w http.ResponseWriter, r *http.Request) {
-	entityID := "cooperativa_demo"
+	entityID := r.URL.Query().Get("entity_id")
+	if entityID == "" {
+		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
+		return
+	}
 	ctx := r.Context()
 
 	stockItems, err := h.supplyAPI.GetStockItems(ctx, entityID)
@@ -226,9 +327,16 @@ func (h *SupplyHandler) StockPage(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	// Usar template do handler (que já tem todas as funções incluindo fdiv)
-	if err := h.tmpl.ExecuteTemplate(w, "supply_stock_simple.html", data); err != nil {
+	// Carregar template do disco (cache-proof) com funções
+	tmpl, err := loadSupplyTemplate("supply_stock_simple.html")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -238,14 +346,23 @@ func (h *SupplyHandler) RegisterPurchase(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	entityID := "cooperativa_demo"
-	ctx := r.Context()
-
-	// Parse form
+	// Parse form primeiro para obter entity_id
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao processar formulário: %v", err), http.StatusBadRequest)
 		return
 	}
+
+	entityID := r.FormValue("entity_id")
+	if entityID == "" {
+		// Tentar da query string também
+		entityID = r.URL.Query().Get("entity_id")
+	}
+	if entityID == "" {
+		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
 
 	supplierID := r.FormValue("supplier_id")
 	paymentType := r.FormValue("payment_type")
@@ -320,14 +437,23 @@ func (h *SupplyHandler) RegisterSupplier(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	entityID := "cooperativa_demo"
-	ctx := r.Context()
-
-	// Parse form
+	// Parse form primeiro para obter entity_id
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao processar formulário: %v", err), http.StatusBadRequest)
 		return
 	}
+
+	entityID := r.FormValue("entity_id")
+	if entityID == "" {
+		// Tentar da query string também
+		entityID = r.URL.Query().Get("entity_id")
+	}
+	if entityID == "" {
+		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
 
 	name := r.FormValue("name")
 	contactInfo := r.FormValue("contact_info")
@@ -524,14 +650,23 @@ func (h *SupplyHandler) RegisterStockItem(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	entityID := "cooperativa_demo"
-	ctx := r.Context()
-
-	// Parse form
+	// Parse form primeiro para obter entity_id
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, fmt.Sprintf("Erro ao processar formulário: %v", err), http.StatusBadRequest)
 		return
 	}
+
+	entityID := r.FormValue("entity_id")
+	if entityID == "" {
+		// Tentar da query string também
+		entityID = r.URL.Query().Get("entity_id")
+	}
+	if entityID == "" {
+		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
 
 	name := r.FormValue("name")
 	itemType := r.FormValue("type")

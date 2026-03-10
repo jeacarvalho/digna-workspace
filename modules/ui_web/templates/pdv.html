@@ -96,7 +96,7 @@
 
         <button hx-post="/api/sale" 
             hx-include="[name='amount'], [name='quantity'], [name='stock_item_id']" 
-            hx-vals='{"entity_id": "cooperativa_demo", "product": "from-js"}'
+            hx-vals='{"entity_id": "{{.EntityID}}", "product": "from-js"}'
             hx-target="#sale-result"
             hx-on::before-request="updateHxVals()"
             onclick="return validateSale()"
@@ -123,7 +123,7 @@
             const quantity = document.getElementById('quantity').value;
             const stockItemId = document.getElementById('stockItemId').value;
             btn.setAttribute('hx-vals', JSON.stringify({
-                entity_id: 'cooperativa_demo',
+                entity_id: '{{.EntityID}}',
                 product: product,
                 amount: amount,
                 quantity: quantity,
@@ -235,7 +235,7 @@
 			const product = document.getElementById('product').value;
 			const stockItemId = document.getElementById('stockItemId').value;
 			const btn = document.querySelector('button[hx-post]');
-			btn.setAttribute('hx-vals', `{"entity_id": "cooperativa_demo", "product": "${product}", "amount": "${currentAmount}", "quantity": "${quantity}", "stock_item_id": "${stockItemId}"}`);
+			btn.setAttribute('hx-vals', `{"entity_id": "{{.EntityID}}", "product": "${product}", "amount": "${currentAmount}", "quantity": "${quantity}", "stock_item_id": "${stockItemId}"}`);
             
             // Clear after successful sale
             setTimeout(() => {

@@ -20,11 +20,16 @@
 - Criam dados isolados para cada teste
 - Execução moderada (2-5s cada)
 
-### 3. Testes E2E (opcional)
+### 3. Testes E2E com Playwright (OBRIGATÓRIO para features UI)
 - Testam fluxos completos com browser real
-- Requerem setup complexo (Playwright)
-- Devem ser executados apenas quando necessário
-- Marcados com `-run` específico
+- Setup automático via `validate_e2e.sh`
+- **Modos disponíveis:**
+  - `--headless` (stealth mode - padrão): Não abre janelas
+  - `--ui`: Interface gráfica para debug
+  - `--basic`: 7 passos padrão Digna
+  - `--full`: Todos os testes
+- **Integrado no workflow:** Executado após cada implementação
+- **Valida fluxo real de negócio**, não apenas código
 
 ## Padrões Implementados
 
@@ -68,9 +73,13 @@ if stockItemID == "expected_id" { // Pode falhar se implementação mudar
 
 ### 3. Timeout em Testes Browser
 **Problema**: Playwright espera elemento que não existe
-**Solução**: Timeouts curtos, verificação de fallback
+**Solução**: Timeouts configuráveis via `--timeout N`, verificação de fallback
 
-### 4. Endpoints Alterados
+### 4. Janelas do Browser no Desktop
+**Problema**: Testes E2E abrem janelas durante execução
+**Solução**: Usar modo `--headless` (stealth mode) por padrão no `validate_e2e.sh`
+
+### 5. Endpoints Alterados
 **Problema**: Teste usa `/cash/entries`, mas rota é `/cash`
 **Solução**: Verificar rotas reais no código, atualizar testes
 
@@ -89,6 +98,11 @@ go test ./modules/ui_web -v -run "TestUnidadesEstoque" -timeout 30s
 
 # Pular testes problemáticos
 go test ./modules/ui_web -v -run "TestE2E_Otimizado|TestFluxoCompleto" -timeout 30s
+
+# Validação E2E com Playwright (workflow integrado)
+./scripts/dev/validate_e2e.sh --basic --headless    # Stealth mode (padrão)
+./scripts/dev/validate_e2e.sh --basic --ui          # Com navegador (debug)
+./scripts/dev/validate_e2e.sh --full --headless     # Todos testes stealth
 ```
 
 ### Debug
@@ -122,6 +136,9 @@ go test ./modules/ui_web -v -run "TestE2E_Browser_Minimal" -timeout 10s
 3. Verificações tolerantes a mudanças de implementação
 4. Correção de endpoints desatualizados
 5. Logs claros sobre limitações dos testes
+6. **Validação E2E integrada no workflow**
+7. **Modo stealth (headless) para não interferir com desktop**
+8. **Script `validate_e2e.sh` para validação automatizada**
 
 ## Manutenção
 
