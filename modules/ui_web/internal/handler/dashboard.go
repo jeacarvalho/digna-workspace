@@ -83,6 +83,12 @@ func NewDashboardHandler(lm lifecycle.LifecycleManager) (*DashboardHandler, erro
 				return "bg-gray-100 text-gray-800 border-gray-300"
 			}
 		},
+		"fdiv": func(a, b float64) float64 {
+			if b == 0 {
+				return 0
+			}
+			return a / b
+		},
 		"getCategoryLabel": func(category string) string {
 			labels := map[string]string{
 				"INSUMOS":      "Insumos",
@@ -160,20 +166,13 @@ func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request)
 		"Members":      calc.Members,
 	}
 
-	// Carregar template simples do disco
-	tmpl, err := template.New("dashboard_simple.html").ParseFiles("templates/dashboard_simple.html")
-	if err != nil {
+	// Usar template do handler (que já tem todas as funções incluindo fdiv)
+	if err := h.tmpl.ExecuteTemplate(w, "dashboard_simple.html", data); err != nil {
 		// Fallback para template antigo
-		tmpl, err = template.New("dashboard.html").ParseFiles("templates/dashboard.html")
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
+		if err := h.tmpl.ExecuteTemplate(w, "dashboard.html", data); err != nil {
+			http.Error(w, fmt.Sprintf("Erro ao renderizar template: %v", err), http.StatusInternalServerError)
 			return
 		}
-	}
-
-	if err := tmpl.Execute(w, data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 }
 
@@ -188,15 +187,9 @@ func (h *DashboardHandler) SocialClockPage(w http.ResponseWriter, r *http.Reques
 		"EntityID": entityID,
 	}
 
-	// Carregar template do disco
-	tmpl, err := template.New("social_clock.html").ParseFiles("templates/social_clock.html")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	if err := tmpl.Execute(w, data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// Usar template do handler (que já tem todas as funções incluindo fdiv)
+	if err := h.tmpl.ExecuteTemplate(w, "social_clock.html", data); err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao renderizar template: %v", err), http.StatusInternalServerError)
 		return
 	}
 }

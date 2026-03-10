@@ -61,6 +61,12 @@ func NewPDVHandler(lm lifecycle.LifecycleManager) (*PDVHandler, error) {
 				return "bg-gray-100 text-gray-800 border-gray-300"
 			}
 		},
+		"fdiv": func(a, b float64) float64 {
+			if b == 0 {
+				return 0
+			}
+			return a / b
+		},
 		"getCategoryLabel": func(category string) string {
 			labels := map[string]string{
 				"INSUMOS":      "Insumos",
@@ -173,15 +179,9 @@ func (h *PDVHandler) PDVPage(w http.ResponseWriter, r *http.Request) {
 		"ProductDetails": productDetails,
 	}
 
-	// Carregar template do disco para evitar problemas de cache
-	tmpl, err := template.New("pdv_simple.html").ParseFiles("templates/pdv_simple.html")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	if err := tmpl.Execute(w, data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// Usar template do handler (que já tem todas as funções incluindo fdiv)
+	if err := h.tmpl.ExecuteTemplate(w, "pdv_simple.html", data); err != nil {
+		http.Error(w, fmt.Sprintf("Erro ao renderizar template: %v", err), http.StatusInternalServerError)
 		return
 	}
 }

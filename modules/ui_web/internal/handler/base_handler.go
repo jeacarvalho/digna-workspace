@@ -87,6 +87,57 @@ func NewBaseHandler(lm lifecycle.LifecycleManager, devMode bool) *BaseHandler {
 		return category
 	})
 
+	// fdiv - divisão de float64 (usada nos templates para cálculos monetários)
+	tm.AddFunc("fdiv", func(a, b float64) float64 {
+		if b == 0 {
+			return 0
+		}
+		return a / b
+	})
+
+	// Funções específicas para supply
+	tm.AddFunc("stockItemTypeLabel", func(itemType string) string {
+		switch itemType {
+		case "INSUMO":
+			return "Insumo/Matéria-prima"
+		case "PRODUTO":
+			return "Produto Acabado"
+		case "MERCADORIA":
+			return "Mercadoria para Revenda"
+		default:
+			return itemType
+		}
+	})
+
+	tm.AddFunc("stockItemUnitLabel", func(unit string) string {
+		switch unit {
+		case "UNIDADE":
+			return "unid."
+		case "KG":
+			return "kg"
+		case "G":
+			return "g"
+		case "L":
+			return "L"
+		case "M":
+			return "m"
+		case "CM":
+			return "cm"
+		case "PACOTE":
+			return "pct"
+		case "CAIXA":
+			return "cx"
+		case "SACO":
+			return "sc"
+		default:
+			return unit
+		}
+	})
+
+	tm.AddFunc("isBelowMinimum", func(quantity, minQuantity int) bool {
+		return quantity < minQuantity
+	})
+
 	// Pré-carregar templates
 	if err := tm.PreloadTemplates(); err != nil {
 		fmt.Printf("[WARNING] Failed to preload templates: %v\n", err)

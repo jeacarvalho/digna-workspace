@@ -74,6 +74,12 @@ func NewSupplyHandler(lm lifecycle.LifecycleManager) (*SupplyHandler, error) {
 		"isBelowMinimum": func(quantity, minQuantity int) bool {
 			return quantity < minQuantity
 		},
+		"fdiv": func(a, b float64) float64 {
+			if b == 0 {
+				return 0
+			}
+			return a / b
+		},
 	}
 
 	// Carregar templates
@@ -112,14 +118,8 @@ func (h *SupplyHandler) SupplyDashboard(w http.ResponseWriter, r *http.Request) 
 		"EntityID": "cooperativa_demo",
 	}
 
-	// Carregar template simples do disco
-	tmpl, err := template.New("supply_dashboard_simple.html").ParseFiles("templates/supply_dashboard_simple.html")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	if err := tmpl.Execute(w, data); err != nil {
+	// Usar template do handler (que já tem todas as funções incluindo fdiv)
+	if err := h.tmpl.ExecuteTemplate(w, "supply_dashboard_simple.html", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -192,14 +192,8 @@ func (h *SupplyHandler) StockPage(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	// Carregar template simples do disco
-	tmpl, err := template.New("supply_stock_simple.html").ParseFiles("templates/supply_stock_simple.html")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	if err := tmpl.Execute(w, data); err != nil {
+	// Usar template do handler (que já tem todas as funções incluindo fdiv)
+	if err := h.tmpl.ExecuteTemplate(w, "supply_stock_simple.html", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

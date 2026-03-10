@@ -56,7 +56,13 @@ func NewBudgetHandler(lm lifecycle.LifecycleManager) (*BudgetHandler, error) {
 				return "bg-gray-100 text-gray-800 border-gray-300"
 			}
 		},
-		"getAlertStatusLabel": func(status string) string {
+		"fdiv": func(a, b float64) float64 {
+		if b == 0 {
+			return 0
+		}
+		return a / b
+	},
+	"getAlertStatusLabel": func(status string) string {
 			switch status {
 			case "SAFE":
 				return "Dentro do planejado"

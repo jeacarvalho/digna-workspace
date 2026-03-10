@@ -92,7 +92,13 @@ func NewAuthHandler(lm lifecycle.LifecycleManager) (*AuthHandler, error) {
 			}
 			return category
 		},
-		"getAlertStatusClass": func(status string) string {
+		"fdiv": func(a, b float64) float64 {
+		if b == 0 {
+			return 0
+		}
+		return a / b
+	},
+	"getAlertStatusClass": func(status string) string {
 			switch status {
 			case "SAFE":
 				return "bg-green-100 text-green-800 border-green-300"

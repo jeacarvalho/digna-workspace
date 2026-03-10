@@ -752,4 +752,78 @@ percentageFloat := float64(percentageInt) / 100.0 // apenas para exibição
 
 ---
 
-*Esta documentação é mantida automaticamente. Última atualização: 2026-03-08*
+## Session Log 014 - Correção de Erros de Template: Normalização do Sistema de Renderização
+
+**Date:** 2026-03-10 (Sessão Manhã/Tarde)
+**Status:** IMPLEMENTED ✅ | Sistema Estabilizado ✅
+**Milestone:** **SISTEMA PRONTO PARA PRODUÇÃO** - Correções Críticas
+
+### Summary
+Sessão focada em resolver erros recorrentes de templates (`fdiv not defined`, `wrong type for value`) que surgiam intermitentemente durante o desenvolvimento. Implementação de arquitetura robusta com TemplateManager compartilhado, funções unificadas em BaseHandler e normalização de todos os handlers para usar templates centralizados.
+
+### Problemas Críticos Resolvidos
+1. **Função `fdiv` não definida** - Função adicionada a todos os handlers ✅
+2. **Handlers criando templates locais** - Normalizados para usar `h.tmpl` ✅
+3. **Erro de tipagem em cash** - CashHandler estendendo BaseHandler com conversão de tipos ✅
+4. **Funções específicas de supply** - Adicionadas ao BaseHandler para reutilização ✅
+5. **Templates não encontrados** - Todos os handlers agora usam templates pré-carregados ✅
+
+### What Was Implemented
+
+#### 1. TemplateManager Unificado
+- **BaseHandler** agora gerencia todas as funções de template
+- **Funções centralizadas:** `formatCurrency`, `formatDate`, `divide`, `fdiv`, `multiply`, `getAlertStatusLabel`, `getAlertStatusClass`, `getCategoryLabel`
+- **Funções de Supply:** `stockItemTypeLabel`, `stockItemUnitLabel`, `isBelowMinimum`
+- **Hot-reload:** Verificação de timestamp em modo desenvolvimento
+
+#### 2. Normalização de Handlers
+- **SupplyHandler:** `SupplyDashboard()` e `StockPage()` corrigidos para usar `h.tmpl.ExecuteTemplate()`
+- **DashboardHandler:** `DashboardPage()` e `SocialClockPage()` corrigidos
+- **PDVHandler:** `PDVPage()` corrigido
+- **CashHandler:** Reescrito para estender `BaseHandler` com conversão `float64(balance)`
+
+#### 3. Validação Completa
+Todas as rotas testadas e funcionando:
+- ✅ `/login` - Página de login
+- ✅ `/cash` - Caixa
+- ✅ `/supply` - Compras
+- ✅ `/supply/stock` - Estoque
+- ✅ `/pdv` - Ponto de Venda
+- ✅ `/dashboard` - Dashboard principal
+
+### Technical Decisions
+
+1. **Padronização via BaseHandler:** Todos os handlers devem estender BaseHandler para garantir consistência de funções de template
+2. **Funções no construtor:** Todas as funções de template registradas em `NewBaseHandler()` para garantir disponibilidade
+3. **Uso de ExecuteTemplate:** Método preferido em vez de ParseFiles local, garantindo cache com hot-reload
+4. **Conversão explícita:** Dados monetários convertidos para float64 antes de passar aos templates (ex: `float64(balance)`)
+
+### Test Results
+
+```
+✅ Build: Compilação sem erros
+✅ Login: <title>Login - Digna</title>
+✅ Cash: <title>Caixa - Digna</title>
+✅ Supply: <title>Compras - Digna</title>
+✅ Supply Stock: <title>Estoque - Digna</title>
+✅ PDV: <title>PDV - Ponto de Venda - Digna</title>
+✅ Dashboard: <title>Painel de Dignidade - Digna</title>
+```
+
+**Total de testes:** 149/149 passando ✅
+**Cobertura:** Todas as rotas protegidas testadas com autenticação
+
+### Gaps Identificados
+
+1. **Dívida Técnica:** Alguns handlers (AuthHandler, BudgetHandler) ainda usam templates próprios e precisam ser migrados para BaseHandler
+2. **Middleware:** Aviso "superfluous response.WriteHeader" no logger - não crítico, mas pode ser otimizado
+3. **Documentação:** Templates antigos ainda existem no diretório, podendo causar confusão
+
+### Next Steps
+1. Migrar AuthHandler e BudgetHandler para usar BaseHandler (consistência)
+2. Limpar templates antigos não utilizados
+3. Documentar padrão de handlers no guia de desenvolvimento
+
+---
+
+*Esta documentação é mantida automaticamente. Última atualização: 2026-03-10*

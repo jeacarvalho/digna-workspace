@@ -6,7 +6,7 @@
 
 ### **1.1. O Cenário Atual e a Necessidade de Disrupção**
 
-A economia solidária brasileira enfrenta o desafio da "invisibilidade burocrática". Pequenos empreendimentos produzem riqueza real, mas soçobram ante a complexidade contábil e a dificuldade de acesso ao crédito. O projeto Providentia nasce para romper esse ciclo, transformando a gestão em um ato de cidadania automática.
+A economia solidária brasileira enfrenta o desafio da "invisibilidade burocrática". Pequenos empreendimentos produzem riqueza real, mas se perdem ante a complexidade contábil e a dificuldade de acesso ao crédito. O projeto Providentia nasce para romper esse ciclo, transformando a gestão em um ato de cidadania automática.
 
 ### **1.2. A Filosofia "Digna": Contabilidade Invisível**
 
@@ -14,7 +14,7 @@ O produto **Digna** (app/web) é a interface de libertação do empreendedor. A 
 
 ### **1.3. O Serpro como Indutor de Soberania Nacional**
 
-Como braço tecnológico do Estado, o Serpro atua como o grande hospedeiro desta infraestrutura, garantindo que o dado do cooperado não seja mercadoria, mas sim um ativo de soberania para a formulação de políticas públicas de crédito e fomento.
+Como braço tecnológico do Estado, o Serpro pode atuar como o grande hospedeiro desta infraestrutura, garantindo que o dado do cooperado não seja mercadoria, mas sim um ativo de soberania para a formulação de políticas públicas de crédito e fomento.
 
 ### **1.4. A Fundação Providentia: O Modelo de Governança**
 

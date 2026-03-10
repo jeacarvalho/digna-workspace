@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"fmt"
-	"html/template"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -16,68 +15,19 @@ import (
 )
 
 type CashHandler struct {
+	*BaseHandler
 	lifecycleManager lifecycle.LifecycleManager
 	cashAPI          *cash_flow.CashFlowAPI
-	tmpl             *template.Template
 }
 
 func NewCashHandler(lm lifecycle.LifecycleManager) (*CashHandler, error) {
-	funcMap := template.FuncMap{
-		"formatCurrency": func(amount int64) string {
-			return fmt.Sprintf("R$ %.2f", float64(amount)/100)
-		},
-		"formatDate": func(t time.Time) string {
-			return t.Format("02/01/2006 15:04")
-		},
-		// Adicionar funções necessárias para templates compartilhados
-		"getAlertStatusLabel": func(status string) string {
-			switch status {
-			case "SAFE":
-				return "Dentro do planejado"
-			case "WARNING":
-				return "Atenção: perto do limite"
-			case "EXCEEDED":
-				return "Ultrapassou o planejado"
-			default:
-				return status
-			}
-		},
-		"getAlertStatusClass": func(status string) string {
-			switch status {
-			case "SAFE":
-				return "bg-green-100 text-green-800 border-green-300"
-			case "WARNING":
-				return "bg-yellow-100 text-yellow-800 border-yellow-300"
-			case "EXCEEDED":
-				return "bg-red-100 text-red-800 border-red-300"
-			default:
-				return "bg-gray-100 text-gray-800 border-gray-300"
-			}
-		},
-		"getCategoryLabel": func(category string) string {
-			labels := map[string]string{
-				"INSUMOS":      "Insumos",
-				"ENERGIA":      "Energia",
-				"EQUIPAMENTOS": "Equipamentos",
-				"TRANSPORTE":   "Transporte",
-				"MANUTENCAO":   "Manutenção",
-				"SERVICOS":     "Serviços",
-				"OUTROS":       "Outros",
-			}
-			if label, ok := labels[category]; ok {
-				return label
-			}
-			return category
-		},
-	}
-
-	// Criar template vazio - vamos carregar templates do disco quando necessário
-	tmpl := template.New("").Funcs(funcMap)
+	// Criar BaseHandler com TemplateManager
+	base := NewBaseHandler(lm, true)
 
 	return &CashHandler{
+		BaseHandler:      base,
 		lifecycleManager: lm,
 		cashAPI:          cash_flow.NewCashFlowAPI(lm),
-		tmpl:             tmpl,
 	}, nil
 }
 
@@ -107,31 +57,13 @@ func (h *CashHandler) CashPage(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
 		"Title":      "Caixa - Digna",
 		"EntityID":   entityID,
-		"Balance":    balance,
+		"Balance":    float64(balance), // Converter para float64 para compatibilidade com fdiv
 		"Entries":    entries,
 		"Categories": []string{"VENDAS", "DESPESAS", "FORNECEDORES", "BANCO", "OUTRAS ENTRADAS", "OUTRAS SAÍDAS"},
 	}
 
-	// Criar função de divisão para templates
-	funcMap := template.FuncMap{
-		"fdiv": func(a, b float64) float64 {
-			if b == 0 {
-				return 0
-			}
-			return a / b
-		},
-	}
-
-	// Carregar template simples do disco com funções
-	tmpl, err := template.New("cash_simple.html").Funcs(funcMap).ParseFiles("templates/cash_simple.html")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Erro ao carregar template: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	if err := tmpl.Execute(w, data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	// Usar TemplateManager do BaseHandler
+	h.RenderTemplate(w, "cash_simple.html", data)
 }
 
 func (h *CashHandler) RecordEntry(w http.ResponseWriter, r *http.Request) {
