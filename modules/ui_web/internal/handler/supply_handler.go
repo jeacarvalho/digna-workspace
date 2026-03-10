@@ -353,9 +353,9 @@ func (h *SupplyHandler) StockPage(w http.ResponseWriter, r *http.Request) {
 			"UnitCost":    item.UnitCost,
 			"CreatedAt":   item.CreatedAt,
 			// Campos convertidos para float64 (para uso com fdiv no template)
-			"UnitCostFloat":     float64(item.UnitCost),
-			"TotalValueFloat":   float64(itemTotalValue),
-			"MinQuantityDouble": float64(item.MinQuantity * 2), // para a comparação no template
+			"UnitCostFloat":   float64(item.UnitCost),
+			"TotalValueFloat": float64(itemTotalValue),
+			"MinQuantityInt":  item.MinQuantity, // para a comparação no template
 		}
 		templateStockItems = append(templateStockItems, templateItem)
 	}
