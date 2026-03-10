@@ -109,8 +109,11 @@ func NewDashboardHandler(lm lifecycle.LifecycleManager) (*DashboardHandler, erro
 	// Criar template vazio - vamos carregar templates do disco quando necessário
 	tmpl := template.New("").Funcs(funcMap)
 
-	// Parsear template simples de dashboard
-	tmpl.ParseFiles("templates/dashboard_simple.html")
+	// Parsear templates necessários
+	_, err := tmpl.ParseFiles("templates/dashboard_simple.html", "templates/social_clock.html")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse templates: %w", err)
+	}
 
 	return &DashboardHandler{
 		lifecycleManager: lm,
@@ -156,14 +159,18 @@ func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request)
 	opHandler := usecase.NewOperationHandler(h.lifecycleManager)
 	balance, _ := opHandler.GetCashBalance(entityID)
 
+	// Calcular sobras disponíveis após reservas (15% para Reserva Legal + FATES)
+	availableSurplus := float64(calc.TotalSurplus) * 0.85 / 100 // 85% após 15% de reservas
+
 	data := map[string]interface{}{
-		"Title":        "Painel de Dignidade",
-		"EntityID":     entityID,
-		"CashBalance":  float64(balance) / 100,
-		"TotalSurplus": float64(calc.TotalSurplus) / 100,
-		"TotalHours":   calc.TotalMinutes / 60,
-		"MemberCount":  len(calc.Members),
-		"Members":      calc.Members,
+		"Title":            "Painel de Dignidade",
+		"EntityID":         entityID,
+		"CashBalance":      float64(balance) / 100,
+		"TotalSurplus":     float64(calc.TotalSurplus) / 100,
+		"AvailableSurplus": availableSurplus,
+		"TotalHours":       calc.TotalMinutes / 60,
+		"MemberCount":      len(calc.Members),
+		"Members":          calc.Members,
 	}
 
 	// Usar template do handler (que já tem todas as funções incluindo fdiv)

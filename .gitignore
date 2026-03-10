@@ -27,3 +27,31 @@ data/
 # Logs
 *.log
 docs/sessions/*.log
+
+# Arquivos temporários do workflow
+tmp/
+backups/
+*.tmp
+*.temp
+
+# Arquivos de sessão e tarefa
+.session_*
+.task_*
+.opencode_task_*.txt
+
+# Contextos e documentos temporários
+contexto_*.txt
+docsdigna.txt
+
+# Backups automáticos
+backup_*/
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema operacional
+.DS_Store
+Thumbs.db

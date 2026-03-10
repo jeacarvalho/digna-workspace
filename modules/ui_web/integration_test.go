@@ -122,3 +122,79 @@ func TestPricingCalculatorIntegration(t *testing.T) {
 		t.Log("✅ Integração da calculadora de preços validada com sucesso")
 	})
 }
+
+func TestMemberHandlerIntegration(t *testing.T) {
+	// Criar lifecycle manager
+	dataDir := "../../data/entities"
+	defer func() {
+		// Cleanup after test
+		os.RemoveAll(dataDir)
+	}()
+
+	lm := lifecycle.NewSQLiteManager()
+	defer lm.CloseAll()
+
+	// Criar handler de membros
+	memberHandler, err := handler.NewMemberHandler(lm)
+	if err != nil {
+		t.Fatalf("Failed to create Member handler: %v", err)
+	}
+
+	// Criar mux e registrar rotas
+	mux := http.NewServeMux()
+	memberHandler.RegisterRoutes(mux)
+
+	// Testar se a rota de membros está registrada
+	t.Run("Members route registered", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/members?entity_id=test_coop", nil)
+		rr := httptest.NewRecorder()
+
+		mux.ServeHTTP(rr, req)
+
+		// Template might fail to load in test, but route should be registered
+		if rr.Code == http.StatusNotFound {
+			t.Errorf("Members route returned status code = %v, want not 404", rr.Code)
+		}
+	})
+
+	// Testar criação de membro via POST
+	t.Run("Create member POST", func(t *testing.T) {
+		formData := strings.NewReader("entity_id=test_coop&name=Test Member&email=test@example.com&role=MEMBER")
+		req := httptest.NewRequest("POST", "/members/create", formData)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr := httptest.NewRecorder()
+
+		mux.ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusOK {
+			t.Errorf("Create member route returned status code = %v, want %v", rr.Code, http.StatusOK)
+		}
+
+		body := rr.Body.String()
+		if !strings.Contains(body, "Sócio cadastrado") {
+			t.Errorf("Create member response missing success message")
+		}
+	})
+
+	// Testar validação de dados inválidos
+	t.Run("Create member validation", func(t *testing.T) {
+		// Missing required fields
+		formData := strings.NewReader("entity_id=test_coop")
+		req := httptest.NewRequest("POST", "/members/create", formData)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr := httptest.NewRecorder()
+
+		mux.ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusBadRequest {
+			t.Errorf("Create member validation returned status code = %v, want %v", rr.Code, http.StatusBadRequest)
+		}
+
+		body := rr.Body.String()
+		if !strings.Contains(body, "obrigatórios") {
+			t.Errorf("Create member validation missing error message")
+		}
+	})
+
+	t.Log("✅ Integração do handler de membros validada com sucesso")
+}

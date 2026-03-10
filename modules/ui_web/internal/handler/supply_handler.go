@@ -82,11 +82,45 @@ func NewSupplyHandler(lm lifecycle.LifecycleManager) (*SupplyHandler, error) {
 		},
 	}
 
-	// Carregar templates
-	tmpl, err := template.New("supply_templates").Funcs(funcMap).ParseGlob("templates/supply_*.html")
+	// Carregar templates: primeiro os embutidos (base), depois templates do disco
+	baseTmpl := template.New("supply_base").Funcs(funcMap)
+
+	// 1. Parse templates embutidos (obrigatórios)
+	baseTmpl, err := baseTmpl.Parse(supplyTemplates)
 	if err != nil {
-		// Fallback para templates embutidos se os arquivos não existirem
-		tmpl = template.Must(template.New("supply_templates").Funcs(funcMap).Parse(supplyTemplates))
+		return nil, fmt.Errorf("failed to parse embedded supply templates: %w", err)
+	}
+
+	// 2. Tentar adicionar templates do disco (opcional)
+	// Clone o template base para não modificar o original
+	tmpl, err := baseTmpl.Clone()
+	if err != nil {
+		return nil, fmt.Errorf("failed to clone base template: %w", err)
+	}
+
+	// Adicionar templates do disco (se existirem)
+	diskTemplates, err := tmpl.ParseGlob("templates/supply_*.html")
+	if err == nil {
+		// Templates do disco adicionados com sucesso
+		tmpl = diskTemplates
+		fmt.Printf("✅ Loaded supply templates: embedded + disk templates\n")
+
+		// DEBUG: Listar templates carregados
+		for _, t := range tmpl.Templates() {
+			if t.Name() != "" {
+				fmt.Printf("  - Template: %s\n", t.Name())
+			}
+		}
+	} else {
+		// Usar apenas templates embutidos
+		fmt.Printf("ℹ️ Using embedded supply templates only (no disk templates found: %v)\n", err)
+
+		// DEBUG: Listar templates embutidos
+		for _, t := range baseTmpl.Templates() {
+			if t.Name() != "" {
+				fmt.Printf("  - Embedded template: %s\n", t.Name())
+			}
+		}
 	}
 
 	// Criar API de supply (sem ledgerPort por enquanto - será injetado depois se necessário)

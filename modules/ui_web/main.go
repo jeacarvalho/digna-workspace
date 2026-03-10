@@ -148,6 +148,16 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger) 
 	}
 	budgetHandler.RegisterRoutes(mux)
 
+	// Member handler
+	memberHandler, err := handler.NewMemberHandler(lifecycleMgr)
+	if err != nil {
+		// Log mas não falha - pode ser implementação parcial
+		fmt.Printf("⚠️ Member handler creation warning: %v\n", err)
+	} else {
+		memberHandler.RegisterRoutes(mux)
+		fmt.Println("✅ Member handler registered")
+	}
+
 	// Health check
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

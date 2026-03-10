@@ -85,7 +85,10 @@ func NewPDVHandler(lm lifecycle.LifecycleManager) (*PDVHandler, error) {
 	}
 
 	// Criar template simples para evitar problemas de cache
-	tmpl := template.New("pdv_simple.html").Funcs(funcMap)
+	tmpl, err := template.New("pdv_simple.html").Funcs(funcMap).ParseFiles("templates/pdv_simple.html")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse pdv template: %w", err)
+	}
 
 	// Criar calculadora de preços
 	pricingCalc, err := pricing.NewPricingCalculator()

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2A5CAA">
+    <title>Gestão de Sócios - Digna</title>
+    
+    <!-- Configuração do Tailwind com paleta Digna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'digna-primary': '#2A5CAA',    // Azul soberania
+              'digna-secondary': '#4A7F3E',  // Verde suor
+              'digna-accent': '#F57F17',     // Laranja energia
+              'digna-bg': '#F9F9F6',         // Fundo claro
+              'digna-text': '#212121',       // Texto escuro
+            },
+            fontFamily: {
+              'sans': ['Inter', 'Ubuntu', 'system-ui', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Ubuntu:wght@300;400;500;700&display=swap');
+      
+      body {
+        background-color: #F9F9F6;
+        font-family: 'Inter', sans-serif;
+      }
+      
+      .digna-gradient {
+        background: linear-gradient(135deg, #2A5CAA 0%, #4A7F3E 100%);
+      }
+      
+      .digna-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(42, 92, 170, 0.1);
+        border: 1px solid rgba(42, 92, 170, 0.1);
+      }
+      
+      /* Animações HTMX */
+      .htmx-indicator {
+        opacity: 0;
+        transition: opacity 200ms ease-in;
+      }
+      .htmx-request .htmx-indicator {
+        opacity: 1;
+      }
+      .htmx-request.htmx-indicator {
+        opacity: 1;
+      }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Cabeçalho -->
+    <header class="digna-gradient text-white">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <!-- Logo -->
+                    <img src="/static/Digna_logo_v2.png" 
+                         alt="Logotipo Digna" 
+                         class="h-10 w-10">
+                    <div>
+                        <h1 class="text-xl font-bold">DIGNA SÓCIOS</h1>
+                        <p class="text-sm opacity-90">Gestão de Cooperados</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium">{{.EntityID}}</p>
+                    <p class="text-sm opacity-90">
+                        <a href="/dashboard?entity_id={{.EntityID}}" class="hover:underline">Voltar ao Dashboard</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegação -->
+    <nav class="bg-white border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 py-2">
+                <a href="/dashboard?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Dashboard
+                </a>
+                <a href="/pdv?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    PDV
+                </a>
+                <a href="/cash?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Caixa
+                </a>
+                <a href="/supply?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Compras
+                </a>
+                <a href="/supply/stock?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Estoque
+                </a>
+                <a href="/members?entity_id={{.EntityID}}" class="px-4 py-2 bg-digna-primary text-white rounded-lg font-medium">
+                    Sócios
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo principal -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-digna-text mb-2">{{.Title}}</h1>
+            <p class="text-gray-600">Cadastre e gerencie os sócios da sua cooperativa</p>
+        </div>
+
+        <!-- Área de feedback HTMX -->
+        <div id="feedback-area"></div>
+
+        <!-- Formulário para novo sócio -->
+        <div class="digna-card p-6 mb-8">
+            <h2 class="text-xl font-semibold text-digna-text mb-4">Cadastrar Novo Sócio</h2>
+            <form hx-post="/members/create" 
+                  hx-target="#members-list" 
+                  hx-swap="afterbegin"
+                  hx-indicator="#create-spinner"
+                  class="space-y-4">
+                <input type="hidden" name="entity_id" value="{{.EntityID}}">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
+                        <input type="text" name="name" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-digna-primary"
+                               placeholder="Ex: Maria Silva">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                        <input type="email" name="email" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-digna-primary"
+                               placeholder="Ex: maria@cooperativa.com">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                        <input type="tel" name="phone"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-digna-primary"
+                               placeholder="Ex: (11) 99999-9999">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Papel na Cooperativa *</label>
+                        <select name="role" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-digna-primary">
+                            <option value="">Selecione um papel</option>
+                            <option value="COORDINATOR">Coordenador(a)</option>
+                            <option value="MEMBER" selected>Sócio(a)</option>
+                            <option value="ADVISOR">Conselheiro(a)</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">CPF (opcional)</label>
+                        <input type="text" name="cpf"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-digna-primary"
+                               placeholder="Ex: 123.456.789-00">
+                        <p class="text-xs text-gray-500 mt-1">
+                            <strong>Atenção:</strong> Ao informar o CPF, você concorda com o tratamento dos dados conforme a LGPD.
+                            Esta informação é opcional e será usada apenas para fins contábeis obrigatórios.
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Habilidades (separadas por vírgula)</label>
+                        <input type="text" name="skills"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-digna-primary"
+                               placeholder="Ex: Gestão, Vendas, Produção">
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between pt-4 border-t">
+                    <div class="text-sm text-gray-500">
+                        Campos com * são obrigatórios
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span id="create-spinner" class="htmx-indicator">
+                            <svg class="animate-spin h-5 w-5 text-digna-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-digna-primary text-white rounded-lg font-medium hover:bg-blue-700 transition">
+                            Cadastrar Sócio
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de sócios -->
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-digna-text mb-4">Sócios da Cooperativa</h2>
+            <div id="members-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {{range .Members}}
+                <div class="digna-card p-6" id="member-{{.ID}}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-lg text-digna-text">{{.Name}}</h3>
+                            <p class="text-gray-600">{{.Email}}</p>
+                            {{if .Phone}}<p class="text-gray-600 text-sm">{{.Phone}}</p>{{end}}
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                <span class="px-3 py-1 rounded-full text-sm {{getRoleClass .Role}}">
+                                    {{getRoleLabel .Role}}
+                                </span>
+                                <span class="px-3 py-1 rounded-full text-sm {{getStatusClass .Status}}">
+                                    {{getStatusLabel .Status}}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <!-- Botão Editar -->
+                            <button hx-get="/members/{{.ID}}/edit"
+                                    hx-target="body"
+                                    hx-swap="beforeend"
+                                    class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition"
+                                    title="Editar sócio">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Botão Ativar/Inativar -->
+                            <button hx-post="/members/{{.ID}}/toggle-status"
+                                    hx-target="#member-{{.ID}}"
+                                    hx-swap="outerHTML"
+                                    hx-confirm="{{if eq .Status "ACTIVE"}}Tem certeza que deseja inativar este sócio?{{else}}Tem certeza que deseja ativar este sócio?{{end}}"
+                                    class="p-2 {{if eq .Status "ACTIVE"}}text-red-600 hover:text-red-800 hover:bg-red-50{{else}}text-green-600 hover:text-green-800 hover:bg-green-50{{end}} rounded-lg transition"
+                                    title="{{if eq .Status "ACTIVE"}}Inativar sócio{{else}}Ativar sócio{{end}}">
+                                {{if eq .Status "ACTIVE"}}
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                {{else}}
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                {{end}}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-4">
+                        {{if .Skills}}
+                        <p class="text-sm text-gray-600">
+                            <strong class="text-digna-text">Habilidades:</strong> {{joinSkills .Skills}}
+                        </p>
+                        {{end}}
+                        <p class="text-sm text-gray-600 mt-1">
+                            <strong class="text-digna-text">Entrou em:</strong> {{formatDate .JoinedAt}}
+                        </p>
+                        {{if .CPF}}
+                        <p class="text-xs text-gray-500 mt-1">
+                            <strong>CPF registrado</strong> (LGPD)
+                        </p>
+                        {{end}}
+                    </div>
+                </div>
+                {{else}}
+                <div class="col-span-full digna-card p-12 text-center">
+                    <div class="text-gray-400 mb-4">
+                        <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13 0a4 4 0 110 5.292"></path>
+                        </svg>
+                    </div>
+                    <p class="text-gray-600 mb-2">Nenhum sócio cadastrado</p>
+                    <p class="text-sm text-gray-500">
+                        Comece cadastrando o primeiro sócio usando o formulário acima.
+                    </p>
+                </div>
+                {{end}}
+            </div>
+        </div>
+
+        <!-- Informações importantes -->
+        <div class="digna-card p-6 border-l-4 border-digna-accent">
+            <h3 class="font-bold text-digna-text mb-3">📋 Informações Importantes</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+                <li class="flex items-start">
+                    <span class="text-digna-accent mr-2">•</span>
+                    <span><strong>Coordenador(a):</strong> Responsável pela gestão da cooperativa. Pelo menos um coordenador deve estar ativo.</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="text-digna-accent mr-2">•</span>
+                    <span><strong>Sócio(a):</strong> Participante ativo com direito a voto e participação nos resultados.</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="text-digna-accent mr-2">•</span>
+                    <span><strong>Conselheiro(a):</strong> Apoia com conhecimentos específicos, sem direito a voto.</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="text-digna-accent mr-2">•</span>
+                    <span><strong>LGPD:</strong> O CPF é opcional e protegido pela Lei Geral de Proteção de Dados.</span>
+                </li>
+            </ul>
+        </div>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="mt-12 border-t border-gray-200 py-6">
+        <div class="container mx-auto px-4 text-center text-gray-600">
+            <p>© 2024 Digna - Gestão de Sócios para Economia Solidária</p>
+            <p class="mt-1 text-sm">v.0 MVP | <a href="/dashboard?entity_id={{.EntityID}}" class="text-digna-primary hover:underline">Voltar ao Dashboard</a></p>
+        </div>
+    </footer>
+
+    <!-- Scripts HTMX -->
+    <script>
+        // Configuração HTMX
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            // Rolar para o topo após ações
+            if (evt.detail.target.id === 'members-list' || evt.detail.target.id === 'feedback-area') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            
+            // Fechar modal de edição após sucesso
+            if (evt.detail.target.id && evt.detail.target.id.startsWith('member-')) {
+                const modal = document.querySelector('.fixed.inset-0');
+                if (modal) modal.remove();
+            }
+        });
+        
+        // Feedback para eventos HTMX
+        document.body.addEventListener('member-created', function() {
+            showFeedback('✅ Sócio cadastrado com sucesso!', 'success');
+        });
+        
+        document.body.addEventListener('member-status-toggled', function() {
+            showFeedback('✅ Status do sócio atualizado!', 'success');
+        });
+        
+        document.body.addEventListener('member-updated', function() {
+            showFeedback('✅ Sócio atualizado com sucesso!', 'success');
+        });
+        
+        function showFeedback(message, type) {
+            const feedbackArea = document.getElementById('feedback-area');
+            const bgColor = type === 'success' ? 'bg-green-100 border-green-500 text-green-700' : 'bg-red-100 border-red-500 text-red-700';
+            
+            feedbackArea.innerHTML = `
+                <div class="${bgColor} border-l-4 p-4 mb-4 rounded" role="alert">
+                    <p class="font-bold">${message}</p>
+                </div>
+            `;
+            
+            // Auto-remover após 5 segundos
+            setTimeout(() => {
+                feedbackArea.innerHTML = '';
+            }, 5000);
+        }
+        
+        // Fechar modal ao clicar fora
+        document.addEventListener('click', function(event) {
+            const modal = document.querySelector('.fixed.inset-0');
+            if (modal && event.target === modal) {
+                modal.remove();
+            }
+        });
+    </script>
+</body>
+</html>

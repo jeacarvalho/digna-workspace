@@ -50,19 +50,28 @@ func TestSprint05_DoD(t *testing.T) {
 	defer server.Close()
 
 	t.Run("Step1_ServerStarts", func(t *testing.T) {
-		resp, err := http.Get(server.URL + "/")
+		// Criar cliente HTTP que segue redirecionamentos
+		client := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse // Não seguir redirecionamentos
+			},
+		}
+
+		resp, err := client.Get(server.URL + "/")
 		if err != nil {
 			t.Fatalf("failed to connect to server: %v", err)
 		}
 		defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("expected status 200, got %d", resp.StatusCode)
+		// A página inicial redireciona para /login
+		if resp.StatusCode != http.StatusFound {
+			t.Errorf("expected redirect status 302, got %d", resp.StatusCode)
 		}
 
-		body, _ := io.ReadAll(resp.Body)
-		if !strings.Contains(string(body), "Digna") {
-			t.Error("expected page to contain 'Digna'")
+		// Verificar se redireciona para /login
+		location := resp.Header.Get("Location")
+		if location != "/login" {
+			t.Errorf("expected redirect to /login, got %s", location)
 		}
 
 		t.Log("✅ Server started and responding on port 8080 (test)")
