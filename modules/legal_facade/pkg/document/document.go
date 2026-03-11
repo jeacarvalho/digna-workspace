@@ -19,6 +19,10 @@ func (g *Generator) GenerateAssemblyMinutes(entityID string, entityName string, 
 	return g.Generator.GenerateAssemblyMinutes(entityID, entityName, status)
 }
 
+func (g *Generator) GenerateDossier(entityID string, entityName string, status string) (string, string, error) {
+	return g.Generator.GenerateDossier(entityID, entityName, status)
+}
+
 type IdentityGenerator struct {
 	*document.IdentityGenerator
 }

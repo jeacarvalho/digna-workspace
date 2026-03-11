@@ -1,0 +1,109 @@
+# 🔍 Checklist de Validação Pré-Implementação: --file=prompt_teste_
+
+**Tarefa:** --file=Prompt_teste_correcos.md
+**Gerado em:** 11/03/2026 11:23:01
+**Tarefa ID:** 20260311_112301
+
+---
+
+## 📋 Informações Extraídas
+- **Tipo:** Feature
+- **Módulo:** ui_web
+- **Objetivo:** --file=Prompt_teste_correcos.md
+- **Decisões:** Seguir padrões estabelecidos
+
+---
+
+## 1. 🏗️ Análise Arquitetural
+
+### 1.1 Backend Existente
+- [ ] **Serviço existe?** `find modules/core_lume -name "*--file=prompt_teste_*" -type f`
+- [ ] **Testes passando?** `cd modules/core_lume && go test ./... -run [Ff]--file=prompt_teste_`
+- [ ] **Cobertura adequada?** (>80% para serviços críticos)
+
+### 1.2 Acessibilidade do Serviço
+- [ ] **Pacote é `internal`?** Verificar caminho do serviço
+- [ ] **Padrão de acesso estabelecido?** Como outros handlers acessam serviços similares
+- [ ] **Dependências do Serviço:** Quais repositórios precisa?
+
+---
+
+## 2. 🎨 Padrões de Frontend
+
+### 2.1 Handlers de Referência
+- [ ] **Qual handler mais similar?** `ls modules/ui_web/internal/handler/*.go | grep -i [padrão]`
+- [ ] **Estende BaseHandler?** Verificar estrutura do handler de referência
+- [ ] **Rotas padrão HTMX?** Analisar `RegisterRoutes` do handler de referência
+
+### 2.2 Sistema de Templates
+- [ ] **Template base a usar?** `ls modules/ui_web/templates/*_simple.html | head -5`
+- [ ] **Funções de template necessárias?** Analisar template similar
+- [ ] **Já existem no BaseHandler?** `grep -n "AddFunc" modules/ui_web/internal/handler/base_handler.go`
+
+### 2.3 Navegação e Layout
+- [ ] **Quais templates atualizar?** `grep -l "nav\\|Navegação" modules/ui_web/templates/*.html`
+- [ ] **Padrão de navegação?** Horizontal (header) vs Grid (layout.html)
+- [ ] **Design system aplicado?** Cores (#2A5CAA, #4A7F3E, #F57F17)
+
+---
+
+## 3. ⚙️ Testabilidade
+
+### 3.1 Estrutura de Testes
+- [ ] **Testes de handler similares?** `find modules/ui_web -name "*test*.go" -exec grep -l "Test.*Handler" {} \;`
+- [ ] **Como mockar dependências?** Analisar testes de referência
+- [ ] **Setup de testes necessário?** Precisa de dados, templates, etc.
+
+### 3.2 Cobertura Alvo
+- [ ] **Coverage mínimo:** >90% para handlers
+- [ ] **Tipos de testes necessários:**
+  - [ ] Testes unitários (lógica pura)
+  - [ ] Testes de integração (com banco)
+  - [ ] Testes E2E (Playwright - opcional)
+
+---
+
+## 4. 🚨 Riscos Identificados
+
+| Risco | Probabilidade | Impacto | Mitigação |
+|-------|--------------|---------|-----------|
+| Serviço não acessível (internal) | Alta | Alto | Implementar com mock, planejar refatoração |
+| Performance com muitos dados | Média | Médio | Paginação no template, lazy loading |
+| Template functions faltando | Alta | Baixo | Adicionar ao BaseHandler ou handler específico |
+
+---
+
+## 5. 📝 Decisões Documentadas
+
+### 5.1 Decisões Técnicas
+1. **Acesso ao serviço:** □ Mock inicial □ API layer □ Direct import □ Outro: ________
+2. **Estrutura do handler:** □ Estende BaseHandler □ Independente □ Outro: ________
+3. **Template base:** □ dashboard_simple.html □ pdv_simple.html □ Outro: ________
+
+### 5.2 Decisões de Design
+1. **Navegação:** Links em quais templates? `_________________________________`
+2. **Responsividade:** □ Mobile-first □ Desktop-first □ Adaptativo
+
+---
+
+## ✅ Checklist de Validação Final
+
+### ANTES de começar a codificar:
+- [ ] Backend analisado e compreendido
+- [ ] Padrões de frontend identificados
+- [ ] Riscos mapeados e mitigados
+- [ ] Decisões documentadas
+- [ ] Checklist completo preenchido
+
+---
+
+## 📊 Métricas desta Análise
+
+- **Tempo gasto na análise:** ______ minutos
+- **Problemas identificados antecipadamente:** ______
+- **Confiança na estimativa:** 1-5 (1=baixa, 5=alta)
+
+---
+
+**📌 Nota:** Preencher este checklist antes de criar plano de implementação.
+Arquivo: docs/implementation_plans/--file=prompt_teste__pre_check.md

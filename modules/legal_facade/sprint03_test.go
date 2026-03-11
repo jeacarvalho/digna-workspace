@@ -1,4 +1,4 @@
-package sprint03_test
+package legal_facade_test
 
 import (
 	"os"

@@ -1,219 +1,189 @@
 # 🏛️ Projeto Digna - Economia Solidária
 
-**Status:** Sprint 16 completa, Sprint 17 em andamento  
-**Arquitetura:** Clean Architecture + DDD + HTMX  
-**Banco:** SQLite isolado por entidade (cooperativa)  
-**Última atualização:** 10/03/2026
+**Status:** Sprint 17 em andamento  
+**Última atualização:** 11/03/2026  
+**Documentação completa:** [docs/README.md](docs/README.md)
 
 ---
 
-## 📁 ESTRUTURA DO PROJETO (REORGANIZADA)
+## 🚀 COMEÇAR AQUI
+
+### Para Desenvolvedores/Contribuidores:
+```bash
+# 1. Clonar e configurar
+git clone [repositório]
+cd digna-workspace
+
+# 2. Iniciar sessão de desenvolvimento (✅ link simbólico)
+./start_session.sh
+
+# 3. Criar primeira tarefa (✅ link simbólico)
+./create_task.sh "Nome da Tarefa" [módulo]
+
+# 4. Seguir fluxo completo (recomendado)
+./process_task.sh --task=[ID] --checklist    # ✅ link
+./process_task.sh --task=[ID] --plan         # ✅ link  
+./process_task.sh --task=[ID] --execute      # ✅ link
+./conclude_task.sh --task=[ID] "Aprendizados" # ✅ link
+./end_session.sh                             # ✅ link
+
+# 5. Executar testes (✅ link simbólico)
+./run_tests.sh
+```
+
+### Para Usuários/Implementadores:
+```bash
+# Ver documentação de deploy
+cat docs/deployment/QUICK_DEPLOY.md
+
+# Executar testes
+cd modules && ./run_tests.sh
+
+# Iniciar sistema
+cd modules/ui_web && go run main.go
+```
+
+---
+
+## 📁 ESTRUTURA DO PROJETO
 
 ```
 digna-workspace/
-├── 📁 modules/                 # Código fonte Go
-│   ├── core_lume/             # Core business logic
-│   ├── ui_web/                # Web interface (HTMX + Tailwind)
+├── modules/                    # Módulos Go do sistema
+│   ├── core_lume/             # Domínio e serviços centrais
+│   ├── ui_web/                # Interface web (HTMX + Go)
+│   ├── legal_facade/          # Facade jurídica (✅ dossiês, atas, etc.)
 │   └── [outros módulos]/
-├── 📁 docs/                   # Documentação completa
-│   ├── learnings/             # Aprendizados por tarefa
-│   ├── templates/             # Templates para workflow
-│   ├── antipatterns/          # Antipadrões e soluções
-│   └── implementation_plans/  # Planos de implementação
-├── 📁 scripts/                # Scripts organizados
-│   ├── workflow/              # Fluxo de trabalho principal
-│   │   ├── start_session.sh   # Iniciar sessão
-│   │   ├── process_task.sh    # Processar tarefa
-│   │   ├── conclude_task.sh   # Concluir tarefa
-│   │   └── end_session.sh     # Encerrar sessão
-│   ├── dev/                   # Desenvolvimento
-│   │   ├── run_tests.sh       # Executar testes
-│   │   ├── smoke_test_new_feature.sh
-│   │   └── init_test_companies.sh
-│   └── tools/                 # Ferramentas auxiliares
-├── 📁 data/                   # Dados (banco SQLite por entidade)
-├── 📁 tmp/                    # Arquivos temporários (.gitignore)
-├── 📁 backups/                # Backups de sessões (.gitignore)
-├── 📄 README.md               # Este arquivo
-├── 📄 Makefile                # Build automation
-├── 📄 go.work                 # Go workspace
-└── 📄 .gitignore              # Arquivos ignorados pelo Git
+├── docs/                      # ✅ Documentação organizada
+│   ├── README.md              # Documentação principal
+│   ├── deployment/            # Guias de deploy
+│   ├── analysis/              # Análises e estudos
+│   ├── task_conclusions/      # Conclusões de tarefas
+│   ├── testing/               # Relatórios de testes
+│   ├── task_prompts/          # Prompts de tarefas
+│   ├── learnings/             # Aprendizados consolidados
+│   ├── skills/                # Skills específicas do projeto
+│   └── templates/             # Templates para desenvolvimento
+├── work_in_progress/          # ✅ Trabalho em andamento
+│   ├── current_session/       # Sessão atual
+│   ├── tasks/                 # Tarefas ativas
+│   ├── archive/               # Histórico completo
+│   └── task_template/         # Template padronizado
+├── scripts/                   # Scripts de automação
+│   ├── workflow/              # Fluxo de trabalho (✅ links simbólicos na raiz)
+│   ├── tools/                 # Ferramentas auxiliares
+│   ├── dev/                   # Desenvolvimento (✅ run_tests.sh link)
+│   ├── deployment/            # Configuração e deploy
+│   └── testing/               # Testes e qualidade
+└── data/                      # Dados (não versionado)
 ```
 
 ---
 
-## 🚀 COMEÇAR A TRABALHAR
+## 🎯 STATUS ATUAL
 
-### **Fluxo 1: Com arquivo de prompt/roadmap** (RECOMENDADO)
-```bash
-# 1. Iniciar sessão
-./start_session.sh          # Modo completo
-./start_session.sh quick    # Modo rápido
+### ✅ Funcionalidades Implementadas:
+- **Sistema completo de economia solidária**
+- **Gestão de membros e trabalho**
+- **Rateio social proporcional**
+- **PDV (Ponto de Venda)**
+- **Fluxo de caixa**
+- **Orçamento e planejamento**
+- **Facade jurídica** (dossiês, atas, formalização)
+- **Interface web com HTMX**
+- **Testes unitários e E2E**
 
-# 2. Preparar implementação a partir de arquivo
-./prepare_implementation.sh prompts/suppliers-ui.md --execute
+### 🔄 Em Desenvolvimento (Sprint 17):
+- Melhorias na experiência do usuário
+- Otimizações de performance
+- Documentação expandida
+- Integrações adicionais
 
-# 3. O script gera:
-#    - Checklist pré-implementação
-#    - Plano de implementação  
-#    - Prompt final para opencode
-
-# 4. Copie o prompt (.opencode_task_*.txt) e cole no opencode
-
-# 5. Implemente seguindo as instruções
-
-# 6. Validação pós-implementação (OBRIGATÓRIA)
-./scripts/dev/smoke_test_new_feature.sh "Suppliers" "/suppliers"
-
-# 7. Concluir tarefa
-./conclude_task.sh "Suppliers implementado. Aprendi: ..."
-
-# 8. Encerrar sessão (opcional)
-./end_session.sh
-```
-
-### **Fluxo 2: Direto com descrição**
-```bash
-# 1. Iniciar sessão
-./start_session.sh
-
-# 2. Processar tarefa com descrição
-./process_task.sh "Tipo: Feature | Módulo: ui_web | Objetivo: Implementar X | Decisões: seguir padrão Y"
-
-# Opções:
-./process_task.sh "descrição" --checklist    # Apenas checklist
-./process_task.sh "descrição" --plan         # Checklist + plano
-./process_task.sh "descrição" --execute      # Tudo + prompt para opencode
-
-# 3. Implementar no OpenCode
-# Copie o prompt gerado e cole no opencode
-
-# 4. Validação pós-implementação (OBRIGATÓRIA)
-./scripts/dev/smoke_test_new_feature.sh "Nome da Feature" "/rota"
-
-# 5. Concluir tarefa
-./conclude_task.sh "O que aprendi com esta implementação"
-```
+### 📈 Próximos Passos:
+- Ver `docs/NEXT_STEPS.md` para backlog completo
+- Consultar `docs/learnings/` para aprendizados recentes
 
 ---
 
-## 🛠️ DESENVOLVIMENTO
+## 🔧 TECNOLOGIAS
 
-### **Executar Testes**
-```bash
-./run_tests.sh              # Todos os testes
-cd modules && ./run_tests.sh # Alternativa
-```
+### Backend:
+- **Go** (Golang) - Linguagem principal
+- **SQLite** - Banco de dados por entidade (soberania de dados)
+- **HTMX** - Interatividade no frontend
+- **Tailwind CSS** - Estilização
 
-### **Iniciar Servidor**
-```bash
-cd modules/ui_web && go run .
-# Acesse: http://localhost:8090
-```
+### Padrões Arquiteturais:
+- **Domain-Driven Design** (DDL adaptado)
+- **Clean Architecture** (camadas separadas)
+- **Event Sourcing** (para auditoria)
+- **CQRS** (leitura/escrita separadas onde aplicável)
 
-### **Smoke Test para Novas Features**
-```bash
-./scripts/dev/smoke_test_new_feature.sh "Member Management" "/members"
-```
-
----
-
-## 📚 DOCUMENTAÇÃO
-
-### **Documentos Principais**
-- `docs/QUICK_REFERENCE.md` - Referência rápida de padrões
-- `docs/README_OPENCODE_WORKFLOW.md` - Fluxo completo do opencode
-- `docs/EXAMPLE_USAGE.md` - Exemplos de uso
-
-### **Templates**
-- `docs/templates/pre_implementation_checklist.md` - Checklist pré-implementação
-- `docs/templates/implementation_plan.md` - Template de plano
-- `docs/templates/post_correction_validation.md` - Validação pós-correção
-
-### **Aprendizados**
-- `docs/learnings/` - Aprendizados documentados por tarefa
-- `docs/antipatterns/` - Antipadrões e soluções
+### Princípios de Design:
+- **Soberania de dados** (um banco por entidade)
+- **Anti-float** (nunca usar float para valores financeiros)
+- **Exit power** (usuário sempre tem controle)
+- **Transparência radical** (tudo auditável)
 
 ---
 
-## 🏗️ ARQUITETURA
+## 📚 DOCUMENTAÇÃO COMPLETA
 
-### **Princípios Fundamentais**
-1. **Soberania do Dado** - Banco SQLite isolado por entidade
-2. **Anti-Float** - Zero `float` para valores financeiros/tempo
-3. **Clean Architecture** - Domínio independente de frameworks
-4. **Contabilidade Invisível** - Operações geram lançamentos automáticos
+### Guias Principais:
+- **[docs/README.md](docs/README.md)** - Documentação detalhada
+- **[docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md)** - Referência rápida
+- **[docs/ANTIPATTERNS.md](docs/ANTIPATTERNS.md)** - O que NÃO fazer
+- **[docs/NEXT_STEPS.md](docs/NEXT_STEPS.md)** - Backlog e próximos passos
 
-### **Módulos Principais**
-- **core_lume/** - Lógica de negócio central
-- **ui_web/** - Interface web (HTMX + Tailwind)
-- **cash_flow/** - Gestão de fluxo de caixa
-- **supply/** - Compras e estoque
-- **lifecycle/** - Gerenciamento de ciclo de vida
+### Específicos:
+- **Deploy:** `docs/deployment/` - Guias de implantação
+- **Análises:** `docs/analysis/` - Estudos e decisões
+- **Testes:** `docs/testing/` - Relatórios e guias
+- **Aprendizados:** `docs/learnings/` - Lições do desenvolvimento
 
-### **Handlers Registrados**
-- AuthHandler, DashboardHandler, PDVHandler, CashHandler
-- SupplyHandler, BudgetHandler, MemberHandler, AccountantHandler
-
----
-
-## ✅ SISTEMA DE VALIDAÇÃO 4-NÍVEIS
-
-### **Nível 1: Testes Unitários**
-- Lógica pura do handler
-- Mock de dependências
-- Cobertura >90%
-
-### **Nível 2: Testes de Integração**
-- Banco real (SQLite)
-- Templates carregados
-- Dependências injetadas
-
-### **Nível 3: Testes de Sistema**
-- Handler registrado no servidor
-- Rotas respondem HTTP 200
-- Templates compilam sem erro
-
-### **Nível 4: Smoke Test Local**
-- Testa feature no ambiente REAL
-- Valida servidor, rotas, templates
-- Output com ações corretivas
+### Fluxo de Trabalho:
+- **Nova estrutura:** `docs/NOVA_ESTRUTURA_WORKFLOW.md`
+- **Scripts:** `scripts/workflow/` - Automação completa
 
 ---
 
-## 🔧 SISTEMA DE PREVENÇÃO DE BUGS
+## 🤝 CONTRIBUIÇÃO
 
-### **Problemas Comuns Prevenidos:**
-1. **Handler não registrado** - Checklist obrigatório + validação automática
-2. **Template não carregado** - Validação de compatibilidade
-3. **Testes passam mas app quebra** - Smoke test obrigatório
+### Processo de Desenvolvimento:
+1. **Sessão:** `./start_session.sh` (inicia contexto)
+2. **Tarefa:** `./create_task.sh` (cria tarefa padronizada)
+3. **Implementação:** Seguir padrões em `docs/QUICK_REFERENCE.md`
+4. **Testes:** Executar `cd modules && ./run_tests.sh`
+5. **Documentação:** `./conclude_task.sh` (aprendizados)
 
-### **Mecanismos Implementados:**
-- ✅ Validação no `start_session.sh`
-- ✅ Checklist expandido com itens críticos
-- ✅ Validação obrigatória no `conclude_task.sh`
-- ✅ Testes de sistema (`TestSystem_*`)
-- ✅ Smoke test script
+### Padrões Importantes:
+- ✅ **Seguir antipadrões** em `docs/ANTIPATTERNS.md`
+- ✅ **Usar analyze_patterns.sh** para referências
+- ✅ **Implementar testes** para novas funcionalidades
+- ✅ **Documentar aprendizados** ao concluir
 
----
-
-## 🎯 MISSÃO DO PROJETO
-
-> Promover a autogestão, soberania e transformação digital dos Empreendimentos de Economia Solidária no Brasil através de tecnologia livre e acessível, atuando simultaneamente como uma **ponte tecnológica inclusiva para a conformidade legal e a classe contábil**.
-
----
-
-## 📞 CONTATO E SUPORTE
-
-### **Para ajuda com opencode:**
-- Reportar issues: https://github.com/anomalyco/opencode/issues
-- Documentação: `docs/README_OPENCODE_WORKFLOW.md`
-
-### **Próximos Passos Sugeridos:**
-1. Revisar `docs/NEXT_STEPS.md`
-2. Escolher tarefa do backlog
-3. Seguir fluxo automatizado
+### Canais de Apoio:
+- Issues no repositório
+- Documentação em `docs/`
+- Aprendizados consolidados em `docs/learnings/`
 
 ---
 
-**Status:** 🟢 **PRODUCTION READY** - Sistema 100% funcional com workflow automatizado
+## 📞 SUPORTE E CONTATO
+
+### Problemas Comuns:
+- **Configuração:** Ver `docs/deployment/QUICK_DEPLOY.md`
+- **Desenvolvimento:** Consultar `docs/QUICK_REFERENCE.md`
+- **Fluxo:** Ler `docs/NOVA_ESTRUTURA_WORKFLOW.md`
+
+### Links Úteis:
+- [Documentação completa](docs/)
+- [Referência rápida](docs/QUICK_REFERENCE.md)
+- [Próximos passos](docs/NEXT_STEPS.md)
+- [Aprendizados recentes](docs/learnings/)
+
+---
+
+**Nota:** Esta é uma visão geral. Para documentação completa, acesse [docs/README.md](docs/README.md).
+
+**Licença:** Economia Solidária - Uso livre para comunidades e cooperativas.

@@ -163,6 +163,16 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger, 
 		fmt.Println("✅ Member handler registered")
 	}
 
+	// Legal handler (dossiê CADSOL, atas, estatutos)
+	legalHandler, err := handler.NewLegalHandler(lifecycleMgr)
+	if err != nil {
+		// Log mas não falha - pode ser implementação parcial
+		fmt.Printf("⚠️ Legal handler creation warning: %v\n", err)
+	} else {
+		legalHandler.RegisterRoutes(mux)
+		fmt.Println("✅ Legal handler registered")
+	}
+
 	// Health check
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

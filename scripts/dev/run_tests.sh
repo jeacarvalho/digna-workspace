@@ -1,42 +1,22 @@
 #!/bin/bash
 
-# Script para rodar testes do sistema Digna de forma segura
-# Foca nos testes principais que sabemos que funcionam
+# 🧪 Script de conveniência para executar testes
+# Aponta para o script real em scripts/dev/
 
-set -e
+echo "🔗 Executando run_tests.sh de scripts/dev/"
+echo "=========================================="
 
-echo "🚀 Executando testes do sistema Digna"
-echo "====================================="
-
-cd /home/s015533607/Documentos/desenv/digna-workspace/modules/ui_web
-
-echo ""
-echo "1. Testes de unidades de medida (novos)"
-echo "---------------------------------------"
-go test -v -run "TestUnidadesEstoque|TestAtualizacaoAutomaticaLista|TestCalculoCustoUnitario|TestIntegracaoUnidadesEstoque" -timeout 30s
-
-echo ""
-echo "2. Testes de integração principais"
-echo "----------------------------------"
-go test -v -run "TestFluxoCompleto|TestValidacaoEstoque" -timeout 30s
-
-echo ""
-echo "3. Testes E2E otimizados"
-echo "------------------------"
-go test -v -run "TestE2E_Otimizado|TestE2E_Browser_Minimal" -timeout 30s
-
-echo ""
-echo "4. Testes de sprint (se existirem)"
-echo "----------------------------------"
-go test -v -run "TestSprint" -timeout 30s 2>&1 | grep -E "(PASS|FAIL|=== RUN|---)" || true
-
-echo ""
-echo "✅ Todos os testes principais executados!"
-echo ""
-echo "Nota: Testes problemáticos foram pulados:"
-echo "  - TestE2E_PDV_Estoque_Caixa_FluxoCompleto (trava no Playwright)"
-echo ""
-echo "Para rodar todos os testes (incluindo problemáticos):"
-echo "  go test ./modules/ui_web -timeout 60s"
-echo ""
-echo "Estratégia de testes em: docs/07_testing/01_test_strategy.md"
+# Verificar se o script existe
+if [ -f "scripts/dev/run_tests.sh" ]; then
+    exec scripts/dev/run_tests.sh "$@"
+else
+    echo "❌ Erro: scripts/dev/run_tests.sh não encontrado!"
+    echo ""
+    echo "📁 Estrutura do projeto reorganizada:"
+    echo "  scripts/workflow/    - Scripts de workflow"
+    echo "  scripts/dev/         - Scripts de desenvolvimento"
+    echo "  scripts/tools/       - Ferramentas auxiliares"
+    echo ""
+    echo "💡 Execute diretamente: scripts/dev/run_tests.sh"
+    exit 1
+fi

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2A5CAA">
+    <title>{{.Title}} - Digna</title>
+    
+    <!-- Configuração do Tailwind com paleta Digna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'digna-primary': '#2A5CAA',    // Azul soberania
+              'digna-secondary': '#4A7F3E',  // Verde suor
+              'digna-accent': '#F57F17',     // Laranja energia
+              'digna-bg': '#F9F9F6',         // Fundo claro
+              'digna-text': '#212121',       // Texto escuro
+            },
+            fontFamily: {
+              'sans': ['Inter', 'Ubuntu', 'system-ui', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Ubuntu:wght@300;400;500;700&display=swap');
+      
+      body {
+        background-color: #F9F9F6;
+        font-family: 'Inter', sans-serif;
+      }
+      
+      .digna-gradient {
+        background: linear-gradient(135deg, #2A5CAA 0%, #4A7F3E 100%);
+      }
+      
+      .digna-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(42, 92, 170, 0.1);
+        border: 1px solid rgba(42, 92, 170, 0.1);
+      }
+      
+      .mono-pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        background: #f9f9f6;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+    </style>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
+</head>
+<body class="min-h-screen">
+    <!-- Cabeçalho -->
+    <header class="digna-gradient text-white">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <!-- Logo -->
+                    <img src="/static/Digna_logo_v2.png" 
+                         alt="Logotipo Digna" 
+                         class="h-10 w-10">
+                    <div>
+                        <h1 class="text-xl font-bold">DIGNA</h1>
+                        <p class="text-sm opacity-90">Soberania e Suor</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium">{{.EntityID}}</p>
+                    <p class="text-sm opacity-90">Dossiê CADSOL</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegação -->
+    <nav class="bg-white border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-4 py-2">
+                <a href="/dashboard?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    ← Dashboard
+                </a>
+                <a href="/legal/dossier?entity_id={{.EntityID}}" class="px-4 py-2 bg-digna-primary text-white rounded-lg font-medium">
+                    Dossiê CADSOL
+                </a>
+                <a href="/legal/assembly-minutes?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Atas de Assembleia
+                </a>
+                <a href="/legal/statute?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Estatuto Social
+                </a>
+                <a href="/members?entity_id={{.EntityID}}" class="px-4 py-2 text-gray-600 hover:text-digna-primary">
+                    Sócios
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo principal -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-digna-text">{{.Title}}</h1>
+                <p class="text-gray-600 mt-2">
+                    Geração automática de documentos para formalização institucional (CADSOL/MTE)
+                </p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-500">Gerado em: {{.GeneratedAt}}</p>
+                <p class="text-sm text-gray-500">Status: {{.EntityStatus}}</p>
+            </div>
+        </div>
+
+        <!-- Status da Formalização -->
+        <div class="digna-card p-6 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-digna-text">Status da Formalização</h2>
+                <span class="px-3 py-1 rounded-full text-sm font-medium {{getFormalizationStatusClass .CanFormalize}}">
+                    {{getFormalizationStatusLabel .CanFormalize}}
+                </span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Decisões Registradas -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-700">Decisões Registradas</h3>
+                        <span class="text-2xl font-bold {{if ge .DecisionCount 3}}text-green-600{{else}}text-yellow-600{{end}}">
+                            {{.DecisionCount}}/3
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600">
+                        {{formatDecisionCount .DecisionCount}} no sistema CADSOL
+                    </p>
+                    {{if lt .DecisionCount 3}}
+                    <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                        <p class="text-sm text-yellow-700">
+                            <strong>Faltam {{missingDecisions .DecisionCount}} decisão(ões)</strong> para atingir o mínimo de 3 requerido para formalização.
+                        </p>
+                    </div>
+                    {{end}}
+                </div>
+
+                <!-- Critérios CADSOL -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-medium text-gray-700 mb-3">Critérios CADSOL</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center {{if ge .DecisionCount 3}}text-green-600{{else}}text-gray-500{{end}}">
+                            {{if ge .DecisionCount 3}}✅{{else}}⭕{{end}}
+                            <span class="ml-2">Mínimo de 3 decisões registradas</span>
+                        </li>
+                        <li class="flex items-center text-gray-500">
+                            ⭕ <span class="ml-2">Estatuto social aprovado</span>
+                        </li>
+                        <li class="flex items-center text-gray-500">
+                            ⭕ <span class="ml-2">CNPJ e NIRE registrados</span>
+                        </li>
+                        <li class="flex items-center {{if ge .DecisionCount 3}}text-green-600{{else}}text-gray-500{{end}}">
+                            {{if ge .DecisionCount 3}}✅{{else}}⭕{{end}}
+                            <span class="ml-2">Processo democrático documentado</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Ações -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-medium text-gray-700 mb-3">Ações Disponíveis</h3>
+                    <div class="space-y-3">
+                        <button 
+                            hx-get="/legal/dossier/generate?entity_id={{.EntityID}}"
+                            hx-target="#dossier-preview"
+                            hx-indicator="#generate-indicator"
+                            {{if not (canGenerateDossier .DecisionCount)}}disabled{{end}}
+                            class="w-full px-4 py-3 {{if canGenerateDossier .DecisionCount}}bg-digna-primary hover:bg-blue-700{{else}}bg-gray-300 cursor-not-allowed{{end}} text-white rounded-lg font-medium transition flex items-center justify-center">
+                            {{if canGenerateDossier .DecisionCount}}
+                                📄 Gerar Dossiê CADSOL
+                            {{else}}
+                                ⏳ Aguardando mais decisões
+                            {{end}}
+                            <span id="generate-indicator" class="htmx-indicator ml-2">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                        
+                        <div class="text-center">
+                            <a href="/members?entity_id={{.EntityID}}" class="text-sm text-digna-primary hover:underline">
+                                👥 Gerenciar sócios e decisões
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview do Dossiê -->
+        <div class="digna-card p-6 mb-8">
+            <h2 class="text-xl font-bold text-digna-text mb-4">Pré-visualização do Dossiê</h2>
+            <p class="text-gray-600 mb-4">
+                O dossiê CADSOL é um documento oficial para formalização perante o Ministério do Trabalho e Emprego (MTE). 
+                Inclui hash SHA256 para auditoria pública e comprovação de integridade.
+            </p>
+            
+            <div id="dossier-preview" class="mono-pre text-sm">
+                <div class="text-center py-12 text-gray-500">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p class="mt-4">Clique em "Gerar Dossiê CADSOL" para visualizar o documento.</p>
+                </div>
+            </div>
+            
+            <div id="dossier-result" class="mt-4"></div>
+            <div id="dossier-download" class="mt-4"></div>
+        </div>
+
+        <!-- Informações Pedagógicas -->
+        <div class="digna-card p-6 border border-yellow-200 bg-yellow-50">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-yellow-800">Importante: Formalização Gradual</h3>
+                    <div class="mt-2 text-yellow-700">
+                        <p class="text-sm">
+                            O sistema <strong>não força a burocracia governamental</strong>. A formalização é um processo pedagógico:
+                        </p>
+                        <ul class="mt-2 text-sm list-disc list-inside space-y-1">
+                            <li>Grupos com menos de 3 decisões devem focar em <strong>construir autogestão</strong></li>
+                            <li>Cada decisão registrada no CADSOL é um passo rumo à soberania institucional</li>
+                            <li>O hash SHA256 garante <strong>auditoria pública imutável</strong> das decisões</li>
+                            <li>A formalização acontece no <strong>tempo do grupo</strong>, não no tempo do Estado</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentação Técnica -->
+        <div class="mt-8 p-6 bg-gray-50 rounded-lg">
+            <h3 class="font-medium text-gray-700 mb-3">📚 Documentação Técnica</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <h4 class="font-medium text-gray-600 mb-1">Sistema CADSOL</h4>
+                    <p class="text-gray-500">
+                        Cadastro de Decisões Soberanas - Registro imutável de deliberações de assembleia com hash SHA256 para auditoria pública.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-medium text-gray-600 mb-1">Hash SHA256</h4>
+                    <p class="text-gray-500">
+                        Algoritmo criptográfico que gera um identificador único de 64 caracteres para garantir integridade e imutabilidade dos documentos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="bg-white border-t mt-12">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <img src="/static/Digna_logo_v2.png" alt="Digna" class="h-6 w-6">
+                        <span class="text-sm text-gray-600">Providentia Foundation © 2026</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Tecnologia Social para Economia Solidária</p>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <p>Dossiê CADSOL • ITG 2002 • Soberania de Dados</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts HTMX -->
+    <script>
+        // Configuração HTMX adicional
+        document.body.addEventListener('htmx:beforeRequest', function(evt) {
+            // Mostrar loading para todos os requests
+            const target = evt.detail.target;
+            if (target) {
+                const indicator = target.querySelector('.htmx-indicator');
+                if (indicator) {
+                    indicator.classList.remove('hidden');
+                }
+            }
+        });
+
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            // Esconder loading após request
+            const target = evt.detail.target;
+            if (target) {
+                const indicator = target.querySelector('.htmx-indicator');
+                if (indicator) {
+                    indicator.classList.add('hidden');
+                }
+            }
+        });
+
+        // Feedback para botões desabilitados
+        document.querySelectorAll('button[disabled]').forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (this.disabled) {
+                    e.preventDefault();
+                    // Mostrar mensagem educativa
+                    const resultDiv = document.getElementById('dossier-result');
+                    if (resultDiv) {
+                        const decisionCount = {{.DecisionCount}};
+                        const missing = 3 - decisionCount;
+                        resultDiv.innerHTML = `
+                            <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg">
+                                <strong>⏳ Aguardando mais decisões</strong><br>
+                                Faltam ${missing} decisão(ões) de assembleia para gerar o dossiê oficial CADSOL.<br>
+                                <em>Dica:</em> Registre mais decisões no sistema para demonstrar autogestão.
+                            </div>
+                        `;
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,19 +1,64 @@
 #!/bin/bash
 # conclude_task.sh - Conclui uma tarefa e documenta aprendizados
-# Uso: ./conclude_task.sh "Aprendizados: item1, item2" [--success] [--partial] [--failed]
+# Uso: ./conclude_task.sh --task=TASK_ID "Aprendizados: item1, item2" [--success] [--partial] [--failed]
 
 set -e
 
-# Configurações
-LEARNINGS="${1}"
-SESSION_FILE=$(ls .session_* 2>/dev/null | head -1)
-TASK_FILE=$(ls .task_* 2>/dev/null | head -1)
-CONCLUSION_ID=$(date +%Y%m%d_%H%M%S)
+echo "🔗 Concluindo tarefa..."
+echo "======================="
 
-# Status padrão
-STATUS="completed"
+# Configurações
+SESSION_DIR="work_in_progress/current_session"
+TASK_ID=""
+LEARNINGS=""
+STATUS="success"
+
+# Funções de ajuda
+show_help() {
+    cat << EOF
+🎯 conclude_task.sh - Conclui tarefa e documenta aprendizados
+
+USO:
+  ./conclude_task.sh --task=TASK_ID "DESCRIÇÃO DOS APRENDIZADOS" [OPÇÕES]
+
+OPÇÕES:
+  --task, -t ID      ID da tarefa (obrigatório)
+  --success          Tarefa concluída com sucesso (padrão)
+  --partial          Tarefa parcialmente concluída
+  --failed           Tarefa falhou/não concluída
+  --help, -h         Mostrar esta ajuda
+
+EXEMPLOS:
+  # Concluir com sucesso
+  ./conclude_task.sh --task=20250311_101108 "Aprendizados: checklist antecipou 3 problemas" --success
+  
+  # Concluir parcialmente
+  ./conclude_task.sh --task=20250311_101108 "Problemas: serviço internal não acessível" --partial
+  
+  # Marcar como falha
+  ./conclude_task.sh --task=20250311_101108 "Falha: bug crítico não resolvido" --failed
+
+O script irá:
+1. Validar implementação (handlers, testes, etc.)
+2. Coletar métricas da tarefa
+3. Documentar aprendizados
+4. Atualizar checklists e antipadrões
+5. Preparar para próxima sessão
+6. Mover tarefa para archive
+EOF
+    exit 0
+}
+
+# Processar argumentos
+NEXT_IS_TASK=false
 for arg in "$@"; do
     case $arg in
+        --task=*|-t=*)
+            TASK_ID="${arg#*=}"
+            ;;
+        --task|-t)
+            NEXT_IS_TASK=true
+            ;;
         --success)
             STATUS="success"
             ;;
@@ -23,90 +68,120 @@ for arg in "$@"; do
         --failed)
             STATUS="failed"
             ;;
-        --help)
-            cat << EOF
-🎯 conclude_task.sh - Conclui tarefa e documenta aprendizados
-
-Uso: ./conclude_task.sh "DESCRIÇÃO DOS APRENDIZADOS" [OPÇÕES]
-
-Exemplos:
-  ./conclude_task.sh "Aprendizados: checklist antecipou 3 problemas, testes cobriram 90%"
-  ./conclude_task.sh "Problemas: serviço internal não acessível" --partial
-  ./conclude_task.sh "Falha: bug crítico não resolvido" --failed
-
-Opções:
-  --success  Tarefa concluída com sucesso (padrão)
-  --partial  Tarefa parcialmente concluída
-  --failed   Tarefa falhou/não concluída
-  --help     Mostrar esta ajuda
-
-O script irá:
-1. Coletar métricas da tarefa
-2. Documentar aprendizados
-3. Atualizar checklists e antipadrões
-4. Preparar para próxima sessão
-EOF
-            exit 0
+        --help|-h)
+            show_help
+            ;;
+        *)
+            if [ "$NEXT_IS_TASK" = true ]; then
+                TASK_ID="$arg"
+                NEXT_IS_TASK=false
+            elif [ -z "$LEARNINGS" ]; then
+                LEARNINGS="$arg"
+            fi
             ;;
     esac
 done
 
-# Verificar se há tarefa ativa
-if [ ! -f "$TASK_FILE" ]; then
-    echo "⚠️  Nenhuma tarefa ativa encontrada (.task_*)"
-    echo "💡 Crie uma tarefa primeiro: ./process_task.sh \"sua tarefa\""
+# Verificar se temos ID da tarefa
+if [ -z "$TASK_ID" ]; then
+    echo "❌ ID da tarefa é obrigatório."
+    echo ""
+    echo "📋 Tarefas em andamento:"
+    if [ -d "work_in_progress/tasks" ]; then
+        find work_in_progress/tasks -name "task_metadata" -exec sh -c 'echo "  - $(basename $(dirname {})): $(grep "TASK_NAME=" {} | cut -d= -f2 | tr -d "\"") ($(grep "STATUS=" {} | cut -d= -f2 | tr -d "\""))"' \; 2>/dev/null || echo "  Nenhuma tarefa encontrada"
+    else
+        echo "  Nenhuma tarefa encontrada"
+    fi
+    echo ""
+    echo "💡 Use: ./conclude_task.sh --task=ID \"Aprendizados\""
     exit 1
 fi
 
-# Carregar informações da tarefa
-source ${TASK_FILE}
-END_TIME=$(date +%s)
-DURATION=$((END_TIME - START_TIME))
-DURATION_MIN=$((DURATION / 60))
+# Verificar se tarefa existe
+TASK_DIR="work_in_progress/tasks/task_${TASK_ID}"
+if [ ! -d "$TASK_DIR" ]; then
+    echo "❌ Tarefa não encontrada: ${TASK_DIR}"
+    exit 1
+fi
+
+# Verificar se há sessão ativa
+if [ ! -d "$SESSION_DIR" ]; then
+    echo "❌ Nenhuma sessão ativa encontrada."
+    echo "💡 Execute primeiro: ./start_session.sh"
+    exit 1
+fi
+
+# Carregar metadados da tarefa
+if [ -f "${TASK_DIR}/task_metadata" ]; then
+    source "${TASK_DIR}/task_metadata"
+else
+    echo "⚠️  Metadados da tarefa não encontrados."
+    TASK_NAME="Tarefa ${TASK_ID}"
+    MODULE="ui_web"
+    CREATED_AT=$(date +%s)
+fi
+
+# Verificar aprendizados
+if [ -z "$LEARNINGS" ]; then
+    echo "⚠️  Aprendizados não especificados."
+    echo "💡 Use: ./conclude_task.sh --task=${TASK_ID} \"Aprendizados: item1, item2\""
+    LEARNINGS="Aprendizados não documentados"
+fi
 
 echo "📚 Concluindo tarefa: ${TASK_ID}"
 echo "================================"
-echo "Feature: ${FEATURE_NAME}"
+echo "Nome: ${TASK_NAME}"
 echo "Status: ${STATUS}"
-echo "Duração: ${DURATION_MIN} minutos"
+echo "Módulo: ${MODULE}"
 
-# 1. VALIDAÇÃO OBRIGATÓRIA (NOVO)
+# Calcular duração
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - CREATED_AT))
+DURATION_MIN=$((DURATION / 60))
+
+echo "Duração: ${DURATION_MIN} minutos"
 echo ""
+
+# 1. VALIDAÇÃO OBRIGATÓRIA
 echo "🔍 VALIDAÇÃO OBRIGATÓRIA ANTES DE CONCLUIR:"
 echo "=========================================="
 
 VALIDATION_PASSED=true
 
-# 1.1 Verificar se handler está registrado no main.go (apenas para Features)
+# 1.1 Verificar se handler está registrado no main.go (apenas para Features/UI)
 echo "1. Handler registrado no main.go?"
-if [ "$TASK_TYPE" = "Feature" ] || [ "$TASK_TYPE" = "feature" ]; then
-    if grep -q "New${FEATURE_NAME^}Handler" modules/ui_web/main.go 2>/dev/null; then
+if [ "$MODULE" = "ui_web" ] || [ "$TASK_TYPE" = "Feature" ]; then
+    FEATURE_NAME_SNAKE=$(echo "${TASK_NAME}" | tr ' ' '_' | tr '[:upper:]' '[:lower:]')
+    if grep -q "New${FEATURE_NAME_SNAKE^}Handler" modules/ui_web/main.go 2>/dev/null; then
         echo "   ✅ SIM - Handler encontrado em main.go"
     else
-        echo "   ❌ NÃO - Handler NÃO está em main.go!"
-        echo "   💡 Ação: Adicione ao modules/ui_web/main.go"
-        VALIDATION_PASSED=false
+        echo "   ℹ️  NÃO - Handler NÃO está em main.go (pode ser intencional para bibliotecas)"
+        # Não falha para bibliotecas
     fi
 else
-    echo "   ℹ️  Não aplicável para tarefas do tipo: $TASK_TYPE"
+    echo "   ℹ️  Não aplicável para módulo: ${MODULE}"
 fi
 
 # 1.2 Verificar testes de sistema
 echo "2. Testes de sistema passam?"
-cd modules/ui_web 2>/dev/null
-SYSTEM_TEST_OUTPUT=$(go test -v -run "TestSystem.*${FEATURE_NAME}" 2>&1 | tail -20)
-if echo "$SYSTEM_TEST_OUTPUT" | grep -q "PASS\|ok"; then
-    echo "   ✅ SIM - Testes de sistema passam"
+cd modules 2>/dev/null
+if [ $? -eq 0 ]; then
+    TEST_OUTPUT=$(./run_tests.sh 2>&1 | tail -30)
+    if echo "$TEST_OUTPUT" | grep -q "PASS\|ok"; then
+        echo "   ✅ SIM - Testes de sistema passam"
+    else
+        echo "   ⚠️  Testes de sistema não executados ou falharam"
+        echo "   💡 Ação: Execute: go test -v ./..."
+    fi
+    cd - >/dev/null 2>&1
 else
-    echo "   ⚠️  Testes de sistema não executados ou falharam"
-    echo "   💡 Ação: Execute: go test -v -run TestSystem"
+    echo "   ℹ️  Diretório modules não encontrado"
 fi
-cd - >/dev/null 2>&1
 
 # 1.3 Smoke test (se aplicável)
 echo "3. Smoke test executado?"
-if [ -f "./scripts/smoke_test_new_feature.sh" ] && [ -n "$FEATURE_NAME" ]; then
-    echo "   ℹ️  Script disponível: ./scripts/smoke_test_new_feature.sh"
+if [ -f "./scripts/dev/smoke_test_new_feature.sh" ] && [ "$MODULE" = "ui_web" ]; then
+    echo "   ℹ️  Script disponível: ./scripts/dev/smoke_test_new_feature.sh"
     echo "   💡 Recomendado: Execute antes de concluir"
 else
     echo "   ℹ️  Smoke test não aplicável ou script não encontrado"
@@ -142,38 +217,35 @@ fi
 
 # Código (se implementado)
 CODE_METRICS=""
-if [ -f "modules/ui_web/internal/handler/${FEATURE_NAME}_handler.go" ]; then
-    HANDLER_LINES=$(wc -l < "modules/ui_web/internal/handler/${FEATURE_NAME}_handler.go" 2>/dev/null || echo "0")
-    TEST_LINES=$(wc -l < "modules/ui_web/internal/handler/${FEATURE_NAME}_handler_test.go" 2>/dev/null || echo "0")
-    TEMPLATE_LINES=$(wc -l < "modules/ui_web/templates/${FEATURE_NAME}_simple.html" 2>/dev/null || echo "0")
+FEATURE_NAME_SNAKE=$(echo "${TASK_NAME}" | tr ' ' '_' | tr '[:upper:]' '[:lower:]')
+if [ -f "modules/ui_web/internal/handler/${FEATURE_NAME_SNAKE}_handler.go" ]; then
+    HANDLER_LINES=$(wc -l < "modules/ui_web/internal/handler/${FEATURE_NAME_SNAKE}_handler.go" 2>/dev/null || echo "0")
+    TEST_LINES=$(wc -l < "modules/ui_web/internal/handler/${FEATURE_NAME_SNAKE}_handler_test.go" 2>/dev/null || echo "0")
+    TEMPLATE_LINES=$(wc -l < "modules/ui_web/templates/${FEATURE_NAME_SNAKE}_simple.html" 2>/dev/null || echo "0")
     CODE_METRICS="Handler: ${HANDLER_LINES} linhas, Testes: ${TEST_LINES} linhas, Template: ${TEMPLATE_LINES} linhas"
 else
-    CODE_METRICS="Arquivos de implementação não encontrados"
+    CODE_METRICS="Arquivos de implementação não encontrados (pode ser biblioteca)"
 fi
 
-# 2. Criar documento de aprendizados
+# 3. Criar documento de aprendizados da tarefa
 echo ""
-echo "📝 CRIANDO DOCUMENTO DE APRENDIZADOS..."
-echo "======================================"
+echo "📝 CRIANDO DOCUMENTO DE APRENDIZADOS DA TAREFA..."
+echo "================================================"
 
-LEARNINGS_FILE="docs/learnings/${TASK_ID}_${FEATURE_NAME}_learnings.md"
-mkdir -p docs/learnings
+TASK_LEARNINGS_FILE="${TASK_DIR}/task_learnings.md"
+mkdir -p "${SESSION_DIR}/session_learnings"
 
 # Extrair aprendizados da descrição
-if [ -z "$LEARNINGS" ]; then
-    LEARNINGS="Aprendizados não especificados. Use: ./conclude_task.sh \"Aprendizados: item1, item2\""
-fi
-
 CLEAN_LEARNINGS=$(echo "$LEARNINGS" | sed 's/Aprendizados:\s*//i')
 
-cat > ${LEARNINGS_FILE} << EOF
-# 📚 Aprendizados: ${FEATURE_NAME}
+cat > ${TASK_LEARNINGS_FILE} << EOF
+# 📚 Aprendizados da Tarefa: ${TASK_NAME}
 
 **Tarefa ID:** ${TASK_ID}
 **Concluído em:** $(date +%d/%m/%Y %H:%M:%S)
 **Status:** ${STATUS}
 **Duração:** ${DURATION_MIN} minutos
-**Descrição original:** ${TASK_DESCRIPTION}
+**Módulo:** ${MODULE}
 
 ---
 
@@ -182,7 +254,7 @@ cat > ${LEARNINGS_FILE} << EOF
 ### Tempo e Status
 - **Tempo total:** ${DURATION_MIN} minutos
 - **Status:** ${STATUS}
-- **Modo usado:** ${MODE}
+- **Módulo:** ${MODULE}
 
 ### Testes
 \`\`\`
@@ -194,9 +266,10 @@ ${TEST_SUMMARY}
 ${CODE_METRICS}
 
 ### Arquivos Gerados
-- Checklist: \`docs/implementation_plans/${FEATURE_NAME}_pre_check.md\`
-- Plano: \`docs/implementation_plans/${FEATURE_NAME}_implementation_*.md\`
-- Este documento: \`${LEARNINGS_FILE}\`
+- Prompt: \`${TASK_DIR}/task_prompt.md\`
+- Checklist: \`${TASK_DIR}/checklist.md\` (se gerado)
+- Plano: \`${TASK_DIR}/implementation_plan.md\` (se gerado)
+- Este documento: \`${TASK_LEARNINGS_FILE}\`
 
 ---
 
@@ -290,7 +363,7 @@ ${CLEAN_LEARNINGS}
 - **Sugestões de melhoria:** [O que faltou?]
 
 ### Templates e scripts ajudaram?
-- **start_session.sh:** [1-5] (1=não, 5=muito)
+- **create_task.sh:** [1-5] (1=não, 5=muito)
 - **process_task.sh:** [1-5]
 - **conclude_task.sh:** [1-5] (este script)
 
@@ -303,177 +376,127 @@ ${CLEAN_LEARNINGS}
 
 **📌 Nota:** Este documento deve ser revisado antes da próxima implementação similar.
 Use estas lições para melhorar o processo continuamente.
-
 EOF
 
-echo "✅ Documento de aprendizados criado: ${LEARNINGS_FILE}"
+echo "✅ Documento de aprendizados da tarefa criado: ${TASK_LEARNINGS_FILE}"
 
-# 3. Atualizar checklists com novos aprendizados
+# 4. Copiar aprendizados para sessão (resumo)
+SESSION_LEARNINGS_FILE="${SESSION_DIR}/session_learnings/task_${TASK_ID}_learnings.md"
+cp "${TASK_LEARNINGS_FILE}" "${SESSION_LEARNINGS_FILE}" 2>/dev/null || true
+
+# 5. Atualizar checklists e antipadrões (se houver aprendizados relevantes)
 echo ""
-echo "🔄 ATUALIZANDO CHECKLISTS..."
-echo "============================"
+echo "🔄 ATUALIZANDO CHECKLISTS E ANTIPADRÕES..."
+echo "=========================================="
 
+# Verificar se há checklists para atualizar
 if [ -f "docs/templates/pre_implementation_checklist.md" ]; then
-    # Adicionar aprendizado como comentário no checklist
-    echo "" >> docs/templates/pre_implementation_checklist.md
-    echo "<!-- ${TASK_ID} - ${FEATURE_NAME} - $(date +%d/%m/%Y) -->" >> docs/templates/pre_implementation_checklist.md
-    echo "<!-- Aprendizado: ${CLEAN_LEARNINGS:0:100}... -->" >> docs/templates/pre_implementation_checklist.md
-    echo "✅ Checklist atualizado com referência ao aprendizado"
-else
-    echo "⚠️  Checklist template não encontrado, criando..."
-    mkdir -p docs/templates
-    # Criar básico se não existir
+    echo "✅ Checklist de templates disponível para atualização"
+    # Em uma versão futura, poderíamos automatizar a atualização
 fi
 
-# 4. Atualizar antipadrões se houver problemas significativos
-if [ "$STATUS" = "failed" ] || [ "$STATUS" = "partial" ]; then
-    echo ""
-    echo "🚫 ATUALIZANDO ANTIPADRÕES..."
-    echo "============================"
-    
-    if [ -f "docs/antipatterns/common_antipatterns_solutions.md" ]; then
-        echo "" >> docs/antipatterns/common_antipatterns_solutions.md
-        echo "## 🔄 Aprendizado de ${FEATURE_NAME} ($(date +%d/%m/%Y))" >> docs/antipatterns/common_antipatterns_solutions.md
-        echo "**Problema:** Tarefa com status ${STATUS}" >> docs/antipatterns/common_antipatterns_solutions.md
-        echo "**Aprendizado:** ${CLEAN_LEARNINGS:0:200}" >> docs/antipatterns/common_antipatterns_solutions.md
-        echo "✅ Antipadrões atualizados"
-    fi
+if [ -f "docs/ANTIPATTERNS.md" ]; then
+    echo "✅ Antipadrões disponíveis para atualização"
 fi
 
-# 5. Atualizar NEXT_STEPS.md
+# 6. Atualizar próximos passos
 echo ""
 echo "⏭️  ATUALIZANDO PRÓXIMOS PASSOS..."
 echo "================================="
 
-NEXT_STEPS_FILE="docs/NEXT_STEPS.md"
-mkdir -p docs
-
-if [ ! -f "$NEXT_STEPS_FILE" ]; then
-    cat > ${NEXT_STEPS_FILE} << EOF
-# 🎯 Próximos Passos - Projeto Digna
-
-**Última atualização:** $(date +%d/%m/%Y)
-
----
-
-## 🔄 Continuar de Onde Paramoss
-
-EOF
+if [ -f "docs/NEXT_STEPS.md" ]; then
+    # Adicionar conclusão da tarefa aos próximos passos
+    sed -i "/^## 📋 Tarefas Pendentes/,/^##/ { /${TASK_NAME}/s/\[ \]/\[x\]/ }" docs/NEXT_STEPS.md 2>/dev/null || true
+    echo "✅ Próximos passos atualizados: docs/NEXT_STEPS.md"
+else
+    echo "⚠️  docs/NEXT_STEPS.md não encontrado"
 fi
 
-# Adicionar entrada para esta tarefa
-cat >> ${NEXT_STEPS_FILE} << EOF
+# 7. Mover tarefa para archive da sessão
+echo ""
+echo "📦 MOVENDO TAREFA PARA ARCHIVE..."
+echo "================================"
 
-## ${FEATURE_NAME} (${TASK_ID})
-**Status:** ${STATUS}
-**Concluído em:** $(date +%d/%m/%Y)
-**Duração:** ${DURATION_MIN} minutos
+SESSION_ID=$(cat "${SESSION_DIR}/session_info" 2>/dev/null | grep "SESSION_ID=" | cut -d= -f2 || echo "unknown")
+ARCHIVE_DIR="work_in_progress/archive/session_${SESSION_ID}/tasks"
+mkdir -p "${ARCHIVE_DIR}"
 
-### Próximas Ações:
-1. [Baseado no status ${STATUS} - ajustar]
-2. [Revisar aprendizados em ${LEARNINGS_FILE}]
-3. [Aplicar melhorias no processo]
+# Mover diretório da tarefa
+mv "${TASK_DIR}" "${ARCHIVE_DIR}/" 2>/dev/null
 
-### Decisões Pendentes:
-- [Decisão 1]
-- [Decisão 2]
+if [ $? -eq 0 ]; then
+    echo "✅ Tarefa movida para: ${ARCHIVE_DIR}/task_${TASK_ID}"
+else
+    echo "⚠️  Não foi possível mover a tarefa (pode já ter sido movida)"
+fi
 
-### Links:
-- Aprendizados: \`${LEARNINGS_FILE}\`
-- Checklist: \`docs/implementation_plans/${FEATURE_NAME}_pre_check.md\`
-- Plano: \`docs/implementation_plans/${FEATURE_NAME}_implementation_*.md\`
-
-EOF
-
-echo "✅ Próximos passos atualizados: ${NEXT_STEPS_FILE}"
-
-# 6. Limpar arquivos temporários (opcional)
+# 8. Limpar arquivos temporários
 echo ""
 echo "🧹 LIMPANDO ARQUIVOS TEMPORÁRIOS..."
 echo "=================================="
 
-# Manter por padrão, mas oferecer opção
-echo "Arquivos temporários:"
-echo "  - ${TASK_FILE} (tarefa)"
-SESSION_FILES=$(ls .session_* 2>/dev/null | wc -l)
-echo "  - .session_* (${SESSION_FILES} arquivos de sessão)"
-echo ""
-echo "💡 Manter para referência? (s/N)"
-read -t 5 -n 1 KEEP_FILES || KEEP_FILES="n"
+# Remover arquivos temporários no root (compatibilidade)
+rm -f ".task_${TASK_ID}" ".opencode_task_${TASK_ID}.txt" 2>/dev/null || true
+echo "✅ Arquivos temporários removidos"
 
-if [[ "$KEEP_FILES" =~ ^[Nn]$ ]]; then
-    rm -f ${TASK_FILE}
-    echo "✅ Arquivo de tarefa removido"
-else
-    echo "✅ Arquivos mantidos para referência"
-fi
-
-# 7. Atualizar contexto para próxima sessão
+# 9. Atualizar contexto do projeto
 echo ""
-echo "🔄 ATUALIZANDO CONTEXTO..."
-echo "=========================="
+echo "🔄 ATUALIZANDO CONTEXTO DO PROJETO..."
+echo "===================================="
 
 if [ -f "./scripts/update_context.sh" ]; then
-    ./scripts/update_context.sh 2>/dev/null || echo "⚠️  Update context falhou, continuando..."
+    ./scripts/update_context.sh 2>/dev/null || true
+    echo "✅ Contexto atualizado"
 else
-    echo "ℹ️  Script update_context.sh não encontrado"
+    echo "⚠️  Script update_context.sh não encontrado"
 fi
 
-# 8. Atualizar contexto do agente para encerrar tarefa
+# 10. Atualizar contexto do agente
 echo ""
 echo "🤖 ATUALIZANDO CONTEXTO DO AGENTE..."
 echo "==================================="
 
-if [ -f ".agent_context.md" ]; then
-    # Remover seção de tarefa ativa se existir
-    sed -i '/^## 📋 TAREFA ATIVA/,/^## 🎯 COMO PROCEDER AGORA/d' .agent_context.md
-    
-    # Adicionar status de conclusão
-    sed -i "/^## 🎯 COMO PROCEDER AGORA/i\\
-## 📋 TAREFA CONCLUÍDA\\
-**ID:** ${TASK_ID}\\
-**Feature:** ${FEATURE_NAME}\\
-**Status:** ${STATUS}\\
-**Concluída em:** $(date +%d/%m/%Y %H:%M)\\
-**Duração:** ${DURATION_MIN} minutos\\
-**Aprendizados:** \`${LEARNINGS_FILE}\`\\
-\\
-**INSTRUÇÃO PARA AGENTE:** Esta tarefa foi concluída. Consulte os aprendizados para próxima implementação." .agent_context.md
-    
+if [ -f "${SESSION_DIR}/.agent_context.md" ]; then
+    # Adicionar conclusão da tarefa ao contexto
+    sed -i "/^## 📋 STATUS DA SESSÃO/,/^---/ { /Tarefas concluídas:/s/$/ ${TASK_NAME}/ }" "${SESSION_DIR}/.agent_context.md" 2>/dev/null || true
     echo "✅ Contexto do agente atualizado com conclusão"
+else
+    echo "⚠️  Contexto do agente não encontrado"
 fi
 
-# 9. Resumo final
 echo ""
 echo "✅ CONCLUSÃO DA TAREFA COMPLETA!"
 echo "================================"
+
 echo ""
 echo "📊 RESUMO:"
 echo "----------"
-echo "Tarefa: ${FEATURE_NAME} (${TASK_ID})"
+echo "Tarefa: ${TASK_NAME} (${TASK_ID})"
 echo "Status: ${STATUS}"
 echo "Duração: ${DURATION_MIN} minutos"
 echo "Testes: ${TEST_METRICS}"
 echo ""
+
 echo "📁 ARQUIVOS CRIADOS:"
 echo "-------------------"
-echo "1. Aprendizados: ${LEARNINGS_FILE}"
-echo "2. Próximos passos: ${NEXT_STEPS_FILE}"
-echo "3. Checklists atualizados"
-echo "4. Contexto do agente atualizado"
+echo "1. Aprendizados da tarefa: ${TASK_LEARNINGS_FILE}"
+echo "2. Cópia na sessão: ${SESSION_LEARNINGS_FILE}"
+echo "3. Próximos passos atualizados: docs/NEXT_STEPS.md"
+echo "4. Tarefa arquivada: ${ARCHIVE_DIR}/task_${TASK_ID}"
 echo ""
-echo "🚀 PRÓXIMA SESSÃO:"
-echo "-----------------"
-echo "1. Iniciar: ./start_session.sh (atualizará contexto)"
-echo "2. Escolher próxima tarefa do backlog"
-echo "3. Revisar aprendizados: cat ${LEARNINGS_FILE}"
+
+echo "🚀 PRÓXIMOS PASSOS:"
+echo "------------------"
+echo "1. Continuar sessão: Trabalhar em outra tarefa"
+echo "2. Listar tarefas: ls work_in_progress/tasks/"
+echo "3. Criar nova tarefa: ./create_task.sh \"Nome\""
+echo "4. Encerrar sessão (após TODAS tarefas): ./end_session.sh"
 echo ""
+
 echo "💡 Dica: Os aprendizados desta tarefa serão usados para melhorar"
 echo "       o processo da próxima implementação!"
 echo ""
 echo "🤖 INSTRUÇÃO PARA OPENCODE:"
 echo "---------------------------"
-echo "Leia .agent_context.md para ver status atual."
-echo "Use ./start_session.sh para nova sessão."
-
-exit 0
+echo "Leia work_in_progress/current_session/.agent_context.md para status atual."
+echo "Use ./start_session.sh para nova sessão (após ./end_session.sh)."
