@@ -134,6 +134,21 @@ echo "Nome: ${TASK_NAME}"
 echo "Status: ${STATUS}"
 echo "Módulo: ${MODULE}"
 
+# Verificação de segurança - garantir que não é execução automática do agente
+if [ -n "${OPENCODE_AGENT}" ] || [ -n "${AUTOMATIC_EXECUTION}" ]; then
+    echo "❌❌❌ ERRO DE SEGURANÇA ❌❌❌"
+    echo "Este script NÃO deve ser executado automaticamente pelo agente opencode."
+    echo "O agente deve INFORMAR ao usuário que a tarefa pode ser concluída."
+    echo "O usuário deve executar este script manualmente após validar a implementação."
+    echo ""
+    echo "Fluxo correto:"
+    echo "1. Agente implementa tarefa"
+    echo "2. Agente informa: 'Tarefa pode ser concluída'"
+    echo "3. Usuário executa: ./conclude_task.sh --task=${TASK_ID} \"Aprendizados\""
+    echo "4. Tarefa é arquivada"
+    exit 1
+fi
+
 # Calcular duração
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - CREATED_AT))

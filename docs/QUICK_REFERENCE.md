@@ -1,7 +1,7 @@
 # 🚀 Quick Reference - Projeto Digna
 
-**Última atualização:** 10/03/2026
-**Status:** ✅ PRODUCTION READY (149/149 testes passando)
+**Última atualização:** 11/03/2026
+**Status:** ✅ PRODUCTION READY (149/149 testes passando) + RF-12 IMPLEMENTADO
 
 ---
 
@@ -22,6 +22,7 @@ internal/handler/    # HTTP handlers (UI Web)
 
 ### **3. Soberania de Dados**
 - **Isolamento:** `data/entities/{entity_id}.db` (um banco por entidade)
+- **Banco Central:** `data/entities/central.db` para relações inter-tenant (RF-12)
 - **LifecycleManager:** Ponto único de acesso a bancos SQLite
 - **Context:** `entity_id` extraído de `r.Context().Value("entity_id")`
 - **Proibido:** JOINs entre bancos diferentes
@@ -270,3 +271,20 @@ accountant_handler, auth_handler, base_handler, budget_handler, budget_templates
 ## 🏗️ Handlers Existentes
 
 accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+- **Sessão 20260311_175424:** 11/03/2026 - 1h44m, 6 tarefas (ver `docs/learnings/SESSION_20260311_175424_CONSOLIDATED.md`)

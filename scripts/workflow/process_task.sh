@@ -244,6 +244,17 @@ ${PROMPT_CONTENT}
 - [ ] Smoke test executado
 - [ ] Documentação atualizada
 
+### ⚠️⚠️⚠️ INSTRUÇÃO CRÍTICA DE FLUXO ⚠️⚠️⚠️
+**O AGENTE OPENCODE NUNCA DEVE EXECUTAR ./conclude_task.sh AUTOMATICAMENTE**
+
+**FLUXO CORRETO:**
+1. Implemente a tarefa conforme instruções acima
+2. Após implementação completa, INFORME ao usuário:
+   "A tarefa ${TASK_ID} ('${TASK_NAME}') está implementada e PODE ser concluída"
+3. AGUARDE o usuário executar:
+   ./conclude_task.sh --task=${TASK_ID} "Aprendizados: [descreva aprendizados]"
+4. Só após o usuário executar o comando, a tarefa será arquivada
+
 **Status:** AGUARDANDO IMPLEMENTAÇÃO
 EOF
     
@@ -253,6 +264,14 @@ EOF
     echo "============================"
     echo "Leia o arquivo: ${OPENCODE_FILE}"
     echo "Implemente seguindo as instruções acima."
+    echo ""
+    echo "⚠️⚠️⚠️ ATENÇÃO CRÍTICA PARA OPENCODE ⚠️⚠️⚠️"
+    echo "=========================================="
+    echo "1. IMPLEMENTE a tarefa conforme instruções no arquivo"
+    echo "2. NÃO execute ./conclude_task.sh automaticamente"
+    echo "3. APÓS implementação, INFORME ao usuário que:"
+    echo "   'A tarefa está implementada e PODE ser concluída'"
+    echo "4. AGUARDE o usuário executar: ./conclude_task.sh --task=${TASK_ID} \"Aprendizados\""
     echo ""
     echo "💡 Dica: O contexto atual está em: work_in_progress/current_session/.agent_context.md"
     

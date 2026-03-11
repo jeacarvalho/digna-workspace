@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2A5CAA">
+    <title>{{.Title}} - Digna</title>
+    
+    <!-- Configuração do Tailwind com paleta Digna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'digna-primary': '#2A5CAA',    // Azul soberania
+              'digna-secondary': '#4A7F3E',  // Verde suor
+              'digna-accent': '#F57F17',     // Laranja energia
+              'digna-bg': '#F9F9F6',         // Fundo claro
+              'digna-text': '#212121',       // Texto escuro
+            },
+            fontFamily: {
+              'sans': ['Inter', 'Ubuntu', 'system-ui', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Ubuntu:wght@300;400;500;700&display=swap');
+      
+      body {
+        background-color: #F9F9F6;
+        font-family: 'Inter', sans-serif;
+      }
+      
+      .digna-gradient {
+        background: linear-gradient(135deg, #2A5CAA 0%, #4A7F3E 100%);
+      }
+      
+      .digna-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(42, 92, 170, 0.1);
+        border: 1px solid rgba(42, 92, 170, 0.1);
+      }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Cabeçalho -->
+    <header class="digna-gradient text-white py-6 px-4">
+        <div class="container mx-auto">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">{{.Title}}</h1>
+                    <p class="text-white/80 mt-1">Gerenciamento de vínculos contábeis</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="bg-white/20 px-3 py-1 rounded-full text-sm">
+                        {{if eq .UserType "contador"}}Contador{{else}}Empreendimento{{end}}: {{.EntityID}}
+                    </span>
+                    <a href="/dashboard" class="bg-white text-digna-primary px-4 py-2 rounded-lg font-medium hover:bg-white/90 transition">
+                        Voltar ao Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- Mensagens de sucesso/erro -->
+        {{if .Success}}
+        <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-green-700">{{.Success}}</span>
+            </div>
+        </div>
+        {{end}}
+
+        {{if .Error}}
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-red-700">{{.Error}}</span>
+            </div>
+        </div>
+        {{end}}
+
+        <!-- Seção para empreendimentos criar vínculos -->
+        {{if eq .UserType "empreendimento"}}
+        <section class="mb-8 digna-card p-6">
+            <h2 class="text-2xl font-semibold text-digna-primary mb-4">Criar Novo Vínculo Contábil</h2>
+            <p class="text-gray-600 mb-6">Convide um contador social para gerenciar suas finanças. Apenas um contador pode estar ativo por vez.</p>
+            
+            <form action="/accountant/links/create" method="POST" class="space-y-4">
+                <div>
+                    <label for="accountant_id" class="block text-sm font-medium text-gray-700 mb-1">
+                        ID do Contador Social
+                    </label>
+                    <input type="text" id="accountant_id" name="accountant_id" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-digna-primary focus:border-transparent"
+                           placeholder="Ex: contador_social, alianca_contabil">
+                    <p class="mt-1 text-sm text-gray-500">IDs disponíveis: contador_social, alianca_contabil</p>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500">
+                        <p>⚠️ <strong>Exit Power:</strong> Apenas você pode desativar este vínculo.</p>
+                        <p>⚠️ <strong>Cardinalidade:</strong> Se já houver um contador ativo, ele será desativado.</p>
+                    </div>
+                    <button type="submit"
+                            class="bg-digna-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">
+                        Criar Vínculo
+                    </button>
+                </div>
+            </form>
+        </section>
+        {{end}}
+
+        <!-- Lista de vínculos -->
+        <section class="digna-card p-6">
+            <h2 class="text-2xl font-semibold text-digna-primary mb-4">Vínculos Contábeis</h2>
+            
+            {{if .Links}}
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="text-left py-3 px-4 text-gray-700 font-medium">Empreendimento</th>
+                            <th class="text-left py-3 px-4 text-gray-700 font-medium">Contador</th>
+                            <th class="text-left py-3 px-4 text-gray-700 font-medium">Status</th>
+                            <th class="text-left py-3 px-4 text-gray-700 font-medium">Data Início</th>
+                            <th class="text-left py-3 px-4 text-gray-700 font-medium">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Links}}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-3 px-4">{{.EnterpriseID}}</td>
+                            <td class="py-3 px-4">{{.AccountantID}}</td>
+                            <td class="py-3 px-4">
+                                <span class="px-2 py-1 rounded text-sm {{if eq .Status "ACTIVE"}}bg-green-100 text-green-800{{else}}bg-gray-100 text-gray-800{{end}}">
+                                    {{if eq .Status "ACTIVE"}}Ativo{{else}}Inativo{{end}}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4">{{.StartDate}}</td>
+                            <td class="py-3 px-4">
+                                {{if eq .Status "ACTIVE"}}
+                                {{if eq $.UserType "empreendimento"}}
+                                <form action="/accountant/links/deactivate" method="POST" class="inline">
+                                    <input type="hidden" name="link_id" value="{{.ID}}">
+                                    <button type="submit"
+                                            class="text-red-600 hover:text-red-800 text-sm font-medium"
+                                            onclick="return confirm('Tem certeza que deseja desativar este vínculo?')">
+                                        Desativar
+                                    </button>
+                                </form>
+                                {{end}}
+                                {{end}}
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{else}}
+            <div class="text-center py-8">
+                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <p class="text-gray-500">Nenhum vínculo contábil encontrado.</p>
+                {{if eq .UserType "empreendimento"}}
+                <p class="text-gray-400 mt-1">Use o formulário acima para criar seu primeiro vínculo.</p>
+                {{end}}
+            </div>
+            {{end}}
+        </section>
+
+        <!-- Informações sobre RF-12 -->
+        <section class="mt-8 digna-card p-6">
+            <h3 class="text-lg font-semibold text-digna-primary mb-3">Sobre a RF-12 - Gestão de Vínculo Contábil</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-blue-800 mb-2">Exit Power</h4>
+                    <p class="text-blue-700 text-sm">Apenas a cooperativa que criou o vínculo pode desativá-lo. Isso garante a soberania da cooperativa sobre suas relações contábeis.</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-green-800 mb-2">Cardinalidade Temporal</h4>
+                    <p class="text-green-700 text-sm">Apenas um contador pode estar ativo por cooperativa por vez. Novos vínculos desativam automaticamente os anteriores.</p>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-orange-800 mb-2">Filtragem Temporal</h4>
+                    <p class="text-orange-700 text-sm">Contadores inativos têm acesso apenas aos dados do período em que estiveram ativos. Isso protege a privacidade dos dados.</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-purple-800 mb-2">Banco de Dados Central</h4>
+                    <p class="text-purple-700 text-sm">Os vínculos são armazenados no banco central (central.db), não nos bancos das cooperativas. Isso garante isolamento de dados.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="mt-12 py-6 px-4 bg-gray-800 text-white">
+        <div class="container mx-auto text-center">
+            <p class="text-gray-400">Digna - Sistema de Economia Solidária</p>
+            <p class="text-gray-500 text-sm mt-1">RF-12: Gestão de Vínculo Contábil e Delegação Temporal</p>
+        </div>
+    </footer>
+</body>
+</html>

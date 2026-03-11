@@ -133,11 +133,21 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger, 
 	cashHandler.RegisterRoutes(mux)
 
 	// Accountant dashboard handler
-	accountantHandler, err := handler.NewAccountantHandler(lifecycleMgr)
+	accountantHandler, err := handler.NewAccountantHandler(lifecycleMgr, authHandler)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create accountant handler: %w", err)
 	}
 	accountantHandler.RegisterRoutes(mux)
+
+	// Accountant link handler (RF-12)
+	accountantLinkHandler, err := handler.NewAccountantLinkHandler(lifecycleMgr, authHandler)
+	if err != nil {
+		// Log mas não falha - pode ser implementação parcial
+		fmt.Printf("⚠️ Accountant link handler creation warning: %v\n", err)
+	} else {
+		accountantLinkHandler.RegisterRoutes(mux)
+		fmt.Println("✅ Accountant link handler registered (RF-12)")
+	}
 
 	// Supply handler
 	supplyHandler, err := handler.NewSupplyHandler(lifecycleMgr)

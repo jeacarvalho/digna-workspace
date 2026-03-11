@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"digna/accountant_dashboard/internal/domain"
+	"digna/accountant_dashboard/internal/middleware"
 )
 
 type TranslatorService struct {
@@ -31,6 +32,15 @@ type TranslationResult struct {
 }
 
 func (s *TranslatorService) TranslateAndExport(ctx context.Context, entityID string, period string) (*domain.FiscalBatch, []byte, error) {
+	// Check if accountant has access to this entity for the period
+	validEnterprises, ok := middleware.GetValidEnterprisesFromContext(ctx)
+	if ok {
+		// We have temporal filtering context, validate access
+		if !validEnterprises[entityID] {
+			return nil, nil, fmt.Errorf("accountant does not have access to entity %s for period %s", entityID, period)
+		}
+	}
+
 	entries, err := s.repo.LoadEntries(ctx, entityID, period)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to load entries: %w", err)
@@ -172,10 +182,40 @@ func (s *TranslatorService) GenerateHash(data []byte) string {
 }
 
 func (s *TranslatorService) ListPendingEntities(ctx context.Context, period string) ([]string, error) {
-	return s.repo.ListPendingEntities(ctx, period)
+	// Get all pending entities from repository
+	allEntities, err := s.repo.ListPendingEntities(ctx, period)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have temporal filtering context
+	validEnterprises, ok := middleware.GetValidEnterprisesFromContext(ctx)
+	if !ok {
+		// No filtering context, return all entities
+		return allEntities, nil
+	}
+
+	// Filter entities based on valid enterprises
+	var filteredEntities []string
+	for _, entity := range allEntities {
+		if validEnterprises[entity] {
+			filteredEntities = append(filteredEntities, entity)
+		}
+	}
+
+	return filteredEntities, nil
 }
 
 func (s *TranslatorService) GetExportHistory(ctx context.Context, entityID string, period string) ([]domain.FiscalExportLog, error) {
+	// Check if accountant has access to this entity for the period
+	validEnterprises, ok := middleware.GetValidEnterprisesFromContext(ctx)
+	if ok {
+		// We have temporal filtering context, validate access
+		if !validEnterprises[entityID] {
+			return nil, fmt.Errorf("accountant does not have access to entity %s for period %s", entityID, period)
+		}
+	}
+
 	return s.repo.GetExportHistory(ctx, entityID, period)
 }
 

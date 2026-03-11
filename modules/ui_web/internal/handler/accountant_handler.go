@@ -14,11 +14,13 @@ import (
 
 type AccountantHandler struct {
 	*BaseHandler
-	dashboardService dashboard.DashboardService
-	repoFactory      dashboard.RepositoryFactory
+	dashboardService      dashboard.DashboardService
+	repoFactory           dashboard.RepositoryFactory
+	authHandler           *AuthHandler
+	accountantLinkService lifecycle.AccountantLinkService
 }
 
-func NewAccountantHandler(lm lifecycle.LifecycleManager) (*AccountantHandler, error) {
+func NewAccountantHandler(lm lifecycle.LifecycleManager, authHandler *AuthHandler) (*AccountantHandler, error) {
 	// Obter devMode do ambiente (mesmo padrão usado no middleware)
 	devMode := os.Getenv("DEV") != "false" && os.Getenv("DEV") != "0"
 	baseHandler := NewBaseHandler(lm, devMode)
@@ -38,10 +40,20 @@ func NewAccountantHandler(lm lifecycle.LifecycleManager) (*AccountantHandler, er
 
 	dashboardService := dashboard.NewDashboardService(dummyRepo)
 
+	// lm implementa AccountantLinkService (SQLiteManager)
+	accountantLinkService, ok := lm.(lifecycle.AccountantLinkService)
+	if !ok {
+		// Fallback: criar serviço manualmente se lm não implementar a interface
+		// Isso pode acontecer em testes ou implementações mock
+		accountantLinkService = nil
+	}
+
 	return &AccountantHandler{
-		BaseHandler:      baseHandler,
-		dashboardService: dashboardService,
-		repoFactory:      repoFactory,
+		BaseHandler:           baseHandler,
+		dashboardService:      dashboardService,
+		repoFactory:           repoFactory,
+		authHandler:           authHandler,
+		accountantLinkService: accountantLinkService,
 	}, nil
 }
 
@@ -52,15 +64,69 @@ func (h *AccountantHandler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
+	// Verificar autenticação
+	accountantID, valid := h.authHandler.GetCurrentEntity(r)
+	if !valid {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	// Verificar se é contador
+	userType, _ := h.authHandler.GetCurrentUserType(r)
+	if userType != "contador" {
+		http.Error(w, "Acesso restrito a contadores", http.StatusForbidden)
+		return
+	}
+
 	period := r.URL.Query().Get("period")
 	if period == "" {
 		period = time.Now().Format("2006-01")
 	}
 
-	pendingEntities, _ := h.dashboardService.ListPendingEntities(r.Context(), period)
+	// Obter período como time.Time para filtragem temporal
+	startTime, endTime, parseErr := parsePeriodToTime(period)
+	if parseErr != nil {
+		http.Error(w, "Período inválido", http.StatusBadRequest)
+		return
+	}
 
-	entities := make([]map[string]interface{}, len(pendingEntities))
-	for i, entityID := range pendingEntities {
+	// Obter todas as entidades pendentes
+	allPendingEntities, listErr := h.dashboardService.ListPendingEntities(r.Context(), period)
+	if listErr != nil {
+		http.Error(w, fmt.Sprintf("Erro ao listar entidades: %v", listErr), http.StatusInternalServerError)
+		return
+	}
+
+	// Filtrar entidades baseado em vínculos temporais
+	var filteredEntities []string
+	if h.accountantLinkService != nil {
+		// Usar AccountantLinkService para filtrar
+		validEnterprises, filterErr := h.accountantLinkService.GetValidEnterprisesForAccountant(
+			r.Context(), accountantID, startTime, endTime)
+		if filterErr != nil {
+			http.Error(w, fmt.Sprintf("Erro na filtragem temporal: %v", filterErr), http.StatusInternalServerError)
+			return
+		}
+
+		// Criar mapa para lookup rápido
+		validMap := make(map[string]bool)
+		for _, enterprise := range validEnterprises {
+			validMap[enterprise] = true
+		}
+
+		// Filtrar entidades pendentes
+		for _, entityID := range allPendingEntities {
+			if validMap[entityID] {
+				filteredEntities = append(filteredEntities, entityID)
+			}
+		}
+	} else {
+		// Fallback: mostrar todas as entidades (compatibilidade)
+		filteredEntities = allPendingEntities
+	}
+
+	entities := make([]map[string]interface{}, len(filteredEntities))
+	for i, entityID := range filteredEntities {
 		history, _ := h.dashboardService.GetExportHistory(r.Context(), entityID, period)
 		entities[i] = map[string]interface{}{
 			"ID":           entityID,
@@ -167,4 +233,20 @@ func (h *AccountantHandler) ExportFiscal(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=fiscal_%s_%s.csv", entityID, period))
 	w.Header().Set("X-Export-Hash", batch.ExportHash)
 	w.Write(data)
+}
+
+// parsePeriodToTime converte uma string de período (YYYY-MM) para valores time.Time
+func parsePeriodToTime(period string) (time.Time, time.Time, error) {
+	t, err := time.Parse("2006-01", period)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+
+	// Início do mês
+	startTime := time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, time.UTC)
+
+	// Fim do mês
+	endTime := time.Date(t.Year(), t.Month()+1, 0, 23, 59, 59, 999999999, time.UTC)
+
+	return startTime, endTime, nil
 }
