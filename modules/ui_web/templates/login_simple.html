@@ -62,7 +62,7 @@
                 <p class="opacity-90">Soberania e Suor</p>
             </div>
             <h2 class="text-2xl font-semibold text-digna-text mb-2">Acesso ao Sistema</h2>
-            <p class="text-gray-600">Selecione sua empresa para continuar</p>
+            <p class="text-gray-600">Selecione seu perfil para continuar</p>
         </div>
 
         <!-- Card de login -->
@@ -70,14 +70,61 @@
             <form id="loginForm" class="space-y-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Empresa
+                        Selecione seu perfil
                     </label>
-                    <select id="entity_id" name="entity_id" 
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-digna-primary focus:border-transparent transition">
+                    
+                    <!-- Abas para tipo de usuário -->
+                    <div class="flex border-b border-gray-200 mb-4">
+                        <button type="button" id="tab-empreendimento" class="flex-1 py-2 px-4 text-center font-medium text-gray-700 border-b-2 border-digna-primary">
+                            Empreendimentos
+                        </button>
+                        <button type="button" id="tab-contador" class="flex-1 py-2 px-4 text-center font-medium text-gray-500">
+                            Contadores
+                        </button>
+                    </div>
+                    
+                    <!-- Lista de empreendimentos -->
+                    <div id="empreendimento-list" class="space-y-3">
                         {{range .Companies}}
-                        <option value="{{.id}}">{{.name}}</option>
+                        {{if eq .type "empreendimento"}}
+                        <div class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer" onclick="selectEntity('{{.id}}')">
+                            <div class="w-10 h-10 rounded-full bg-digna-primary/10 flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-digna-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-900">{{.name}}</p>
+                                <p class="text-xs text-gray-500">Cooperativa</p>
+                            </div>
+                            <input type="radio" id="entity_{{.id}}" name="entity_id" value="{{.id}}" class="hidden">
+                        </div>
                         {{end}}
-                    </select>
+                        {{end}}
+                    </div>
+                    
+                    <!-- Lista de contadores -->
+                    <div id="contador-list" class="space-y-3 hidden">
+                        {{range .Companies}}
+                        {{if eq .type "contador"}}
+                        <div class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer" onclick="selectEntity('{{.id}}')">
+                            <div class="w-10 h-10 rounded-full bg-digna-secondary/10 flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-digna-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-900">{{.name}}</p>
+                                <p class="text-xs text-gray-500">Contador Social</p>
+                            </div>
+                            <input type="radio" id="entity_{{.id}}" name="entity_id" value="{{.id}}" class="hidden">
+                        </div>
+                        {{end}}
+                        {{end}}
+                    </div>
+                    
+                    <input type="hidden" id="selected_entity" name="entity_id" required>
+                    <div id="entity-error" class="mt-2 text-sm text-red-600 hidden">Por favor, selecione um perfil</div>
                 </div>
 
                 <div>
@@ -98,13 +145,21 @@
             <div class="mt-6 pt-6 border-t border-gray-100">
                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                     <p class="text-sm text-yellow-800 font-medium">Credenciais de teste:</p>
-                    <ul class="mt-1 text-xs text-yellow-700 space-y-1">
-                        <li>• Café Digna: usuário <code class="bg-yellow-100 px-1 rounded">cafe_digna</code> | senha <code class="bg-yellow-100 px-1 rounded">cd0123</code></li>
-                        <li>• Queijaria Digna: usuário <code class="bg-yellow-100 px-1 rounded">queijaria_digna</code> | senha <code class="bg-yellow-100 px-1 rounded">qd321</code></li>
-                    </ul>
+                    <div class="mt-2">
+                        <p class="text-xs font-medium text-yellow-800 mb-1">Empreendimentos:</p>
+                        <ul class="text-xs text-yellow-700 space-y-1">
+                            <li>• Café Digna: usuário <code class="bg-yellow-100 px-1 rounded">cafe_digna</code> | senha <code class="bg-yellow-100 px-1 rounded">cd0123</code></li>
+                            <li>• Queijaria Digna: usuário <code class="bg-yellow-100 px-1 rounded">queijaria_digna</code> | senha <code class="bg-yellow-100 px-1 rounded">qd321</code></li>
+                        </ul>
+                        <p class="text-xs font-medium text-yellow-800 mt-2 mb-1">Contadores:</p>
+                        <ul class="text-xs text-yellow-700 space-y-1">
+                            <li>• Contador Social: usuário <code class="bg-yellow-100 px-1 rounded">contador_social</code> | senha <code class="bg-yellow-100 px-1 rounded">cs456</code></li>
+                            <li>• Aliança Contábil: usuário <code class="bg-yellow-100 px-1 rounded">alianca_contabil</code> | senha <code class="bg-yellow-100 px-1 rounded">ac789</code></li>
+                        </ul>
+                    </div>
                 </div>
                 <p class="text-center text-sm text-gray-500">
-                    Sistema de gestão para cooperativas e pequenos produtores
+                    Sistema de gestão para cooperativas e contadores sociais
                 </p>
             </div>
         </div>
@@ -117,11 +172,66 @@
     </div>
 
     <script>
+        // Controle de abas
+        document.getElementById('tab-empreendimento').addEventListener('click', function() {
+            document.getElementById('tab-empreendimento').classList.add('border-b-2', 'border-digna-primary', 'text-gray-700');
+            document.getElementById('tab-empreendimento').classList.remove('text-gray-500');
+            document.getElementById('tab-contador').classList.remove('border-b-2', 'border-digna-primary', 'text-gray-700');
+            document.getElementById('tab-contador').classList.add('text-gray-500');
+            
+            document.getElementById('empreendimento-list').classList.remove('hidden');
+            document.getElementById('contador-list').classList.add('hidden');
+            
+            // Limpar seleção ao mudar de aba
+            document.getElementById('selected_entity').value = '';
+            document.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
+        });
+        
+        document.getElementById('tab-contador').addEventListener('click', function() {
+            document.getElementById('tab-contador').classList.add('border-b-2', 'border-digna-primary', 'text-gray-700');
+            document.getElementById('tab-contador').classList.remove('text-gray-500');
+            document.getElementById('tab-empreendimento').classList.remove('border-b-2', 'border-digna-primary', 'text-gray-700');
+            document.getElementById('tab-empreendimento').classList.add('text-gray-500');
+            
+            document.getElementById('contador-list').classList.remove('hidden');
+            document.getElementById('empreendimento-list').classList.add('hidden');
+            
+            // Limpar seleção ao mudar de aba
+            document.getElementById('selected_entity').value = '';
+            document.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
+        });
+        
+        // Seleção de entidade
+        function selectEntity(entityId) {
+            document.getElementById('selected_entity').value = entityId;
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.checked = radio.value === entityId;
+            });
+            document.getElementById('entity-error').classList.add('hidden');
+            
+            // Destacar item selecionado
+            document.querySelectorAll('[onclick^="selectEntity"]').forEach(item => {
+                item.classList.remove('bg-blue-50', 'border-blue-300');
+                item.classList.add('border-gray-200', 'hover:bg-gray-50');
+            });
+            const selectedItem = document.querySelector(`[onclick="selectEntity('${entityId}')"]`);
+            if (selectedItem) {
+                selectedItem.classList.remove('border-gray-200', 'hover:bg-gray-50');
+                selectedItem.classList.add('bg-blue-50', 'border-blue-300');
+            }
+        }
+        
+        // Validação do formulário
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const entityId = document.getElementById('entity_id').value;
+            const entityId = document.getElementById('selected_entity').value;
             const password = document.getElementById('password').value;
+            
+            if (!entityId) {
+                document.getElementById('entity-error').classList.remove('hidden');
+                return;
+            }
             
             const button = this.querySelector('button[type="submit"]');
             const originalText = button.textContent;

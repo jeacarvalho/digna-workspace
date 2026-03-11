@@ -155,7 +155,7 @@ work_in_progress/
 - \`docs/QUICK_REFERENCE.md\` - Arquitetura e padrões
 - \`docs/ANTIPATTERNS.md\` - O que NÃO fazer
 - \`docs/NEXT_STEPS.md\` - Tarefas pendentes
-- \`docs/learnings/\` - Aprendizados anteriores
+- \`docs/learnings/\` - Aprendizados anteriores (LEIA TODOS ANTES DE IMPLEMENTAR)
 
 ---
 
@@ -178,5 +178,12 @@ echo "📋 PRÓXIMOS PASSOS:"
 echo "1. Criar tarefa: ./create_task.sh \"Nome da Tarefa\" [módulo]"
 echo "2. Listar tarefas: ls work_in_progress/tasks/"
 echo "3. Processar tarefa: ./process_task.sh --task=[ID] --checklist"
+echo ""
+echo "📚 DOCUMENTAÇÃO OBRIGATÓRIA:"
+echo "O AGENTE DEVE LER IMEDIATAMENTE:"
+echo "- docs/QUICK_REFERENCE.md (padrões e arquitetura)"
+echo "- docs/ANTIPATTERNS.md (o que NÃO fazer)"
+echo "- docs/NEXT_STEPS.md (tarefas pendentes)"
+echo "- docs/learnings/ (TODOS os aprendizados anteriores)"
 echo ""
 echo "💡 Dica: Use modo rápido para sessões curtas: ./start_session.sh quick"

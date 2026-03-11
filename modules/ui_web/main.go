@@ -185,12 +185,21 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger, 
 		fmt.Fprintln(w, `{"ready":true}`)
 	})
 
-	// Adicionar middlewares (auth primeiro, depois logging)
+	// Adicionar middlewares
 	authMiddleware := middleware.NewAuthMiddleware(authHandler)
+	accountantAuthMiddleware := middleware.NewAccountantAuthMiddleware(authHandler)
+	empreendimentoAuthMiddleware := middleware.NewEmpreendimentoAuthMiddleware(authHandler)
 	loggerMiddleware := middleware.NewLoggerMiddleware(logger)
 
-	// Encadeamento: auth -> logging -> mux
-	handler := authMiddleware.Handler(loggerMiddleware.Handler(mux))
+	// Encadeamento: auth -> accountant/empreendimento auth -> logging -> mux
+	// Primeiro verifica autenticação geral, depois tipo de usuário
+	handler := authMiddleware.Handler(
+		accountantAuthMiddleware.Handler(
+			empreendimentoAuthMiddleware.Handler(
+				loggerMiddleware.Handler(mux),
+			),
+		),
+	)
 
 	// Configure server with timeouts
 	server := &http.Server{

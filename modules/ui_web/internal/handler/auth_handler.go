@@ -25,22 +25,39 @@ type AuthHandler struct {
 type Session struct {
 	EntityID   string
 	EntityName string
+	UserType   string // "empreendimento" ou "contador"
 	CreatedAt  time.Time
 	LastAccess time.Time
 }
 
-// Empresas de teste pré-configuradas
-var testCompanies = map[string]struct {
+// CompanyInfo armazena informações da empresa/contador
+type CompanyInfo struct {
 	Name     string
 	Password string
-}{
+	UserType string
+}
+
+// Empresas de teste pré-configuradas
+var testCompanies = map[string]CompanyInfo{
 	"cafe_digna": {
 		Name:     "Café Digna",
 		Password: "cd0123",
+		UserType: "empreendimento",
 	},
 	"queijaria_digna": {
 		Name:     "Queijaria Digna",
 		Password: "qd321",
+		UserType: "empreendimento",
+	},
+	"contador_social": {
+		Name:     "Contador Social",
+		Password: "cs456",
+		UserType: "contador",
+	},
+	"alianca_contabil": {
+		Name:     "Aliança Contábil",
+		Password: "ac789",
+		UserType: "contador",
 	},
 }
 
@@ -93,12 +110,12 @@ func NewAuthHandler(lm lifecycle.LifecycleManager) (*AuthHandler, error) {
 			return category
 		},
 		"fdiv": func(a, b float64) float64 {
-		if b == 0 {
-			return 0
-		}
-		return a / b
-	},
-	"getAlertStatusClass": func(status string) string {
+			if b == 0 {
+				return 0
+			}
+			return a / b
+		},
+		"getAlertStatusClass": func(status string) string {
 			switch status {
 			case "SAFE":
 				return "bg-green-100 text-green-800 border-green-300"
@@ -113,7 +130,33 @@ func NewAuthHandler(lm lifecycle.LifecycleManager) (*AuthHandler, error) {
 	}
 
 	// Parsear apenas o template simples de login
-	tmpl, err := template.New("login_simple.html").Funcs(funcMap).ParseFiles("templates/login_simple.html")
+	// Tentar múltiplos caminhos para funcionar em diferentes ambientes
+	var tmpl *template.Template
+	var err error
+	var templatePaths = []string{
+		"templates/login_simple.html",                // Quando executado de modules/ui_web/
+		"modules/ui_web/templates/login_simple.html", // Quando executado da raiz do projeto
+		"../../templates/login_simple.html",          // Caminho relativo alternativo
+	}
+
+	for _, path := range templatePaths {
+		tmpl, err = template.New("login_simple.html").Funcs(funcMap).ParseFiles(path)
+		if err == nil {
+			break
+		}
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse login template: %w", err)
+	}
+
+	for _, path := range templatePaths {
+		tmpl, err = template.New("login_simple.html").Funcs(funcMap).ParseFiles(path)
+		if err == nil {
+			break
+		}
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse login template: %w", err)
 	}
@@ -147,8 +190,12 @@ func (h *AuthHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
 		h.sessionMutex.RUnlock()
 
 		if exists && time.Since(session.LastAccess) < 24*time.Hour {
-			// Redirecionar para dashboard
-			http.Redirect(w, r, fmt.Sprintf("/dashboard?entity_id=%s", session.EntityID), http.StatusFound)
+			// Redirecionar baseado no tipo de usuário
+			if session.UserType == "contador" {
+				http.Redirect(w, r, "/accountant/dashboard", http.StatusFound)
+			} else {
+				http.Redirect(w, r, fmt.Sprintf("/dashboard?entity_id=%s", session.EntityID), http.StatusFound)
+			}
 			return
 		}
 	}
@@ -156,8 +203,10 @@ func (h *AuthHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
 		"Title": "Login - Digna",
 		"Companies": []map[string]string{
-			{"id": "cafe_digna", "name": "Café Digna"},
-			{"id": "queijaria_digna", "name": "Queijaria Digna"},
+			{"id": "cafe_digna", "name": "Café Digna", "type": "empreendimento"},
+			{"id": "queijaria_digna", "name": "Queijaria Digna", "type": "empreendimento"},
+			{"id": "contador_social", "name": "Contador Social", "type": "contador"},
+			{"id": "alianca_contabil", "name": "Aliança Contábil", "type": "contador"},
 		},
 	}
 
@@ -202,29 +251,51 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	// Validar credenciais
 	company, exists := testCompanies[entityID]
 
-	if !exists || company.Password != password {
+	if !exists {
+		// Log para debug
+		fmt.Printf("DEBUG: Usuário não encontrado - entityID: %s, empresas disponíveis: ", entityID)
+		for k := range testCompanies {
+			fmt.Printf("%s ", k)
+		}
+		fmt.Println()
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
-			"message": "Credenciais inválidas",
+			"message": "Usuário não encontrado",
+		})
+		return
+	}
+
+	if company.Password != password {
+		// Log para debug
+		fmt.Printf("DEBUG: Login falhou - entityID: %s, nome: %s, tipo: %s, esperado: %s, recebido: %s\n",
+			entityID, company.Name, company.UserType, company.Password, password)
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"message": "Senha incorreta",
 		})
 		return
 	}
 
 	// Criar banco de dados se não existir
-	if err := h.ensureDatabaseExists(entityID, company.Name); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"success": false,
-			"message": fmt.Sprintf("Erro ao criar banco de dados: %s", err.Error()),
-		})
-		return
+	// Só criar banco de dados para empreendimentos, não para contadores
+	if company.UserType == "empreendimento" {
+		if err := h.ensureDatabaseExists(entityID, company.Name); err != nil {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"success": false,
+				"message": fmt.Sprintf("Erro ao criar banco de dados: %s", err.Error()),
+			})
+			return
+		}
 	}
 
 	// Criar sessão
-	sessionID := h.createSession(entityID, company.Name)
+	sessionID := h.createSession(entityID, company.Name, company.UserType)
 
 	// Configurar cookie
 	cookie := &http.Cookie{
@@ -238,10 +309,19 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, cookie)
 
+	// Determinar redirecionamento baseado no tipo de usuário
+	var redirectURL string
+	if company.UserType == "contador" {
+		redirectURL = "/accountant/dashboard"
+	} else {
+		redirectURL = fmt.Sprintf("/dashboard?entity_id=%s", entityID)
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success":  true,
-		"redirect": fmt.Sprintf("/dashboard?entity_id=%s", entityID),
+		"redirect": redirectURL,
+		"userType": company.UserType,
 	})
 }
 
@@ -268,7 +348,7 @@ func (h *AuthHandler) ensureDatabaseExists(entityID, entityName string) error {
 }
 
 // createSession cria uma nova sessão
-func (h *AuthHandler) createSession(entityID, entityName string) string {
+func (h *AuthHandler) createSession(entityID, entityName, userType string) string {
 	h.sessionMutex.Lock()
 	defer h.sessionMutex.Unlock()
 
@@ -280,6 +360,7 @@ func (h *AuthHandler) createSession(entityID, entityName string) string {
 	h.sessions[sessionID] = Session{
 		EntityID:   entityID,
 		EntityName: entityName,
+		UserType:   userType,
 		CreatedAt:  time.Now(),
 		LastAccess: time.Now(),
 	}
@@ -321,6 +402,24 @@ func (h *AuthHandler) GetCurrentEntity(r *http.Request) (string, bool) {
 	h.sessionMutex.Unlock()
 
 	return session.EntityID, true
+}
+
+// GetCurrentUserType obtém o tipo de usuário atual da sessão
+func (h *AuthHandler) GetCurrentUserType(r *http.Request) (string, bool) {
+	sessionID := h.getSessionID(r)
+	if sessionID == "" {
+		return "", false
+	}
+
+	h.sessionMutex.RLock()
+	session, exists := h.sessions[sessionID]
+	h.sessionMutex.RUnlock()
+
+	if !exists {
+		return "", false
+	}
+
+	return session.UserType, true
 }
 
 // CheckSession verifica se a sessão é válida

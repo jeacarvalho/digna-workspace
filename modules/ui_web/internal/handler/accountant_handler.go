@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"time"
 
 	"digna/accountant_dashboard/pkg/dashboard"
@@ -12,13 +13,16 @@ import (
 )
 
 type AccountantHandler struct {
-	lifecycleManager lifecycle.LifecycleManager
+	*BaseHandler
 	dashboardService dashboard.DashboardService
 	repoFactory      dashboard.RepositoryFactory
-	tmpl             *template.Template
 }
 
 func NewAccountantHandler(lm lifecycle.LifecycleManager) (*AccountantHandler, error) {
+	// Obter devMode do ambiente (mesmo padrão usado no middleware)
+	devMode := os.Getenv("DEV") != "false" && os.Getenv("DEV") != "0"
+	baseHandler := NewBaseHandler(lm, devMode)
+
 	// Create repository factory with data directory from lifecycle manager
 	dataDir := "../../data" // Default, should come from config
 	repoFactory := dashboard.NewSQLiteRepositoryFactory(dataDir)
@@ -34,19 +38,17 @@ func NewAccountantHandler(lm lifecycle.LifecycleManager) (*AccountantHandler, er
 
 	dashboardService := dashboard.NewDashboardService(dummyRepo)
 
-	tmpl := template.Must(template.New("accountant").Parse(accountantTemplate))
-
 	return &AccountantHandler{
-		lifecycleManager: lm,
+		BaseHandler:      baseHandler,
 		dashboardService: dashboardService,
 		repoFactory:      repoFactory,
-		tmpl:             tmpl,
 	}, nil
 }
 
 func (h *AccountantHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/accountant/dashboard", h.Dashboard)
 	mux.HandleFunc("/accountant/export", h.ExportFiscal)
+	mux.HandleFunc("/accountant/export/", h.ExportFiscal) // Para rotas com parâmetros
 }
 
 func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
@@ -90,24 +92,65 @@ func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		"Mappings": defaultMappings,
 	}
 
-	if err := h.tmpl.Execute(w, data); err != nil {
+	// Carregar template cache-proof
+	// Tentar múltiplos caminhos para funcionar em diferentes ambientes
+	var tmpl *template.Template
+	var err error
+
+	// Tentativa 1: Caminho relativo (quando executado de modules/ui_web/)
+	tmpl, err = template.ParseFiles("templates/accountant_dashboard_simple.html")
+	if err != nil {
+		// Tentativa 2: Caminho absoluto do projeto
+		tmpl, err = template.ParseFiles("modules/ui_web/templates/accountant_dashboard_simple.html")
+		if err != nil {
+			// Tentativa 3: Caminho relativo alternativo
+			tmpl, err = template.ParseFiles("../../templates/accountant_dashboard_simple.html")
+			if err != nil {
+				http.Error(w, fmt.Sprintf("template error: não foi possível carregar o template: %v", err), http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, fmt.Sprintf("template error: %v", err), http.StatusInternalServerError)
 	}
 }
 
 func (h *AccountantHandler) ExportFiscal(w http.ResponseWriter, r *http.Request) {
-	entityID := r.URL.Query().Get("entity_id")
-	period := r.URL.Query().Get("period")
+	// Extrair entity_id e period da URL (padrão: /accountant/export/{entity_id}/{period})
+	path := r.URL.Path
+	var entityID, period string
+
+	// Parse simples da URL - em produção usaríamos um router como mux
+	if len(path) > len("/accountant/export/") {
+		remaining := path[len("/accountant/export/"):]
+		// Encontrar a próxima barra para separar entity_id e period
+		for i, char := range remaining {
+			if char == '/' {
+				entityID = remaining[:i]
+				period = remaining[i+1:]
+				break
+			}
+		}
+	}
+
+	// Fallback para query parameters se não encontrou na URL
+	if entityID == "" || period == "" {
+		entityID = r.URL.Query().Get("entity_id")
+		period = r.URL.Query().Get("period")
+	}
 
 	if entityID == "" || period == "" {
 		http.Error(w, "entity_id and period are required", http.StatusBadRequest)
 		return
 	}
 
-	// Create a repository for this specific entity
-	repo, err := h.repoFactory.NewRepository(entityID)
+	// Create a repository for this specific entity with Read-Only access
+	// O parâmetro ?mode=ro garante acesso somente leitura
+	repo, err := h.repoFactory.NewRepository(entityID + "?mode=ro")
 	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to access entity database: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("failed to access entity database (read-only): %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -125,126 +168,3 @@ func (h *AccountantHandler) ExportFiscal(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("X-Export-Hash", batch.ExportHash)
 	w.Write(data)
 }
-
-const accountantTemplate = `
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Title}}</title>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-800">{{.Title}}</h1>
-            <p class="text-gray-600 mt-2">Painel Multi-tenant para Contadores Sociais - Digna</p>
-            <a href="/" class="text-blue-600 hover:underline mt-2 inline-block">← Voltar ao Digna</a>
-        </header>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-700">Empreendimentos</h3>
-                <p class="text-3xl font-bold text-blue-600">{{len .Entities}}</p>
-            </div>
-            <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-700">Período</h3>
-                <p class="text-xl font-medium text-gray-800">{{.Period}}</p>
-            </div>
-            <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-700">Mapeamentos</h3>
-                <p class="text-3xl font-bold text-green-600">{{len .Mappings}}</p>
-            </div>
-        </div>
-
-        <section class="bg-white rounded-lg shadow mb-8">
-            <div class="p-6 border-b">
-                <h2 class="text-xl font-semibold text-gray-800">Entidades com Fechamento Pendente</h2>
-            </div>
-            <div class="p-6">
-                <form method="get" class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Selecione o Período:</label>
-                    <input type="month" name="period" value="{{.Period}}" 
-                           class="border rounded px-3 py-2 mr-2">
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                        Filtrar
-                    </button>
-                </form>
-
-                {{if .Entities}}
-                <table class="w-full">
-                    <thead>
-                        <tr class="border-b">
-                            <th class="text-left py-3 px-4">ID</th>
-                            <th class="text-left py-3 px-4">Nome</th>
-                            <th class="text-left py-3 px-4">Status</th>
-                            <th class="text-left py-3 px-4">Exportações</th>
-                            <th class="text-left py-3 px-4">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{range .Entities}}
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="py-3 px-4 font-mono">{{.ID}}</td>
-                            <td class="py-3 px-4">{{.Name}}</td>
-                            <td class="py-3 px-4">
-                                 <span class="px-2 py-1 rounded text-sm {{if eq .Status "PENDING"}}bg-yellow-100 text-yellow-800{{else}}bg-green-100 text-green-800{{end}}">
-                                    {{.Status}}
-                                </span>
-                            </td>
-                            <td class="py-3 px-4">
-                                {{if .HasExports}}
-                                <span class="text-green-600">✓ Exportado</span>
-                                {{else}}
-                                <span class="text-red-600">Pendente</span>
-                                {{end}}
-                            </td>
-                            <td class="py-3 px-4">
-                                <a href="/accountant/export?entity_id={{.ID}}&period={{$.Period}}"
-                                   class="inline-block bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
-                                    Exportar SPED
-                                </a>
-                            </td>
-                        </tr>
-                        {{end}}
-                    </tbody>
-                </table>
-                {{else}}
-                <p class="text-gray-500 text-center py-4">Nenhuma entidade com fechamento pendente para este período.</p>
-                {{end}}
-            </div>
-        </section>
-
-        <section class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b">
-                <h2 class="text-xl font-semibold text-gray-800">Mapeamento de Contas (Plano de Contas Referencial)</h2>
-            </div>
-            <div class="p-6">
-                <table class="w-full">
-                    <thead>
-                        <tr class="border-b">
-                            <th class="text-left py-2 px-4">Código Local</th>
-                            <th class="text-left py-2 px-4">Nome Local</th>
-                            <th class="text-left py-2 px-4">Código Padrão</th>
-                            <th class="text-left py-2 px-4">Nome Padrão</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{range .Mappings}}
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="py-2 px-4 font-mono text-sm">{{.LocalCode}}</td>
-                            <td class="py-2 px-4">{{.LocalName}}</td>
-                            <td class="py-2 px-4 font-mono text-sm">{{.StandardCode}}</td>
-                            <td class="py-2 px-4">{{.StandardName}}</td>
-                        </tr>
-                        {{end}}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
-</body>
-</html>
-`

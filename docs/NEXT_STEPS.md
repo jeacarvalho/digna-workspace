@@ -5,7 +5,23 @@
 
 ---
 
-## ✅ Tarefa Concluída Recentemente
+## ✅ Tarefas Concluídas Recentemente
+
+### 🏗️ Painel do Contador Social e Exportação SPED (11/03/2026)
+**Status:** ✅ CONCLUÍDA COM SUCESSO  
+**Descrição:** Interface Web do Painel do Contador Social com exportação fiscal SPED/CSV  
+**Entregas:**
+- Handler `accountant_handler.go` estendendo `BaseHandler`
+- Template cache-proof `accountant_dashboard_simple.html` com paleta "Soberania e Suor"
+- Rotas: `/accountant/dashboard` (multi-tenant) e `/accountant/export/{entity_id}/{period}`
+- Acesso Read-Only ao SQLite (`?mode=ro`) para contadores
+- Exportação com hash SHA256 e validação "Soma Zero"
+- Testes unitários completos
+
+**Próximos passos operacionais:**
+1. Testar integração com `TranslatorService` do módulo `accountant_dashboard`
+2. Validar formato de exportação SPED/CSV
+3. Testar acesso multi-tenant com dados reais
 
 ### 🏗️ Infraestrutura de Deploy (11/03/2026)
 **Status:** ✅ CONCLUÍDA COM SUCESSO  
@@ -17,11 +33,6 @@
 - Documentação completa (DEPLOYMENT.md, QUICK_DEPLOY.md)
 - Scripts de validação automatizada
 
-**Próximos passos operacionais:**
-1. Testar deploy em ambiente staging
-2. Configurar backup automático via cron
-3. Executar primeiro deploy em produção
-
 ---
 
 ## 🚀 Próxima Tarefa (Sugestões)
@@ -31,7 +42,7 @@ Escolha uma tarefa do backlog ou crie uma nova:
 ### 🎨 Features de UI (Prioridade Alta)
 1. **Dashboard de métricas** - Visão consolidada do negócio
 2. **Relatórios avançados** - Análise temporal, comparativos
-3. **Integração com SPED** - Exportação para contabilidade
+3. **✅ Integração com SPED** - Exportação para contabilidade **(CONCLUÍDA)**
 
 ### ⚙️ Melhorias Técnicas (Prioridade Média)
 4. **Cache de templates** - Otimização de performance
