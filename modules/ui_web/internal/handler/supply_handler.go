@@ -185,8 +185,11 @@ func NewSupplyHandler(lm lifecycle.LifecycleManager) (*SupplyHandler, error) {
 		}
 	}
 
-	// Criar API de supply (sem ledgerPort por enquanto - será injetado depois se necessário)
-	supplyAPI := supply.NewSupplyAPI(lm, nil)
+	// Criar ledger port real conectado ao core_lume
+	ledgerPort := supply.NewCoreLumeLedgerAdapter(lm)
+
+	// Criar API de supply com ledger port real
+	supplyAPI := supply.NewSupplyAPI(lm, ledgerPort)
 
 	return &SupplyHandler{
 		lifecycleManager: lm,
@@ -214,10 +217,46 @@ func (h *SupplyHandler) SupplyDashboard(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "entity_id é obrigatório", http.StatusBadRequest)
 		return
 	}
+	ctx := r.Context()
+
+	// Buscar compras para exibir no dashboard
+	purchases, err := h.supplyAPI.GetPurchases(ctx, entityID)
+	if err != nil {
+		// Log error but continue with empty purchases
+		fmt.Printf("[DEBUG] Error getting purchases for entity %s: %v\n", entityID, err)
+		purchases = []*supply.Purchase{}
+	}
+
+	// Buscar fornecedores para mapear IDs para nomes
+	suppliers, _ := h.supplyAPI.GetSuppliers(ctx, entityID)
+	supplierMap := make(map[string]string)
+	for _, s := range suppliers {
+		supplierMap[s.ID] = s.Name
+	}
+
+	// Preparar dados para template
+	var templatePurchases []map[string]interface{}
+	for _, p := range purchases {
+		supplierName := supplierMap[p.SupplierID]
+		if supplierName == "" {
+			supplierName = "Fornecedor desconhecido"
+		}
+
+		templatePurchases = append(templatePurchases, map[string]interface{}{
+			"ID":           p.ID,
+			"SupplierID":   p.SupplierID,
+			"SupplierName": supplierName,
+			"TotalAmount":  p.TotalValue,
+			"Date":         p.Date,
+			"Items":        p.Items,
+			"Status":       "PAGO", // TODO: Implementar status baseado no payment_type
+		})
+	}
 
 	data := map[string]interface{}{
-		"Title":    "Gestão de Compras e Estoque - Digna",
-		"EntityID": entityID,
+		"Title":     "Gestão de Compras e Estoque - Digna",
+		"EntityID":  entityID,
+		"Purchases": templatePurchases,
 	}
 
 	// Carregar template do disco (cache-proof) com funções
@@ -242,8 +281,19 @@ func (h *SupplyHandler) PurchasePage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Buscar fornecedores e itens de estoque para os selects
-	suppliers, _ := h.supplyAPI.GetSuppliers(ctx, entityID)
-	stockItems, _ := h.supplyAPI.GetStockItems(ctx, entityID)
+	suppliers, err := h.supplyAPI.GetSuppliers(ctx, entityID)
+	if err != nil {
+		// Log error but continue with empty suppliers
+		fmt.Printf("[DEBUG] Error getting suppliers for entity %s: %v\n", entityID, err)
+		suppliers = []*supply.Supplier{}
+	}
+
+	stockItems, err := h.supplyAPI.GetStockItems(ctx, entityID)
+	if err != nil {
+		// Log error but continue with empty stock items
+		fmt.Printf("[DEBUG] Error getting stock items for entity %s: %v\n", entityID, err)
+		stockItems = []*supply.StockItem{}
+	}
 
 	data := map[string]interface{}{
 		"Title":      "Nova Compra de Material - Digna",
@@ -418,7 +468,13 @@ func (h *SupplyHandler) RegisterPurchase(w http.ResponseWriter, r *http.Request)
 	// Parse items (simplificado - um item por compra nesta versão)
 	stockItemID := r.FormValue("stock_item_id")
 	quantityStr := r.FormValue("quantity")
-	unitCostStr := r.FormValue("unit_cost")
+
+	// Tentar obter unit_cost_cents primeiro (enviado pelo JavaScript)
+	unitCostStr := r.FormValue("unit_cost_cents")
+	if unitCostStr == "" {
+		// Fallback para unit_cost (formato antigo)
+		unitCostStr = r.FormValue("unit_cost")
+	}
 
 	quantity, err := strconv.Atoi(quantityStr)
 	if err != nil || quantity <= 0 {

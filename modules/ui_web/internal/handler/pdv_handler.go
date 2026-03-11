@@ -97,10 +97,11 @@ func NewPDVHandler(lm lifecycle.LifecycleManager) (*PDVHandler, error) {
 	}
 
 	// Criar LedgerPort mock para supply
-	mockLedgerPort := &mockLedgerPort{}
+	// Criar ledger port real conectado ao core_lume
+	ledgerPort := supply.NewCoreLumeLedgerAdapter(lm)
 
 	// Criar API do módulo supply
-	supplyAPI := supply.NewSupplyAPI(lm, mockLedgerPort)
+	supplyAPI := supply.NewSupplyAPI(lm, ledgerPort)
 
 	// Criar API do módulo cash_flow
 	cashAPI := cash_flow.NewCashFlowAPI(lm)
@@ -112,14 +113,6 @@ func NewPDVHandler(lm lifecycle.LifecycleManager) (*PDVHandler, error) {
 		supplyAPI:         supplyAPI,
 		cashAPI:           cashAPI,
 	}, nil
-}
-
-// mockLedgerPort implementa LedgerPort para testes
-type mockLedgerPort struct{}
-
-func (m *mockLedgerPort) RecordTransaction(entityID string, description string, postings []supply.LedgerPosting) error {
-	// Implementação mock - apenas retorna sucesso
-	return nil
 }
 
 func (h *PDVHandler) RegisterRoutes(mux *http.ServeMux) {

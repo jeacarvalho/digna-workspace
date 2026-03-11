@@ -111,7 +111,7 @@
                 <div class="digna-card p-6 mb-6">
                     <h2 class="text-xl font-semibold text-digna-text mb-4">Saldo Atual</h2>
                     <div class="text-4xl font-bold text-green-600">
-                        R$ {{printf "%.2f" (fdiv .Balance 100.0)}}
+                        R$ {{printf "%.2f" .Balance}}
                     </div>
                     <p class="text-sm text-gray-600 mt-2">Disponível em caixa</p>
                 </div>
@@ -182,7 +182,7 @@
                                     </div>
                                     <div class="text-right">
                                         <p class="{{if eq .Type "CREDIT"}}text-green-600{{else}}text-red-600{{end}} font-bold">
-                                            {{if eq .Type "CREDIT"}}+{{else}}-{{end}} R$ {{printf "%.2f" (fdiv .Amount 100.0)}}
+                                            {{if eq .Type "CREDIT"}}+{{else}}-{{end}} {{formatCurrency .Amount}}
                                         </p>
                                         <span class="text-xs px-2 py-1 rounded {{if eq .Type "CREDIT"}}bg-green-100 text-green-800{{else}}bg-red-100 text-red-800{{end}}">
                                             {{if eq .Type "CREDIT"}}Entrada{{else}}Saída{{end}}

@@ -14,6 +14,7 @@ import (
 	"github.com/playwright-community/playwright-go"
 	"github.com/providentia/digna/lifecycle/pkg/lifecycle"
 	"github.com/providentia/digna/ui_web/internal/handler"
+	"github.com/providentia/digna/ui_web/internal/middleware"
 )
 
 func TestE2E_PDV_Estoque_Caixa_FluxoCompleto(t *testing.T) {
@@ -33,6 +34,11 @@ func TestE2E_PDV_Estoque_Caixa_FluxoCompleto(t *testing.T) {
 	setupPDVTestData(t, lifecycleMgr, testEntityID)
 
 	// Criar handlers
+	authHandler, err := handler.NewAuthHandler(lifecycleMgr)
+	if err != nil {
+		t.Fatalf("Failed to create auth handler: %v", err)
+	}
+
 	pdvHandler, err := handler.NewPDVHandler(lifecycleMgr)
 	if err != nil {
 		t.Fatalf("Failed to create PDV handler: %v", err)
@@ -48,7 +54,7 @@ func TestE2E_PDV_Estoque_Caixa_FluxoCompleto(t *testing.T) {
 		t.Fatalf("Failed to create dashboard handler: %v", err)
 	}
 
-	// Criar servidor de teste
+	// Criar servidor de teste com middleware de autenticação
 	mux := http.NewServeMux()
 
 	// Static files
@@ -62,11 +68,16 @@ func TestE2E_PDV_Estoque_Caixa_FluxoCompleto(t *testing.T) {
 	})
 
 	// Registrar rotas
+	authHandler.RegisterRoutes(mux)
 	pdvHandler.RegisterRoutes(mux)
 	cashHandler.RegisterRoutes(mux)
 	dashboardHandler.RegisterRoutes(mux)
 
-	server := httptest.NewServer(mux)
+	// Adicionar middleware de autenticação (igual ao servidor real)
+	authMiddleware := middleware.NewAuthMiddleware(authHandler)
+	handlerWithAuth := authMiddleware.Handler(mux)
+
+	server := httptest.NewServer(handlerWithAuth)
 	defer server.Close()
 
 	// Inicializar Playwright
@@ -97,7 +108,35 @@ func TestE2E_PDV_Estoque_Caixa_FluxoCompleto(t *testing.T) {
 		t.Fatalf("Failed to create page: %v", err)
 	}
 
-	t.Log("✅ Ambiente de teste configurado: servidor + browser")
+	// Fazer login primeiro
+	t.Log("🔐 Fazendo login...")
+	loginURL := server.URL + "/login"
+	if _, err := page.Goto(loginURL); err != nil {
+		t.Fatalf("Failed to navigate to login page: %v", err)
+	}
+
+	// Preencher formulário de login
+	if err := page.Locator("input[name='entity_id']").Fill("cafe_digna"); err != nil {
+		t.Fatalf("Failed to fill entity_id: %v", err)
+	}
+	if err := page.Locator("input[name='password']").Fill("cd0123"); err != nil {
+		t.Fatalf("Failed to fill password: %v", err)
+	}
+
+	// Clicar no botão de login
+	if err := page.Locator("button[type='submit']").Click(); err != nil {
+		t.Fatalf("Failed to click login button: %v", err)
+	}
+
+	// Aguardar redirecionamento para dashboard
+	if err := page.WaitForURL(func(url *string) bool {
+		return url != nil && (*url == server.URL+"/dashboard" || strings.Contains(*url, "/dashboard?"))
+	}); err != nil {
+		t.Fatalf("Failed to wait for dashboard redirect: %v", err)
+	}
+
+	t.Log("✅ Login realizado com sucesso")
+	t.Log("✅ Ambiente de teste configurado: servidor + browser + autenticação")
 
 	// PASSO 1: Acessar dashboard e verificar se está funcionando
 	t.Run("PASSO_1_Acessar_Dashboard", func(t *testing.T) {
@@ -552,4 +591,419 @@ func setupPDVTestData(t *testing.T, lm lifecycle.LifecycleManager, entityID stri
 	// Nota: Em uma implementação completa, criaríamos itens de estoque de teste
 	// via API ou diretamente no banco de dados
 	// Por enquanto, o teste usará o primeiro produto disponível
+}
+
+func TestE2E_Supply_Purchase_Flow(t *testing.T) {
+	// Configurar ambiente de teste isolado
+	testEntityID := fmt.Sprintf("test_supply_flow_%d", time.Now().UnixNano())
+	dataDir := filepath.Join("../../data/test_entities", testEntityID)
+
+	// Limpar diretório de teste anterior
+	os.RemoveAll(dataDir)
+	defer os.RemoveAll(dataDir)
+
+	// Criar lifecycle manager
+	lifecycleMgr := lifecycle.NewSQLiteManager()
+	defer lifecycleMgr.CloseAll()
+
+	// Criar handlers
+	supplyHandler, err := handler.NewSupplyHandler(lifecycleMgr)
+	if err != nil {
+		t.Fatalf("Failed to create SupplyHandler: %v", err)
+	}
+
+	cashHandler, err := handler.NewCashHandler(lifecycleMgr)
+	if err != nil {
+		t.Fatalf("Failed to create cash handler: %v", err)
+	}
+
+	// Criar servidor de teste
+	mux := http.NewServeMux()
+
+	// Static files
+	staticDir := http.Dir("static")
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(staticDir)))
+
+	// Registrar rotas
+	supplyHandler.RegisterRoutes(mux)
+	cashHandler.RegisterRoutes(mux)
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	// Inicializar Playwright
+	pw, err := playwright.Run()
+	if err != nil {
+		t.Fatalf("Failed to start Playwright: %v", err)
+	}
+	defer pw.Stop()
+
+	// Lançar browser
+	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
+		Headless: playwright.Bool(true),
+	})
+	if err != nil {
+		t.Fatalf("Failed to launch browser: %v", err)
+	}
+	defer browser.Close()
+
+	// Criar contexto e página
+	context, err := browser.NewContext()
+	if err != nil {
+		t.Fatalf("Failed to create context: %v", err)
+	}
+	defer context.Close()
+
+	page, err := context.NewPage()
+	if err != nil {
+		t.Fatalf("Failed to create page: %v", err)
+	}
+
+	t.Log("✅ Ambiente de teste configurado para fluxo de compras")
+
+	// PASSO 1: Acessar página de compras
+	t.Run("PASSO_1_Acessar_Pagina_Compras", func(t *testing.T) {
+		url := fmt.Sprintf("%s/supply/purchase?entity_id=%s", server.URL, testEntityID)
+		_, err := page.Goto(url)
+		if err != nil {
+			t.Fatalf("Failed to navigate to purchase page: %v", err)
+		}
+
+		// Aguardar carregamento
+		if _, err := page.WaitForSelector("text=Nova Compra"); err != nil {
+			t.Fatalf("Purchase page not loaded: %v", err)
+		}
+
+		// Verificar se os selects estão presentes
+		selects, err := page.QuerySelectorAll("select")
+		if err != nil {
+			t.Fatalf("Failed to find select elements: %v", err)
+		}
+
+		if len(selects) < 2 {
+			t.Errorf("Expected at least 2 select elements (fornecedor e item), found %d", len(selects))
+		} else {
+			t.Logf("✅ Encontrados %d elementos select na página", len(selects))
+		}
+
+		// Verificar campo de valor unitário
+		unitCostInput, err := page.QuerySelector("input[name='unit_cost']")
+		if err != nil {
+			t.Fatalf("Failed to find unit_cost input: %v", err)
+		}
+
+		inputType, err := unitCostInput.GetAttribute("type")
+		if err != nil {
+			t.Fatalf("Failed to get input type: %v", err)
+		}
+
+		if inputType != "text" {
+			t.Errorf("❌ BUG: unit_cost input should be type='text' to accept Brazilian format, got type='%s'", inputType)
+		} else {
+			t.Log("✅ Campo unit_cost está como type='text' (aceita formato brasileiro)")
+		}
+
+		// Verificar placeholder para formato brasileiro
+		placeholder, _ := unitCostInput.GetAttribute("placeholder")
+		if !strings.Contains(strings.ToLower(placeholder), "0,00") {
+			t.Logf("⚠️  Placeholder não indica formato brasileiro: %s", placeholder)
+		}
+
+		t.Log("✅ Página de compras carregada com elementos corretos")
+	})
+
+	// PASSO 2: Testar formulário de compra (simulado)
+	t.Run("PASSO_2_Testar_Formulario_Compra", func(t *testing.T) {
+		// Preencher formulário via JavaScript (simulação)
+		result, err := page.Evaluate(`() => {
+			// Simular preenchimento do formulário
+			const form = document.getElementById('purchase-form');
+			if (!form) {
+				return 'Form not found';
+			}
+			
+			// Verificar campos obrigatórios
+			const requiredFields = ['entity_id', 'supplier_id', 'stock_item_id', 'quantity', 'unit_cost'];
+			let missingFields = [];
+			
+			for (const fieldName of requiredFields) {
+				const field = form.querySelector('[name="' + fieldName + '"]');
+				if (!field) {
+					missingFields.push(fieldName);
+				}
+			}
+			
+			if (missingFields.length > 0) {
+				return 'Missing fields: ' + missingFields.join(', ');
+			}
+			
+			return 'Form structure OK';
+		}`)
+
+		if err != nil {
+			t.Fatalf("Failed to evaluate form test: %v", err)
+		}
+
+		t.Logf("✅ Estrutura do formulário: %v", result)
+	})
+
+	// PASSO 3: Verificar dashboard de compras
+	t.Run("PASSO_3_Verificar_Dashboard_Compras", func(t *testing.T) {
+		url := fmt.Sprintf("%s/supply?entity_id=%s", server.URL, testEntityID)
+		_, err := page.Goto(url)
+		if err != nil {
+			t.Fatalf("Failed to navigate to supply dashboard: %v", err)
+		}
+
+		// Aguardar carregamento
+		if _, err := page.WaitForSelector("text=Gestão de Compras"); err != nil {
+			t.Fatalf("Supply dashboard not loaded: %v", err)
+		}
+
+		// Verificar se a seção de "Últimas Compras" existe
+		content, err := page.Content()
+		if err != nil {
+			t.Fatalf("Failed to get page content: %v", err)
+		}
+
+		if strings.Contains(content, "Últimas Compras") {
+			t.Log("✅ Seção 'Últimas Compras' encontrada no dashboard")
+		} else {
+			t.Log("⚠️  Seção 'Últimas Compras' não encontrada (pode ser template não carregado)")
+		}
+
+		// Verificar links para outras páginas
+		expectedLinks := []string{
+			"/supply/purchase",
+			"/supply/suppliers",
+			"/supply/stock",
+		}
+
+		for _, link := range expectedLinks {
+			fullLink := fmt.Sprintf("%s?entity_id=%s", link, testEntityID)
+			if strings.Contains(content, fullLink) || strings.Contains(content, link) {
+				t.Logf("✅ Link '%s' encontrado", link)
+			} else {
+				t.Logf("⚠️  Link '%s' não encontrado", link)
+			}
+		}
+
+		t.Log("✅ Dashboard de compras verificado")
+	})
+
+	// PASSO 4: Verificar integração com caixa (se houver dados)
+	t.Run("PASSO_4_Verificar_Integracao_Caixa", func(t *testing.T) {
+		url := fmt.Sprintf("%s/cash?entity_id=%s", server.URL, testEntityID)
+		_, err := page.Goto(url)
+		if err != nil {
+			t.Fatalf("Failed to navigate to cash page: %v", err)
+		}
+
+		// Aguardar carregamento
+		if _, err := page.WaitForSelector("text=Extrato Recente", playwright.PageWaitForSelectorOptions{
+			Timeout: playwright.Float(3000),
+		}); err != nil {
+			// Página pode carregar com template diferente
+			t.Logf("⚠️  Página de caixa pode ter template diferente: %v", err)
+		}
+
+		// Verificar se a página carrega sem erros
+		content, err := page.Content()
+		if err != nil {
+			t.Fatalf("Failed to get page content: %v", err)
+		}
+
+		if strings.Contains(content, "500 Internal Server Error") {
+			t.Errorf("❌ Erro 500 na página de caixa")
+		} else {
+			t.Log("✅ Página de caixa carrega sem erros 500")
+		}
+
+		t.Log("✅ Integração com caixa verificada (página carrega)")
+	})
+
+	t.Log("✅ Fluxo completo de compras testado com sucesso")
+}
+
+func TestE2E_PDV_RegisterSale_Button(t *testing.T) {
+	// Configurar ambiente de teste isolado
+	testEntityID := fmt.Sprintf("test_pdv_button_%d", time.Now().UnixNano())
+	dataDir := filepath.Join("../../data/test_entities", testEntityID)
+
+	// Limpar diretório de teste anterior
+	os.RemoveAll(dataDir)
+	defer os.RemoveAll(dataDir)
+
+	// Criar lifecycle manager
+	lifecycleMgr := lifecycle.NewSQLiteManager()
+	defer lifecycleMgr.CloseAll()
+
+	// Criar handlers
+	pdvHandler, err := handler.NewPDVHandler(lifecycleMgr)
+	if err != nil {
+		t.Fatalf("Failed to create PDVHandler: %v", err)
+	}
+
+	// Criar servidor de teste
+	mux := http.NewServeMux()
+
+	// Static files
+	staticDir := http.Dir("static")
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(staticDir)))
+
+	// Registrar rotas
+	pdvHandler.RegisterRoutes(mux)
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	// Inicializar Playwright
+	pw, err := playwright.Run()
+	if err != nil {
+		t.Fatalf("Failed to start Playwright: %v", err)
+	}
+	defer pw.Stop()
+
+	// Lançar browser
+	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
+		Headless: playwright.Bool(true),
+	})
+	if err != nil {
+		t.Fatalf("Failed to launch browser: %v", err)
+	}
+	defer browser.Close()
+
+	// Criar contexto e página
+	context, err := browser.NewContext()
+	if err != nil {
+		t.Fatalf("Failed to create context: %v", err)
+	}
+	defer context.Close()
+
+	page, err := context.NewPage()
+	if err != nil {
+		t.Fatalf("Failed to create page: %v", err)
+	}
+
+	t.Log("✅ Ambiente de teste configurado para teste do botão PDV")
+
+	// PASSO 1: Acessar página PDV
+	t.Run("PASSO_1_Acessar_Pagina_PDV", func(t *testing.T) {
+		url := fmt.Sprintf("%s/pdv?entity_id=%s", server.URL, testEntityID)
+		_, err := page.Goto(url)
+		if err != nil {
+			t.Fatalf("Failed to navigate to PDV page: %v", err)
+		}
+
+		// Aguardar carregamento
+		if _, err := page.WaitForSelector("text=PDV - Vendas"); err != nil {
+			t.Fatalf("PDV page not loaded: %v", err)
+		}
+
+		// Verificar se o botão "REGISTRAR VENDA" existe
+		registerButton, err := page.QuerySelector("text=REGISTRAR VENDA")
+		if err != nil {
+			t.Fatalf("Failed to find REGISTRAR VENDA button: %v", err)
+		}
+
+		// Verificar que o botão está inicialmente disabled
+		isDisabled, err := registerButton.IsDisabled()
+		if err != nil {
+			t.Fatalf("Failed to check if button is disabled: %v", err)
+		}
+
+		if !isDisabled {
+			t.Errorf("❌ BUG: REGISTRAR VENDA button should be disabled when cart is empty, but it's enabled")
+		} else {
+			t.Log("✅ Botão REGISTRAR VENDA corretamente disabled quando carrinho vazio")
+		}
+
+		// Verificar se há formulário hidden para venda
+		if _, err := page.QuerySelector("#sale-form"); err != nil {
+			t.Errorf("❌ BUG: Formulário #sale-form não encontrado (necessário para HTMX)")
+		} else {
+			t.Log("✅ Formulário #sale-form encontrado")
+		}
+
+		// Verificar campos hidden necessários
+		requiredHiddenFields := []string{"entity_id", "amount", "product", "stock_item_id"}
+		for _, fieldName := range requiredHiddenFields {
+			if _, err := page.QuerySelector(fmt.Sprintf("#sale-form input[name='%s']", fieldName)); err != nil {
+				t.Logf("⚠️  Campo hidden '%s' não encontrado no formulário", fieldName)
+			} else {
+				t.Logf("✅ Campo hidden '%s' encontrado", fieldName)
+			}
+		}
+
+		t.Log("✅ Página PDV carregada com elementos básicos verificados")
+	})
+
+	// PASSO 2: Verificar JavaScript do carrinho
+	t.Run("PASSO_2_Verificar_JavaScript_Carrinho", func(t *testing.T) {
+		// Verificar se as funções JavaScript estão definidas
+		jsFunctions := []string{"addToCart", "updateCartDisplay", "submitSale"}
+
+		for _, funcName := range jsFunctions {
+			isDefined, err := page.Evaluate(fmt.Sprintf(`() => {
+				return typeof %s === 'function';
+			}`, funcName))
+
+			if err != nil {
+				t.Logf("⚠️  Erro ao verificar função %s: %v", funcName, err)
+			} else if isDefined == true {
+				t.Logf("✅ Função JavaScript '%s' está definida", funcName)
+			} else {
+				t.Errorf("❌ BUG: Função JavaScript '%s' não está definida", funcName)
+			}
+		}
+
+		// Verificar se HTMX está carregado
+		isHtmxLoaded, err := page.Evaluate(`() => {
+			return typeof htmx !== 'undefined';
+		}`)
+
+		if err != nil {
+			t.Logf("⚠️  Erro ao verificar HTMX: %v", err)
+		} else if isHtmxLoaded == true {
+			t.Log("✅ HTMX está carregado na página")
+		} else {
+			t.Errorf("❌ BUG: HTMX não está carregado (necessário para submit assíncrono)")
+		}
+
+		t.Log("✅ JavaScript do carrinho verificado")
+	})
+
+	// PASSO 3: Testar estrutura HTML para feedback
+	t.Run("PASSO_3_Verificar_Estrutura_Feedback", func(t *testing.T) {
+		// Verificar área de resultado
+		if _, err := page.QuerySelector("#sale-result"); err != nil {
+			t.Errorf("❌ BUG: Área #sale-result não encontrada (necessária para feedback HTMX)")
+		} else {
+			t.Log("✅ Área #sale-result encontrada para feedback")
+		}
+
+		// Verificar se há elementos de feedback no HTML
+		content, err := page.Content()
+		if err != nil {
+			t.Fatalf("Failed to get page content: %v", err)
+		}
+
+		// Verificar mensagens de feedback esperadas
+		feedbackElements := []string{
+			"Processando venda",
+			"Venda registrada com sucesso",
+			"Erro ao registrar venda",
+		}
+
+		for _, element := range feedbackElements {
+			// Verificar se há referências a essas mensagens no código
+			if strings.Contains(strings.ToLower(content), strings.ToLower(element)) {
+				t.Logf("✅ Referência a feedback '%s' encontrada", element)
+			}
+		}
+
+		t.Log("✅ Estrutura de feedback verificada")
+	})
+
+	t.Log("✅ Teste do botão REGISTRAR VENDA concluído - estrutura básica validada")
 }

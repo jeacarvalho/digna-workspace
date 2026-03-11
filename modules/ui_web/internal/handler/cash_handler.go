@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"database/sql"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -55,10 +54,15 @@ func (h *CashHandler) CashPage(w http.ResponseWriter, r *http.Request) {
 	// Sempre buscar do banco diretamente já que a API retorna lista vazia
 	entries := h.getEntriesFromDatabase(entityID, 20)
 
+	// DEBUG: Verificar valor do saldo
+	slog.Info("DEBUG CashHandler - balance", "raw", balance, "type", fmt.Sprintf("%T", balance))
+	balanceInReais := float64(balance) / 100.0
+	slog.Info("DEBUG CashHandler - balance in reais", "value", balanceInReais)
+
 	data := map[string]interface{}{
 		"Title":      "Caixa - Digna",
 		"EntityID":   entityID,
-		"Balance":    float64(balance), // Converter para float64 para compatibilidade com fdiv
+		"Balance":    balanceInReais, // Já em reais
 		"Entries":    entries,
 		"Categories": []string{"VENDAS", "DESPESAS", "FORNECEDORES", "BANCO", "OUTRAS ENTRADAS", "OUTRAS SAÍDAS"},
 	}
@@ -159,7 +163,19 @@ type CashEntry struct {
 	ID          int64
 	EntityID    string
 	Type        string
-	Amount      int64
+	Amount      int64 // Em centavos (Anti-Float pattern)
+	Description string
+	Category    string
+	Date        time.Time
+	CreatedAt   time.Time
+}
+
+// CashEntryForTemplate é uma versão para templates com Amount como float64
+type CashEntryForTemplate struct {
+	ID          int64
+	EntityID    string
+	Type        string
+	Amount      float64 // Em reais (float64 para compatibilidade com fdiv)
 	Description string
 	Category    string
 	Date        time.Time
@@ -168,23 +184,30 @@ type CashEntry struct {
 
 // getEntriesFromDatabase busca entradas diretamente do banco de dados
 func (h *CashHandler) getEntriesFromDatabase(entityID string, limit int) []CashEntry {
-	dbPath := fmt.Sprintf("../../data/entities/%s.db", entityID)
-	slog.Info("CashHandler - Buscando entradas do banco", "db_path", dbPath, "entity_id", entityID, "limit", limit)
-
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := h.lifecycleManager.GetConnection(entityID)
 	if err != nil {
-		slog.Error("CashHandler - Failed to open database", "error", err, "entity_id", entityID, "db_path", dbPath)
+		slog.Error("CashHandler - Failed to get database", "error", err, "entity_id", entityID)
 		return []CashEntry{}
 	}
 	defer db.Close()
 
-	// Testar conexão
-	if err := db.Ping(); err != nil {
-		slog.Error("CashHandler - Failed to ping database", "error", err, "entity_id", entityID)
+	// Verificar se a tabela entries existe (alguns bancos usam 'entries', outros 'ledger_entries')
+	var tableExists bool
+	err = db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND (name='entries' OR name='ledger_entries')").Scan(&tableExists)
+	if err != nil || !tableExists {
+		slog.Warn("CashHandler - entries/ledger_entries table doesn't exist", "entity_id", entityID, "error", err)
 		return []CashEntry{}
 	}
 
-	// Buscar movimentos de caixa (vendas e compras)
+	// Verificar se a tabela accounts existe
+	err = db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='accounts'").Scan(&tableExists)
+	if err != nil || !tableExists {
+		slog.Warn("CashHandler - accounts table doesn't exist", "entity_id", entityID, "error", err)
+		return []CashEntry{}
+	}
+
+	// Query para movimentos de caixa: conta 1 (caixa) OU vendas (conta 3.x)
+	// Usar nomes de tabelas corretos: 'entries' e 'postings' (não 'ledger_entries' e 'ledger_postings')
 	query := `
 		SELECT 
 			e.id,
@@ -194,28 +217,22 @@ func (h *CashHandler) getEntriesFromDatabase(entityID string, limit int) []CashE
 			p.amount,
 			a.name as account_name,
 			p.direction,
-			a.code
+			a.code as account_code
 		FROM entries e
 		JOIN postings p ON e.id = p.entry_id
 		JOIN accounts a ON p.account_id = a.id
 		WHERE (
-			-- Vendas: crédito em receitas (3.x)
+			-- Vendas: crédito em receitas (3.x) - afeta caixa indiretamente
 			(a.code LIKE '3.%' AND p.direction = 'CREDIT' AND e.description LIKE 'Venda PDV:%')
 			OR
-			-- Compras à vista: débito em caixa (1)
-			(a.code = '1' AND p.direction = 'DEBIT' AND e.description LIKE 'Compra %')
-			OR
-			-- Saídas de caixa manualmente registradas
-			(a.code = '1' AND p.direction = 'DEBIT' AND e.description NOT LIKE 'Venda PDV:%' AND e.description NOT LIKE 'Compra %')
-			OR
-			-- Entradas de caixa manualmente registradas  
-			(a.code = '1' AND p.direction = 'CREDIT' AND e.description NOT LIKE 'Venda PDV:%' AND e.description NOT LIKE 'Compra %')
+			-- Movimentos diretos na conta caixa (1)
+			a.code = '1'
 		)
 		ORDER BY e.entry_date DESC
 		LIMIT ?
 	`
 
-	slog.Info("CashHandler - Executando query", "query", query, "limit", limit)
+	slog.Info("CashHandler - Executando query", "query", query, "limit", limit, "entity_id", entityID)
 	rows, err := db.Query(query, limit)
 	if err != nil {
 		slog.Error("CashHandler - Failed to query entries", "error", err, "entity_id", entityID, "query", query)
@@ -269,7 +286,7 @@ func (h *CashHandler) getEntriesFromDatabase(entityID string, limit int) []CashE
 			ID:          id,
 			EntityID:    entityID,
 			Type:        entryType,
-			Amount:      amount,
+			Amount:      amount, // Já está em centavos
 			Description: description,
 			Category:    category,
 			Date:        time.Unix(entryDate, 0),
@@ -277,7 +294,7 @@ func (h *CashHandler) getEntriesFromDatabase(entityID string, limit int) []CashE
 		}
 		entries = append(entries, entry)
 		rowCount++
-		slog.Info("CashHandler - Linha processada", "id", id, "description", description, "amount", amount, "date", time.Unix(entryDate, 0))
+		slog.Info("CashHandler - Linha processada", "id", id, "description", description, "amount_cents", amount, "amount_reais", float64(amount)/100.0, "date", time.Unix(entryDate, 0))
 	}
 
 	if err := rows.Err(); err != nil {
