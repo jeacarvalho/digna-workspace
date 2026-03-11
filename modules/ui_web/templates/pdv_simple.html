@@ -8,6 +8,7 @@
     
     <!-- Configuração do Tailwind com paleta Digna -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script>
       tailwind.config = {
         theme: {
@@ -166,9 +167,19 @@
                         </div>
                         
                         <div class="space-y-3 mt-6">
+                            <!-- Formulário hidden para enviar venda -->
+                            <form id="sale-form" style="display: none;">
+                                <input type="hidden" name="entity_id" value="{{.EntityID}}">
+                                <input type="hidden" id="sale-amount" name="amount" value="0">
+                                <input type="hidden" id="sale-product" name="product" value="">
+                                <input type="hidden" id="sale-quantity" name="quantity" value="1">
+                                <input type="hidden" id="sale-stock-item-id" name="stock_item_id" value="">
+                            </form>
+                            
                             <button id="checkout-btn" 
                                     class="w-full digna-gradient text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled>
+                                    disabled
+                                    onclick="submitSale()">
                                 REGISTRAR VENDA
                             </button>
                             <button onclick="clearCart()" 
@@ -176,6 +187,9 @@
                                 Limpar Carrinho
                             </button>
                         </div>
+                        
+                        <!-- Área para mostrar resultado da venda -->
+                        <div id="sale-result" class="mt-4"></div>
                     </div>
                 </div>
 
@@ -306,7 +320,7 @@
             updateCartDisplay();
         }
 
-        function clearCart() {
+         function clearCart() {
             if (cart.length === 0) return;
             
             if (confirm('Tem certeza que deseja limpar o carrinho?')) {
@@ -314,7 +328,57 @@
                 updateCartDisplay();
             }
         }
-
+        
+        function submitSale() {
+            if (cart.length === 0) {
+                alert('Carrinho vazio! Adicione produtos antes de registrar a venda.');
+                return;
+            }
+            
+            // Para simplificar, vamos processar apenas o primeiro item do carrinho
+            // Em uma versão futura, podemos processar múltiplos itens
+            const firstItem = cart[0];
+            
+            // Preencher formulário
+            document.getElementById('sale-amount').value = firstItem.total;
+            document.getElementById('sale-product').value = firstItem.name;
+            document.getElementById('sale-quantity').value = firstItem.quantity;
+            document.getElementById('sale-stock-item-id').value = firstItem.id;
+            
+            const form = document.getElementById('sale-form');
+            const saleResult = document.getElementById('sale-result');
+            
+            // Mostrar indicador de carregamento
+            saleResult.innerHTML = `
+                <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4">
+                    <p class="font-bold">Processando venda...</p>
+                </div>
+            `;
+            
+            // Enviar via HTMX
+            htmx.ajax('POST', '/api/sale', {
+                values: htmx.values(form),
+                target: '#sale-result',
+                swap: 'innerHTML'
+            }).then(() => {
+                // Se a venda foi bem-sucedida, limpar carrinho
+                if (!saleResult.innerHTML.includes('Erro') && !saleResult.innerHTML.includes('Estoque insuficiente')) {
+                    cart = [];
+                    updateCartDisplay();
+                    
+                    // Adicionar mensagem de sucesso adicional
+                    setTimeout(() => {
+                        saleResult.innerHTML += `
+                            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mt-2">
+                                <p class="font-bold">✅ Venda registrada com sucesso!</p>
+                                <p class="text-sm mt-1">Carrinho limpo. Pode adicionar novos produtos.</p>
+                            </div>
+                        `;
+                    }, 100);
+                }
+            });
+        }
+        
         // Inicializar
         updateCartDisplay();
     </script>

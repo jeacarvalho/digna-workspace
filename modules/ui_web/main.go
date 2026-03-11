@@ -13,14 +13,17 @@ import (
 	"github.com/providentia/digna/lifecycle/pkg/lifecycle"
 	"github.com/providentia/digna/ui_web/internal/handler"
 	"github.com/providentia/digna/ui_web/internal/middleware"
+	"github.com/providentia/digna/ui_web/pkg/config"
 )
 
 const (
-	DefaultPort     = "8090"
 	ShutdownTimeout = 10 * time.Second
 )
 
 func main() {
+	// Load configuration from environment variables
+	cfg := config.Load()
+
 	// Configurar logger estruturado
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
@@ -29,11 +32,13 @@ func main() {
 
 	logger.Info("🚀 Iniciando Digna Web Server",
 		slog.String("version", "v.0 MVP"),
-		slog.String("port", DefaultPort),
+		slog.String("port", cfg.Port),
+		slog.String("data_dir", cfg.DataDir),
+		slog.String("log_level", cfg.LogLevel),
 	)
 
-	// Inicializar Lifecycle Manager
-	lifecycleMgr := lifecycle.NewSQLiteManager()
+	// Inicializar Lifecycle Manager com diretório configurável
+	lifecycleMgr := lifecycle.NewSQLiteManagerWithDataDir(cfg.DataDir)
 	defer func() {
 		logger.Info("🔄 Fechando conexões com banco de dados...")
 		lifecycleMgr.CloseAll()
@@ -41,7 +46,7 @@ func main() {
 	}()
 
 	// Criar server configurado
-	server, err := createServer(lifecycleMgr, logger)
+	server, err := createServer(lifecycleMgr, logger, cfg)
 	if err != nil {
 		logger.Error("Failed to create server", slog.String("error", err.Error()))
 		os.Exit(1)
@@ -53,10 +58,10 @@ func main() {
 
 	// Iniciar server em goroutine
 	go func() {
-		addr := ":" + DefaultPort
+		addr := cfg.GetPortString()
 		logger.Info("✅ Servidor iniciado",
 			slog.String("addr", addr),
-			slog.String("url", fmt.Sprintf("http://localhost:%s", DefaultPort)),
+			slog.String("url", fmt.Sprintf("http://localhost:%s", cfg.Port)),
 		)
 		logger.Info("📱 Acesse pelo navegador ou instale o PWA")
 		logger.Info("⏹️  Pressione Ctrl+C para parar")
@@ -93,7 +98,7 @@ func main() {
 	)
 }
 
-func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger) (*http.Server, error) {
+func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger, cfg *config.Config) (*http.Server, error) {
 	mux := http.NewServeMux()
 
 	// Static files (PWA)
@@ -179,7 +184,7 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger) 
 
 	// Configure server with timeouts
 	server := &http.Server{
-		Addr:         ":" + DefaultPort,
+		Addr:         cfg.GetPortString(),
 		Handler:      handler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,

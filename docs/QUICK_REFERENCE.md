@@ -98,15 +98,12 @@ modules/
 └── ui_web/             # Interface web principal
 ```
 
+
 ---
 
 ## 🆕 Nova Sessão
 
-**Sessão iniciada em:** 10/03/2026 20:20
+**Sessão iniciada em:** 10/03/2026 22:19
 **Status:** ✅ PRONTO PARA NOVA IMPLEMENTAÇÃO
 
 Use `./start_session.sh` para contexto completo ou `./process_task.sh` para começar.
-
-## 🏗️ Handlers Existentes
-
-accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, member_handler, pdv_handler, supply_handler, supply_templates

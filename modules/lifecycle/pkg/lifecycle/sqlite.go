@@ -12,22 +12,24 @@ import (
 	"github.com/providentia/digna/lifecycle/internal/repository"
 )
 
-const (
-	DataDir = "../../data/entities"
-)
-
 type SQLiteManager struct {
 	connections map[string]*sql.DB
 	mu          sync.RWMutex
 	migrator    domain.Migrator
+	dataDir     string
 }
 
 var _ LifecycleManager = (*SQLiteManager)(nil)
 
 func NewSQLiteManager() *SQLiteManager {
+	return NewSQLiteManagerWithDataDir("../../data/entities")
+}
+
+func NewSQLiteManagerWithDataDir(dataDir string) *SQLiteManager {
 	return &SQLiteManager{
 		connections: make(map[string]*sql.DB),
 		migrator:    repository.NewMigrator(),
+		dataDir:     dataDir,
 	}
 }
 
@@ -46,7 +48,7 @@ func (m *SQLiteManager) GetConnection(entityID string) (*sql.DB, error) {
 		return db, nil
 	}
 
-	dbPath := filepath.Join(DataDir, fmt.Sprintf("%s.db", entityID))
+	dbPath := filepath.Join(m.dataDir, fmt.Sprintf("%s.db", entityID))
 
 	dir := filepath.Dir(dbPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -129,7 +131,7 @@ func (m *SQLiteManager) CloseAll() error {
 
 // EntityExists verifica se o banco de dados da entidade já existe
 func (m *SQLiteManager) EntityExists(entityID string) (bool, error) {
-	dbPath := filepath.Join(DataDir, fmt.Sprintf("%s.db", entityID))
+	dbPath := filepath.Join(m.dataDir, fmt.Sprintf("%s.db", entityID))
 
 	// Verificar se o arquivo existe
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
