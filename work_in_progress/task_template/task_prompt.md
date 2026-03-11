@@ -23,8 +23,12 @@
 ### Técnicos
 - [ ] Seguir padrões do projeto Digna
 - [ ] Implementar testes unitários
+- [ ] Implementar testes E2E com Playwright (fluxo completo)
+- [ ] Testar todas as rotas novas/modificadas
+- [ ] Validar regressões (não quebrar funcionalidades existentes)
 - [ ] Atualizar documentação
 - [ ] Validar com smoke tests
+- [ ] **CRÍTICO:** Testar com dados reais (cafe_digna, contador_social)
 
 ### Não Funcionais
 - [ ] Performance: [requisito]
@@ -135,8 +139,12 @@
 ### Técnicos
 - [ ] Seguir padrões do projeto Digna
 - [ ] Implementar testes unitários
+- [ ] Implementar testes E2E com Playwright (fluxo completo)
+- [ ] Testar todas as rotas novas/modificadas
+- [ ] Validar regressões (não quebrar funcionalidades existentes)
 - [ ] Atualizar documentação
 - [ ] Validar com smoke tests
+- [ ] **CRÍTICO:** Testar com dados reais (cafe_digna, contador_social)
 
 ### Não Funcionais
 - [ ] Performance: [requisito]

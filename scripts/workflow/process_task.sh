@@ -240,20 +240,33 @@ ${PROMPT_CONTENT}
 
 ### ⚠️ VALIDAÇÕES OBRIGATÓRIAS:
 - [ ] Testes unitários implementados
+- [ ] Testes E2E com Playwright implementados (fluxo completo)
 - [ ] Handler registrado no main.go
 - [ ] Smoke test executado
 - [ ] Documentação atualizada
+- [ ] **CRÍTICO:** Testar todas as rotas novas/modificadas
+- [ ] **CRÍTICO:** Validar que não há regressões em funcionalidades existentes
 
 ### ⚠️⚠️⚠️ INSTRUÇÃO CRÍTICA DE FLUXO ⚠️⚠️⚠️
 **O AGENTE OPENCODE NUNCA DEVE EXECUTAR ./conclude_task.sh AUTOMATICAMENTE**
 
-**FLUXO CORRETO:**
+**FLUXO CORRETO COM TESTES OBRIGATÓRIOS:**
 1. Implemente a tarefa conforme instruções acima
-2. Após implementação completa, INFORME ao usuário:
-   "A tarefa ${TASK_ID} ('${TASK_NAME}') está implementada e PODE ser concluída"
-3. AGUARDE o usuário executar:
+2. **CRÍTICO:** Crie/execute testes E2E com Playwright para validar funcionalidade
+3. **CRÍTICO:** Execute testes unitários e de integração
+4. **CRÍTICO:** Teste manualmente todas as rotas novas/modificadas
+5. Após implementação E TESTES COMPLETOS, INFORME ao usuário:
+   "A tarefa ${TASK_ID} ('${TASK_NAME}') está implementada e TESTADA. PODE ser concluída"
+6. AGUARDE o usuário executar:
    ./conclude_task.sh --task=${TASK_ID} "Aprendizados: [descreva aprendizados]"
-4. Só após o usuário executar o comando, a tarefa será arquivada
+7. Só após o usuário executar o comando, a tarefa será arquivada
+
+**TESTES OBRIGATÓRIOS PARA TODAS AS TAREFAS:**
+- ✅ Testes unitários para handlers/services
+- ✅ Testes E2E com Playwright (fluxo completo no browser)
+- ✅ Validação de rotas HTTP (status codes, responses)
+- ✅ Teste de regressão (não quebrar funcionalidades existentes)
+- ✅ Teste com dados reais (cafe_digna, contador_social)
 
 **Status:** AGUARDANDO IMPLEMENTAÇÃO
 EOF

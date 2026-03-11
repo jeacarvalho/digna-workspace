@@ -193,13 +193,50 @@ else
     echo "   ℹ️  Diretório modules não encontrado"
 fi
 
-# 1.3 Smoke test (se aplicável)
-echo "3. Smoke test executado?"
+# 1.3 Verificar se há testes E2E específicos para a tarefa
+echo "3. Testes E2E específicos para a tarefa?"
+TASK_TEST_FILES=$(find modules -name "*test*.go" -newer "${TASK_DIR}/task_prompt.md" 2>/dev/null | wc -l)
+if [ "$TASK_TEST_FILES" -gt 0 ]; then
+    echo "   ✅ SIM - $TASK_TEST_FILES arquivos de teste criados/modificados"
+else
+    echo "   ⚠️  NENHUM teste específico criado para esta tarefa"
+    echo "   🚨 CRÍTICO: Tarefas devem incluir testes E2E com Playwright"
+    echo "   💡 Ação: Crie testes antes de concluir"
+    VALIDATION_PASSED=false
+fi
+
+# 1.4 Smoke test (se aplicável)
+echo "4. Smoke test executado?"
 if [ -f "./scripts/dev/smoke_test_new_feature.sh" ] && [ "$MODULE" = "ui_web" ]; then
     echo "   ℹ️  Script disponível: ./scripts/dev/smoke_test_new_feature.sh"
     echo "   💡 Recomendado: Execute antes de concluir"
 else
     echo "   ℹ️  Smoke test não aplicável ou script não encontrado"
+fi
+
+# 1.5 Verificar testes Playwright (E2E)
+echo "5. Testes Playwright (E2E) existem?"
+PLAYWRIGHT_TESTS=$(find modules -name "*e2e*test*.go" -o -name "*playwright*test*.go" 2>/dev/null | wc -l)
+if [ "$PLAYWRIGHT_TESTS" -gt 0 ]; then
+    echo "   ✅ SIM - $PLAYWRIGHT_TESTS testes E2E encontrados"
+else
+    echo "   ⚠️  NENHUM teste E2E com Playwright encontrado"
+    echo "   💡 Recomendado: Crie testes E2E para validação completa"
+fi
+
+# 1.6 Executar validação detalhada de testes
+echo "6. Validação detalhada de testes..."
+if [ -f "./scripts/validate_task_tests.sh" ]; then
+    echo "   Executando validação de testes..."
+    ./scripts/validate_task_tests.sh --task=${TASK_ID} 2>&1 | tail -20
+    VALIDATION_EXIT=$?
+    
+    if [ "$VALIDATION_EXIT" -ne 0 ] && [ "$VALIDATION_EXIT" -ne 1 ]; then
+        echo "   ⚠️  Validação de testes encontrou problemas"
+        # Não falha automaticamente - permite override com --force
+    fi
+else
+    echo "   ℹ️  Script de validação de testes não encontrado"
 fi
 
 if [ "$VALIDATION_PASSED" = false ]; then

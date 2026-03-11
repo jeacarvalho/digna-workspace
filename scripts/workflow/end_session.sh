@@ -49,12 +49,59 @@ if [ -d "work_in_progress/tasks" ]; then
         echo "💡 Ações possíveis:"
         echo "  1. Concluir tarefas: ./conclude_task.sh --task=ID \"Aprendizados\""
         echo "  2. Forçar encerramento: ./end_session.sh force"
-        echo "  3. Continuar trabalhando nas tarefas"
+        echo ""
         exit 1
-    elif [ "$TOTAL_PENDING" -gt 0 ] && [ "$FORCE_MODE" = "force" ]; then
-        echo "⚠️  FORÇANDO ENCERRAMENTO com ${TOTAL_PENDING} tarefa(s) pendente(s)."
-        echo "💡 As tarefas serão arquivadas como incompletas."
     fi
+fi
+
+# Verificar qualidade das tarefas concluídas (testes)
+echo "🔍 VERIFICANDO QUALIDADE DAS TAREFAS CONCLUÍDAS..."
+echo "================================================="
+
+# Contar tarefas concluídas na sessão
+COMPLETED_TASKS=0
+TASKS_WITH_TESTS=0
+
+if [ -d "work_in_progress/archive/session_${SESSION_ID}/tasks" ]; then
+    for TASK_DIR in work_in_progress/archive/session_${SESSION_ID}/tasks/task_*; do
+        if [ -d "$TASK_DIR" ]; then
+            COMPLETED_TASKS=$((COMPLETED_TASKS + 1))
+            
+            # Verificar se há testes associados à tarefa
+            TASK_ID=$(basename "$TASK_DIR" | sed 's/task_//')
+            TASK_TEST_FILES=$(find modules -name "*test*.go" -newer "${TASK_DIR}/task_prompt.md" 2>/dev/null | wc -l)
+            
+            if [ "$TASK_TEST_FILES" -gt 0 ]; then
+                TASKS_WITH_TESTS=$((TASKS_WITH_TESTS + 1))
+            fi
+        fi
+    done
+fi
+
+if [ "$COMPLETED_TASKS" -gt 0 ]; then
+    TEST_COVERAGE_PERCENT=$((TASKS_WITH_TESTS * 100 / COMPLETED_TASKS))
+    
+    echo "📊 ESTATÍSTICAS DE QUALIDADE:"
+    echo "  - Tarefas concluídas: $COMPLETED_TASKS"
+    echo "  - Tarefas com testes: $TASKS_WITH_TESTS"
+    echo "  - Cobertura de testes: $TEST_COVERAGE_PERCENT%"
+    
+    if [ "$TEST_COVERAGE_PERCENT" -lt 80 ]; then
+        echo "⚠️  ALERTA: Baixa cobertura de testes ($TEST_COVERAGE_PERCENT%)"
+        echo "💡 Recomendado: Crie mais testes antes de encerrar sessão"
+        
+        if [ "$FORCE_MODE" != "force" ]; then
+            echo ""
+            echo "❓ Deseja continuar mesmo com baixa cobertura de testes?"
+            echo "  1. Continuar: ./end_session.sh force"
+            echo "  2. Criar testes primeiro"
+            echo ""
+            exit 1
+        fi
+    else
+        echo "✅ Boa cobertura de testes ($TEST_COVERAGE_PERCENT%)"
+    fi
+fi
 fi
 
 # Calcular duração da sessão
