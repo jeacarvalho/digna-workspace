@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  digna:
+    build: .
+    container_name: digna-app
+    restart: unless-stopped
+    ports:
+      - "${DIGNA_PORT:-8090}:${DIGNA_PORT:-8090}"
+    environment:
+      - DIGNA_PORT=${DIGNA_PORT:-8090}
+      - DIGNA_DATA_DIR=${DIGNA_DATA_DIR:-/var/lib/digna/data}
+      - DIGNA_LOG_LEVEL=${DIGNA_LOG_LEVEL:-info}
+    volumes:
+      # Named volume for SQLite databases - persists between container restarts
+      - digna_data:${DIGNA_DATA_DIR:-/var/lib/digna/data}
+      
+      # Bind mount for local development (commented out in production)
+      # - ./data/entities:${DIGNA_DATA_DIR:-/var/lib/digna/data}:rw
+      
+      # Read-only mounts for templates and static files (built into image in production)
+      # - ./modules/ui_web/templates:/app/templates:ro
+      # - ./modules/ui_web/static:/app/static:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${DIGNA_PORT:-8090}/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - digna-network
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+volumes:
+  digna_data:
+    name: digna_data
+    # External volume for production - ensures data persists even if container is recreated
+    external: true
+    # Uncomment to use a specific volume driver or options
+    # driver: local
+    # driver_opts:
+    #   type: none
+    #   o: bind
+    #   device: /var/lib/digna/data
+
+networks:
+  digna-network:
+    name: digna-network
+    driver: bridge
+    # Internal network for production (no external access)
+    internal: false

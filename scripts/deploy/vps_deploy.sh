@@ -1,0 +1,309 @@
+#!/bin/bash
+
+# ============================================================================
+# Digna VPS Deployment Script
+# ============================================================================
+# Script para automatizar deploy do projeto Digna em VPS
+# 
+# Funcionalidades:
+# 1. Instala docker-compose se necessário
+# 2. Clona repositório (ou atualiza)
+# 3. Configura variáveis de ambiente
+# 4. Build e execução do container
+# 5. Persistência de dados via volumes externos
+#
+# Uso: ./vps_deploy.sh [--update] [--env-file=/path/to/.env]
+# ============================================================================
+
+set -e  # Exit on error
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Configuration
+REPO_URL="https://github.com/providentia/digna.git"
+PROJECT_NAME="digna"
+APP_DIR="/opt/${PROJECT_NAME}"
+DATA_DIR="/var/lib/${PROJECT_NAME}/data"
+ENV_FILE="${APP_DIR}/.env"
+DOCKER_COMPOSE_VERSION="v2.20.0"
+
+# Parse arguments
+UPDATE_MODE=false
+CUSTOM_ENV_FILE=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --update)
+            UPDATE_MODE=true
+            shift
+            ;;
+        --env-file=*)
+            CUSTOM_ENV_FILE="${1#*=}"
+            shift
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $1${NC}"
+            echo "Usage: $0 [--update] [--env-file=/path/to/.env]"
+            exit 1
+            ;;
+    esac
+done
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+print_header() {
+    echo -e "\n${BLUE}========================================${NC}"
+    echo -e "${BLUE}  $1${NC}"
+    echo -e "${BLUE}========================================${NC}"
+}
+
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+check_command() {
+    if ! command -v $1 &> /dev/null; then
+        print_error "Command '$1' not found"
+        return 1
+    fi
+    return 0
+}
+
+# ============================================================================
+# Main Deployment Functions
+# ============================================================================
+
+install_docker_compose() {
+    print_header "Verificando docker-compose..."
+    
+    if check_command docker-compose; then
+        print_success "docker-compose já instalado"
+        return 0
+    fi
+    
+    print_warning "docker-compose não encontrado. Instalando..."
+    
+    # Install docker-compose
+    sudo curl -L "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" \
+        -o /usr/local/bin/docker-compose
+    
+    sudo chmod +x /usr/local/bin/docker-compose
+    
+    # Verify installation
+    if docker-compose --version &> /dev/null; then
+        print_success "docker-compose instalado com sucesso"
+    else
+        print_error "Falha ao instalar docker-compose"
+        exit 1
+    fi
+}
+
+setup_project_directory() {
+    print_header "Configurando diretório do projeto..."
+    
+    # Create directories
+    sudo mkdir -p "${APP_DIR}"
+    sudo mkdir -p "${DATA_DIR}"
+    
+    # Set permissions
+    sudo chown -R $(whoami):$(whoami) "${APP_DIR}"
+    sudo chown -R $(whoami):$(whoami) "${DATA_DIR}"
+    
+    print_success "Diretórios criados: ${APP_DIR}, ${DATA_DIR}"
+}
+
+clone_or_update_repo() {
+    print_header "Clonando/Atualizando repositório..."
+    
+    cd "${APP_DIR}"
+    
+    if [[ -d ".git" ]]; then
+        if [[ "${UPDATE_MODE}" == "true" ]]; then
+            print_warning "Atualizando repositório existente..."
+            git pull origin main
+            print_success "Repositório atualizado"
+        else
+            print_warning "Repositório já existe. Use --update para atualizar"
+        fi
+    else
+        print_warning "Clonando repositório..."
+        git clone "${REPO_URL}" .
+        print_success "Repositório clonado"
+    fi
+}
+
+setup_environment() {
+    print_header "Configurando variáveis de ambiente..."
+    
+    # Use custom env file if provided
+    if [[ -n "${CUSTOM_ENV_FILE}" && -f "${CUSTOM_ENV_FILE}" ]]; then
+        cp "${CUSTOM_ENV_FILE}" "${ENV_FILE}"
+        print_success "Arquivo .env personalizado copiado"
+    elif [[ -f "${APP_DIR}/.env.example" ]]; then
+        if [[ ! -f "${ENV_FILE}" ]]; then
+            cp "${APP_DIR}/.env.example" "${ENV_FILE}"
+            
+            # Update data directory in .env
+            sed -i "s|DIGNA_DATA_DIR=.*|DIGNA_DATA_DIR=${DATA_DIR}|g" "${ENV_FILE}"
+            
+            print_success "Arquivo .env criado a partir de .env.example"
+        else
+            print_warning "Arquivo .env já existe. Mantendo configurações existentes"
+        fi
+    else
+        print_warning "Criando arquivo .env básico..."
+        cat > "${ENV_FILE}" << EOF
+# Digna Application Environment Variables
+# Generated by deployment script on $(date)
+
+# Server Configuration
+DIGNA_PORT=8090
+
+# Data Directory Configuration
+DIGNA_DATA_DIR=${DATA_DIR}
+
+# Logging Configuration
+DIGNA_LOG_LEVEL=info
+
+# Docker Compose Configuration
+COMPOSE_PROJECT_NAME=${PROJECT_NAME}
+EOF
+        print_success "Arquivo .env básico criado"
+    fi
+    
+    # Show environment configuration
+    echo -e "\n${YELLOW}Configuração atual do .env:${NC}"
+    cat "${ENV_FILE}"
+}
+
+build_and_start() {
+    print_header "Build e inicialização do container..."
+    
+    cd "${APP_DIR}"
+    
+    # Load environment variables
+    set -a
+    source "${ENV_FILE}"
+    set +a
+    
+    # Build and start with docker-compose
+    print_warning "Build da imagem Docker..."
+    docker-compose build
+    
+    print_warning "Iniciando serviços..."
+    docker-compose up -d
+    
+    # Wait for service to be healthy
+    print_warning "Aguardando serviço ficar saudável..."
+    for i in {1..30}; do
+        if curl -s -f "http://localhost:${DIGNA_PORT:-8090}/health" > /dev/null; then
+            print_success "Serviço está saudável!"
+            break
+        fi
+        echo -n "."
+        sleep 2
+    done
+    
+    if [[ $i -eq 30 ]]; then
+        print_error "Timeout aguardando serviço ficar saudável"
+        print_warning "Verificando logs do container..."
+        docker-compose logs
+        exit 1
+    fi
+}
+
+show_deployment_info() {
+    print_header "Informações da Implantação"
+    
+    cd "${APP_DIR}"
+    
+    # Load environment variables
+    set -a
+    source "${ENV_FILE}"
+    set +a
+    
+    local PORT=${DIGNA_PORT:-8090}
+    
+    echo -e "${GREEN}✅ Implantação concluída com sucesso!${NC}"
+    echo ""
+    echo -e "${YELLOW}📊 Informações do Serviço:${NC}"
+    echo "  URL: http://$(curl -s ifconfig.me):${PORT}"
+    echo "  Local: http://localhost:${PORT}"
+    echo "  Health Check: http://localhost:${PORT}/health"
+    echo ""
+    echo -e "${YELLOW}📁 Diretórios:${NC}"
+    echo "  Aplicação: ${APP_DIR}"
+    echo "  Dados: ${DATA_DIR}"
+    echo "  Configuração: ${ENV_FILE}"
+    echo ""
+    echo -e "${YELLOW}🐳 Comandos Docker:${NC}"
+    echo "  Ver logs: docker-compose logs -f"
+    echo "  Parar: docker-compose stop"
+    echo "  Reiniciar: docker-compose restart"
+    echo "  Remover: docker-compose down"
+    echo ""
+    echo -e "${YELLOW}🔧 Manutenção:${NC}"
+    echo "  Atualizar: $0 --update"
+    echo "  Backup dados: cp -r ${DATA_DIR} /backup/"
+}
+
+# ============================================================================
+# Main Execution
+# ============================================================================
+
+main() {
+    print_header "🚀 Iniciando Deploy do Digna na VPS"
+    echo "Data: $(date)"
+    echo "Usuário: $(whoami)"
+    echo ""
+    
+    # Check prerequisites
+    print_header "Verificando pré-requisitos..."
+    
+    if ! check_command docker; then
+        print_error "Docker não encontrado. Instale Docker primeiro."
+        exit 1
+    fi
+    
+    if ! check_command git; then
+        print_error "Git não encontrado. Instale Git primeiro."
+        exit 1
+    fi
+    
+    if ! check_command curl; then
+        print_error "Curl não encontrado. Instale Curl primeiro."
+        exit 1
+    fi
+    
+    print_success "Todos pré-requisitos atendidos"
+    
+    # Execute deployment steps
+    install_docker_compose
+    setup_project_directory
+    clone_or_update_repo
+    setup_environment
+    build_and_start
+    show_deployment_info
+    
+    print_header "🎉 Deploy Concluído!"
+    echo "O sistema Digna está rodando na sua VPS."
+    echo "Acesse a URL acima para começar a usar."
+}
+
+# Run main function
+main "$@"

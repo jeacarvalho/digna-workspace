@@ -101,9 +101,53 @@ modules/
 
 ---
 
+## 🚀 Deploy em Produção
+
+### Scripts de Deploy
+- **`deploy.sh`** - Wrapper principal (raiz do projeto)
+- **`scripts/deploy/vps_deploy.sh`** - Deploy automático em VPS
+- **`scripts/deploy/backup.sh`** - Backup de bancos SQLite
+- **`scripts/deploy/restore.sh`** - Restauração de backup
+- **`scripts/deploy/validate_deployment.sh`** - Validação dos scripts
+
+### Configuração
+- **Porta:** `DIGNA_PORT=8090` (variável de ambiente)
+- **Dados:** `DIGNA_DATA_DIR=/var/lib/digna/data`
+- **Logs:** `DIGNA_LOG_LEVEL=info`
+- **Documentação:** `docs/DEPLOYMENT.md` (guia completo)
+
+### Comandos Rápidos
+```bash
+# Deploy automático
+./deploy.sh
+
+# Backup dados
+./scripts/deploy/backup.sh --keep-days=30
+
+# Validação
+./scripts/deploy/validate_deployment.sh
+```
+
+
+## 🔄 Aprendizados Recentes da Sessão
+**Baseado em:** 1 tarefa(s) concluída(s)
+**Período:** 11/03/2026
+
+### Insights:
+- - Retenção configurável (padrão: 7 dias)...
+
+### Status:
+- Taxa de sucesso: 0%
+- Tempo médio: 60 minutos
+
+💡 **Dica:** Consulte `docs/learnings/` e `docs/ANTIPATTERNS.md` para detalhes.
 ## 🆕 Nova Sessão
 
-**Sessão iniciada em:** 10/03/2026 22:19
+**Sessão iniciada em:** 11/03/2026 10:08
 **Status:** ✅ PRONTO PARA NOVA IMPLEMENTAÇÃO
 
 Use `./start_session.sh` para contexto completo ou `./process_task.sh` para começar.
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, member_handler, pdv_handler, supply_handler, supply_templates
