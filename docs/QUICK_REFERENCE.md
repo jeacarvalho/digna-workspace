@@ -238,3 +238,35 @@ accountant_handler, auth_handler, base_handler, budget_handler, budget_templates
 ## 🏗️ Handlers Existentes
 
 accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates

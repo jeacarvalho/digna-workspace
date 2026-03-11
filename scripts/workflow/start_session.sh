@@ -243,25 +243,36 @@ if [ "$QUICK_MODE" != "quick" ]; then
     cat > "${SESSION_DIR}/.agent_context.md" << EOF
 # 🎯 CONTEXTO DO AGENTE - Projeto Digna
 
+### ⚠️⚠️⚠️ ALERTA DE BLOQUEIO - LEIA ESTE ARQUIVO COMPLETO AGORA ⚠️⚠️⚠️
+
 **Sessão iniciada:** $(date +%d/%m/%Y %H:%M:%S)
 **Sessão ID:** ${SESSION_ID}
 **Arquivo:** work_in_progress/current_session/.agent_context.md
 **Verificação docs:** ${DOCS_CHECKLIST}
 **Modo:** COMPLETO (com bloqueio)
 
+### ❌❌❌ STATUS: IMPLEMENTAÇÕES BLOQUEADAS ❌❌❌
+**Você NÃO PODE implementar nenhum código até seguir as instruções abaixo.**
+
 ---
 
 ## 🚀 INSTRUÇÕES OBRIGATÓRIAS PARA O AGENTE (OPENCODE)
 
+### ⚠️⚠️⚠️ ATENÇÃO CRÍTICA - LEIA ESTAS INSTRUÇÕES AGORA ⚠️⚠️⚠️
+
 Você está trabalhando no **Projeto Digna** - sistema de economia solidária.
 
-### ⚠️ BLOQUEIO DE IMPLEMENTAÇÃO ATIVADO
-**O AGENTE ESTÁ BLOQUEADO PARA IMPLEMENTAÇÕES ATÉ CONFIRMAR LEITURA DA DOCUMENTAÇÃO.**
+### ❌❌❌ SISTEMA DE BLOQUEIO ATIVADO - IMPLEMENTAÇÕES IMPOSSÍVEIS ❌❌❌
+**O AGENTE ESTÁ COMPLETAMENTE BLOQUEADO PARA QUALQUER IMPLEMENTAÇÃO ATÉ CONFIRMAR LEITURA DA DOCUMENTAÇÃO.**
 
-### ✅ PRIMEIRO PASSO OBRIGATÓRIO (BLOQUEANTE)
-1. 📚 **LEIA** a documentação obrigatória: \`${DOCS_CHECKLIST}\`
-2. ✅ **MARQUE** cada item como lido no checklist
-3. 🔓 **SÓ ENTÃO** o agente está liberado para implementar
+### ✅✅✅ PRIMEIRO PASSO OBRIGATÓRIO (BLOQUEANTE - FAÇA ISSO AGORA)
+**Você DEVE executar estes passos NA ORDEM EXATA antes de qualquer outra ação:**
+
+1. 📚 **LEIA IMEDIATAMENTE** a documentação obrigatória listada abaixo
+2. ✅ **MARQUE CADA ITEM** como lido em \`${DOCS_CHECKLIST}\`
+3. 🔓 **SÓ ENTÃO** o bloqueio será removido e você poderá implementar
+
+**IMPORTANTE:** Se você tentar implementar qualquer código sem seguir estes passos, violará os padrões do projeto e perderá tempo significativo.
 
 ### 📚 DOCUMENTAÇÃO OBRIGATÓRIA (BLOQUEANTE)
 **LEIA AGORA ANTES DE QUALQUER AÇÃO:**
@@ -296,11 +307,43 @@ work_in_progress/
 10. ✅ \`./conclude_task.sh\`              → Conclui tarefa
 11. 🔚 \`./end_session.sh\`                → Encerra sessão (após TODAS tarefas)
 
-### 🎯 PRÓXIMOS PASSOS (BLOQUEADO ATÉ LEITURA)
-**IMPLEMENTAÇÕES BLOQUEADAS ATÉ CONFIRMAR LEITURA:**
-1. 📚 **LEIA E MARQUE** \`${DOCS_CHECKLIST}\` (BLOQUEANTE)
-2. 📋 **CRIE** tarefa: \`./create_task.sh "Nome da Tarefa" [módulo]\`
-3. 🔍 **PROCESSE** tarefa: \`./process_task.sh --task=[ID] --checklist\`
+### 🎯 COMANDOS OBRIGATÓRIOS PARA O AGENTE OPENCODE (EXECUTE NA ORDEM EXATA)
+
+**AGENTE OPENCODE: Você DEVE executar estes passos NA ORDEM antes de qualquer implementação:**
+
+#### PASSO 1: VERIFICAR STATUS DO BLOQUEIO (EXECUTE AGORA)
+- Use a ferramenta `read` para ler este arquivo: `${SESSION_DIR}/.agent_context.md`
+- Verifique que está bloqueado para implementações
+
+#### PASSO 2: LER DOCUMENTAÇÃO OBRIGATÓRIA (EXECUTE AGORA - BLOQUEANTE)
+**Use a ferramenta `read` para ler CADA arquivo abaixo:**
+
+1. **`docs/QUICK_REFERENCE.md`** - Arquitetura, padrões e handlers
+2. **`docs/ANTIPATTERNS.md`** - O que NÃO fazer no projeto  
+3. **`docs/NEXT_STEPS.md`** - Tarefas pendentes e prioridades
+4. **`docs/learnings/`** - TODOS os aprendizados anteriores (CRÍTICO)
+   - Use `glob` para listar TODOS os arquivos em `docs/learnings/`
+   - Use `read` para ler CADA arquivo de aprendizado (todos, não apenas alguns)
+
+#### PASSO 3: MARCAR CHECKLIST COMO LIDO (EXECUTE AGORA)
+**Use a ferramenta `edit` para atualizar o checklist:**
+
+1. Edite o arquivo: `${DOCS_CHECKLIST}`
+2. Mude `[ ]` para `[x]` em CADA item da lista
+3. Atualize o status de "PENDENTE" para "CONCLUÍDO"
+
+#### PASSO 4: AGUARDAR INSTRUÇÕES DO USUÁRIO (NÃO CRIAR TAREFAS)
+- **NÃO crie tarefas automaticamente** após ler a documentação
+- **NÃO inicie implementações** sem instrução explícita do usuário
+- **Apenas ganhe contexto** do projeto e aguarde próximos passos
+- **Reporte ao usuário** que a documentação foi lida e está pronto para receber tarefas
+
+### 📋 FLUXO DE VERIFICAÇÃO (OBRIGATÓRIO)
+1. ✅ **Execute os comandos acima NA ORDEM**
+2. ✅ **Confirme que TODOS os documentos foram lidos (incluindo TODOS os aprendizados)**
+3. ✅ **Atualize o checklist com [x] em cada item**
+4. ✅ **Verifique se o status mudou para "DESBLOQUEADO"**
+5. ✅ **AGUARDE INSTRUÇÕES DO USUÁRIO - NÃO crie tarefas automaticamente**
 
 ---
 
@@ -383,8 +426,10 @@ EOF
     echo "✅ Contexto do agente criado (modo rápido)"
 fi
 
-# 4. Criar link simbólico para .agent_context.md no root (para compatibilidade)
-ln -sf "${SESSION_DIR}/.agent_context.md" ".agent_context.md" 2>/dev/null || true
+# 4. Criar instrução explícita para o agente ler o contexto da sessão
+echo "📁 Contexto do agente: ${SESSION_DIR}/.agent_context.md"
+echo "💡 AGENTE OPENCODE: Leia este arquivo AGORA usando a ferramenta 'read':"
+echo "   read \"${SESSION_DIR}/.agent_context.md\""
 
 echo ""
 if [ "$QUICK_MODE" != "quick" ]; then
@@ -405,19 +450,21 @@ if [ "$QUICK_MODE" != "quick" ]; then
     echo "3. 🎯 docs/NEXT_STEPS.md - Tarefas pendentes e prioridades"
     echo "4. 📚 docs/learnings/ - TODOS os aprendizados anteriores (CRÍTICO)"
     echo ""
-    echo "🎯 FLUXO DE DESBLOQUEIO OBRIGATÓRIO:"
-    echo "1. 📚 LEIA documentação acima (AGORA - BLOQUEANTE)"
-    echo "2. ✅ MARQUE checklist: ${DOCS_CHECKLIST}"
-    echo "3. 🔓 BLOQUEIO REMOVIDO - Agora pode implementar"
-    echo "4. 📋 CRIE tarefa: ./create_task.sh \"Nome da Tarefa\" [módulo]"
-    echo "5. 🔍 PROCESSE tarefa: ./process_task.sh --task=[ID] --checklist"
-    echo "6. 💻 IMPLEMENTE seguindo padrões do projeto"
-    echo "7. 📝 REGISTRE aprendizado em session_learnings/"
-    echo "8. ✅ CONCLUA tarefa: ./conclude_task.sh"
+echo "🎯 FLUXO DE DESBLOQUEIO OBRIGATÓRIO PARA O AGENTE OPENCODE:"
+echo "1. 📚 LEIA TODA documentação acima (AGORA - BLOQUEANTE) - use ferramenta 'read'"
+echo "2. ✅ MARQUE checklist: work_in_progress/current_session/docs_checklist.md - use ferramenta 'edit'"
+echo "3. 🔓 BLOQUEIO REMOVIDO - Agora pode receber instruções"
+echo "4. ⏸️  AGUARDE instruções do usuário - NÃO crie tarefas automaticamente"
+echo "5. 📋 SÓ crie tarefas quando o usuário solicitar"
+echo "6. 🔍 PROCESSE tarefa: ./process_task.sh --task=[ID] --checklist"
+echo "7. 💻 IMPLEMENTE seguindo padrões do projeto"
+echo "8. 📝 REGISTRE aprendizado em session_learnings/"
+echo "9. ✅ CONCLUA tarefa: ./conclude_task.sh"
     echo ""
-    echo "📁 Sistema de verificação: ${DOCS_CHECKLIST}"
-    echo "📁 Contexto do agente: .agent_context.md"
-    echo "💡 Modo rápido (sem bloqueio): ./start_session.sh quick"
+echo "📁 Sistema de verificação: ${DOCS_CHECKLIST}"
+echo "📁 Contexto do agente: ${SESSION_DIR}/.agent_context.md"
+echo "💡 AGENTE: Após ler documentação, AGUARDE instruções do usuário"
+echo "💡 Modo rápido (sem bloqueio): ./start_session.sh quick"
 else
     echo "✅ SESSÃO RÁPIDA INICIADA! ⚡ SEM BLOQUEIO"
     echo "=========================================="
@@ -442,6 +489,6 @@ else
     echo "4. 📝 REGISTRE aprendizado em session_learnings/"
     echo "5. ✅ CONCLUA tarefa: ./conclude_task.sh"
     echo ""
-    echo "📁 Contexto do agente: .agent_context.md"
+    echo "📁 Contexto do agente: ${SESSION_DIR}/.agent_context.md"
     echo "💡 Modo completo (com verificação): ./start_session.sh"
 fi
