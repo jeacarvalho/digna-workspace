@@ -27,6 +27,16 @@ Pessoa participante do empreendimento. Suas horas dedicadas são o lastro do cap
 ###### SocialAccountant (Contador Social) [NOVO]
 Entidade parceira (externa). Não é dona do dado, mas possui permissão delegada de leitura para auditar a conformidade (ITG 2002) e extrair os balancetes através de um Painel Multi-tenant.
 
+###### EnterpriseAccountant (Vínculo Contábil e Responsabilidade Técnica) [NOVO]**
+Entidade de relacionamento temporal que consolida o **RF-12**. Garante o "Exit Power" da cooperativa e protege a responsabilidade do contador.
+*   `ID`: Identificador único (UUID).
+*   `EnterpriseID`: Referência ao Empreendimento (Tenant).
+*   `AccountantID`: Referência ao Contador Social.
+*   `Status`: `ACTIVE` (Apenas 1 permitido no tempo presente) ou `INACTIVE`.
+*   `StartDate`: Data de início da responsabilidade técnica.
+*   `EndDate`: Data do encerramento (Nulo se for o contador atual).
+*   `DelegatedBy`: ID do membro coordenador que aprovou o vínculo (Auditoria).
+
 ###### Transaction (Operação Comercial)
 Evento econômico do dia a dia (venda na feira, compra de insumo). Traduzido internamente para partidas dobradas.
 
@@ -35,6 +45,10 @@ Registro de trabalho cooperativo. Converte o suor em Capital Social de Trabalho 
 
 ###### Decision (Decisão Democrática)
 Decisão coletiva tomada e registrada em Assembleia. Base para a geração das Atas em Markdown (CADSOL).
+
+###### LegalDocument (Dossiê CADSOL)**
+Agrupamento das `Decisions` exportado em formato Markdown/PDF para fins legais, comprovando a gestão democrática perante o Estado.
+
 
 ###### Fund (Fundos Obrigatórios)
 Reservas estatutárias e legais blindadas pelo sistema (Ex: Reserva Legal e FATES).
@@ -56,7 +70,7 @@ Conjunto imutável de transações agregadas e exportadas para o formato exigido
 #### 2. Data Model (Schema v1)
 
 O banco de dados é instanciado fisicamente de forma isolada por `Enterprise` (Soberania do Dado local). 
-*Nota Arquitetural:* O Painel do Contador Social **não possui** banco de transações próprio; ele atua apenas consumindo dados em modo de leitura (Read-Only) dos micro-databases autorizados.
+*Nota Arquitetural:* O Painel do Contador Social **não possui** banco de transações próprio; ele atua apenas consumindo dados em modo de leitura (Read-Only) dos micro-databases autorizados. E como um contador social pode estar cuidando de várias entidades, as funcionalidades a ele relacionadas devem estar preparadas para pesquisar em diversos db sqlite
 
     TABELAS PRINCIPAIS (SQLite)
     

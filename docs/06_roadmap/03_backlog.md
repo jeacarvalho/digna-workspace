@@ -1,33 +1,40 @@
+---
+title: Product Backlog
+status: proposed
+version: 1.2
+last_updated: 2026-03-11
+---
+
 # Product Backlog - Digna
+
+Este documento rastreia todas as funcionalidades já implementadas e as futuras, alinhadas às Fases do Roadmap e aos Requisitos Funcionais (RF) definidos no BRD.
 
 ---
 
 ## Funcionalidades Concluídas
 
-### Core Contábil
-- [x] PDV Operacional (RF-01) ✅ **CORREÇÕES SPRINT 15**
-- [x] Registro de Trabalho ITG 2002 (RF-02)
+### Core Contábil e Fundação (Sprints 01 a 06)
+- [x] PDV Operacional com Partidas Dobradas Invisíveis (RF-01)
+- [x] Registro de Trabalho / Ponto Social ITG 2002 (RF-02)
 - [x] Motor de Reservas Obrigatórias (RF-03)
 - [x] Dossiê de Formalização (RF-04)
-- [x] Sincronização Offline-First (RF-05)
-- [x] Intercooperação B2B (RF-06)
-- [x] Gestão de Compras (RF-07) ✅ **SPRINT 13**
-- [x] Controle de Estoque (RF-08) ✅ **SPRINT 13 + CORREÇÕES SPRINT 15**
-- [x] Gestão de Caixa (RF-09) ✅ **CORREÇÕES SPRINT 15**
+- [x] Sincronização Offline-First via Delta Tracking (RF-05)
+- [x] Intercooperação B2B - Base de dados (RF-06)
+- [x] Gestão de Caixa conectada ao Motor Lume (RF-09)
 
 ### Gestão de Membros (Sprint 10)
 - [x] Cadastro de membros
-- [x] Roles (COORDINATOR, MEMBER, ADVISOR)
-- [x] Status (ACTIVE, INACTIVE)
-- [x] Skills/habilidades
+- [x] Roles (COORDINATOR, MEMBER, ADVISOR) com hierarquia de permissões
+- [x] Status (ACTIVE, INACTIVE) e trava contra desativação do último coordenador
+- [x] Skills/habilidades associadas ao trabalho voluntário
 
 ### Formalização (Sprint 11)
-- [x] Transição automática DREAM → FORMALIZED
-- [x] Simulador de formalização
-- [x] CheckFormalizationCriteria()
-- [x] AutoTransitionIfReady()
+- [x] Transição automática de status `DREAM` → `FORMALIZED`
+- [x] Simulador de formalização para análise de impacto
+- [x] Funcionalidade `CheckFormalizationCriteria()`
+- [x] Funcionalidade `AutoTransitionIfReady()` (gatilho após 3 decisões)
 
-### Integrações Governamentais
+### Integrações Governamentais (Mocks)
 - [x] Receita Federal (CNPJ, DARF) - Mock
 - [x] MTE (RAIS, CAT, eSocial) - Mock
 - [x] MDS (CadÚnico, Relatório Social) - Mock
@@ -37,44 +44,48 @@
 - [x] SEBRAE (Cursos, Consultoria) - Mock
 - [x] Providentia (Sync, Marketplace) - Mock
 
-### Surplus Calculator
-- [x] CalculateSocialSurplus()
-- [x] CalculateWithDeductions() - 10% Reserva Legal + 5% FATES
-- [x] Rateio proporcional por minutos trabalhados
-- [x] Tratamento de resíduos
+### Finanças Solidárias e Suprimentos (Sprints 13 e 14)
+- [x] Gestão de compras e fornecedores (RF-07)
+- [x] Controle de estoque por categorização obrigatória (INSUMO, PRODUTO, MERCADORIA) com baixa via PDV (RF-08)
+- [x] Gestão Orçamentária e Planejamento Financeiro com alertas visuais SAFE/WARNING/EXCEEDED (RF-10)
 
-### Testes
-- [x] Testes unitários por módulo
-- [x] Testes E2E Journey (jornada anual)
-- [x] Testes de integrações governamentais
-- [x] Testes E2E com Playwright (PDV → Estoque → Caixa) ✅ **SPRINT 15**
+### Estabilização, UI e Rateio (Sprints 15 e 16)
+- [x] Surplus Calculator (`CalculateSocialSurplus()`, deduções automáticas de 10% Reserva Legal + 5% FATES)
+- [x] Identidade Visual Global "Soberania e Suor" aplicada (RNF-07)
+- [x] Arquitetura de renderização de Templates Cache-Proof (`_simple.html`)
+- [x] Integração End-to-End funcional (PDV → Estoque → Caixa)
 
 ---
 
 ## Funcionalidades Futuras
 
-### Alta Prioridade (Fase 1: Integração e Aliança Contábil)
-- [x] **[NOVO] Painel do Contador Social (Accountant Dashboard):** Interface Web Multi-tenant em modo Read-Only para auditores voluntários/parceiros. ✅ **SPRINT 12 COMPLETE**
-- [x] **[NOVO] Motor de Exportação Fiscal (SPED):** Mapeamento do `Core Lume` para formatos padrões exigidos pela Receita Federal e sistemas contábeis comerciais. ✅ **SPRINT 12 COMPLETE**
-- [ ] **[NOVO] Plataforma de Mutirão:** Módulo de gerenciamento para o "Imposto de Renda Solidário" em parceria com Universidades/CRCs.
-- [ ] Autenticação Gov.br (Realização do fluxo OAuth2)
-- [ ] Exportação CADSOL completa
-- [ ] Auditoria pública (Validação visual ITG 2002)
-- [ ] Integrações reais (Substituição de Mocks por APIs do governo)
+### Alta Prioridade (Fase 1 e Fase 2 - Institucional e Aliança Contábil)
+- [ ] **Gestão de Vínculo Contábil e Delegação Temporal (RF-12) [NOVO]:** Sistema de associação temporal (`start_date`, `end_date`) entre Empreendimentos (EES) e Contadores Sociais. Garante o "Exit Power" (Soberania) da cooperativa e assegura o direito de consulta retroativo (Read-Only) do contador aos períodos em que foi Responsável Técnico.
+- [ ] **Visão Analítica do Contador Social (RF-13) [NOVO]:** Dashboard consultivo exclusivo e filtrado pelo vínculo temporal. Compila a saúde dos fundos obrigatórios (FATES e Reserva Legal) e a somatória do capital social de trabalho (ITG 2002) para elaboração de Notas Explicativas.
+- [ ] **Interface de Gestão de Membros (UI):** Criação das telas HTMX para o motor de CRUD de membros já finalizado no backend.
+- [ ] **Integração Real Gov.br (OAuth2):** Substituição do Mock de login unificado pelo fluxo real da Cidadania Digital.
+- [ ] **Exportação CADSOL Oficial:** Motor em PDF/Markdown que agrupa as decisões e estatutos para protocolo governamental.
+- [ ] **Auditoria Pública (Cidadania Criptográfica):** Tela para que qualquer cidadão audite as atas geradas através da validação de Hashes SHA256.
 
-### Média Prioridade
-- [ ] **[NOVO] Módulos educativos embutidos:** UI com auxílio visual na formação de preço no PDV (Custo vs. Hora trabalhada).
-- [ ] Gestão de membros (UI)
-- [x] Gestão de compras (RF-07) ✅ **SPRINT 13**
-- [x] Gestão de fornecedores ✅ **SPRINT 13**
-- [x] Controle de estoque (RF-08) ✅ **SPRINT 13**
-- [ ] Gestão orçamentária (RF-10)
-- [ ] Múltiplas moedas sociais (Preparação para Fase 2)
+### Média Prioridade (Fase 3 - Finanças Solidárias Avançadas)
+- [ ] **Múltiplas Moedas Sociais:** Expansão do Ledger para registrar e transacionar moedas complementares de Bancos Comunitários de Desenvolvimento (BCDs).
+- [ ] **Estoque Substantivo:** Suporte à contabilidade não-monetária, gerindo "Fundos Rotativos Solidários" (troca e controle genético de sementes, animais para repasse).
+- [ ] **Rateio de Sobras na Interface (UI):** Painel visual para que a Assembleia aprove a divisão justa do excedente com base nas horas trabalhadas (transparência algorítmica).
 
-### Baixa Prioridade
-- [ ] API GraphQL
-- [ ] App mobile nativo (Substituindo o atual PWA, se necessário)
-- [ ] Relatórios em PDF
+### Baixa Prioridade (Fase 4 - Intercooperação e Escala Nacional)
+- [ ] **Integração Contábil Fiscal Definitiva:** Conexão direta por API (sem arquivos intermediários) com softwares comerciais de contabilidade (via Contador Social).
+- [ ] **Marketplace B2B Solidário:** Interface para trocas e vendas em lote apenas entre entidades autenticadas na rede Digna.
+- [ ] **Score de Crédito Social:** Motor que calcula a reputação da entidade baseada no trabalho e autogestão (não apenas em dinheiro) para solicitar crédito ao BNDES.
+- [ ] **API Pública Restrita (OpenAPI/Swagger):** Documentação técnica e geração de endpoints para ecossistemas parceiros (Serpro, Governos Estaduais).
+- [ ] **App Mobile Nativo / Relatórios PDF Avulsos.**
 ```
 
 ***
+
+### 📋 Próximo da Fila
+
+O Backlog agora reflete o poder real do sistema e traz o Contador Social para o centro da nossa prioridade atual. 
+
+O próximo documento a ser atualizado (Documento 2 de 4) é o **`02_product/02_models.md`**, onde vamos inserir a estrutura de dados que suporta essas datas de vigência do contador (`EnterpriseAccountant`) e os modelos do filtro fiscal.
+
+Me dê o **sinal verde** e eu gerarei a versão completa do modelo de dados!

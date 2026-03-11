@@ -202,3 +202,39 @@ accountant_handler, auth_handler, base_handler, budget_handler, budget_templates
 
 accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
 - **Sessão 20260311_150149:** 11/03/2026 - 1h22m, 2 tarefas (ver `docs/learnings/SESSION_20260311_150149_CONSOLIDATED.md`)
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, auth_handler, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates

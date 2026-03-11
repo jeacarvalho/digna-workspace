@@ -55,8 +55,11 @@ O Digna respeita o tempo social do grupo. Ele atua como um facilitador da confor
 ##### Pilar 5: Ferramenta Pedagógica e Design Participativo
 O software ensina enquanto é operado. Ele auxilia visualmente o trabalhador na formação correta do seu preço (custo de insumos + hora trabalhada). Todo o seu desenvolvimento deve ser validado *com* os trabalhadores e Incubadoras (ITCPs).
 
-##### Pilar 6: Aliança Contábil e Escala Fiscal (Novo)
+#### Pilar 6: Aliança Contábil e Responsabilidade Técnica [NOVO]
 O sistema não exclui o contador; ele o eleva. O Digna é a materialização tecnológica da norma ITG 2002 do Conselho Federal de Contabilidade (CFC). Ao automatizar a digitação, o sistema permite que "Contadores Sociais" voluntários ou de baixo custo atendam dezenas de cooperativas simultaneamente de forma viável, transformando conformidade legal em inclusão.
+O Digna estabelece o Contador Social como um parceiro estratégico. A ferramenta blinda a Responsabilidade Técnica do contador (exigência do CFC) através da **delegação temporal do acesso**. Um contador inativo perde o acesso gerencial aos dados atuais da cooperativa, mas preserva o direito inalienável de consulta (Read-Only) ao período em que gerou o SPED, garantindo segurança jurídica total para os profissionais que apoiam o movimento.
+
+---
 
 --------------------------------------------------------------------------------
 

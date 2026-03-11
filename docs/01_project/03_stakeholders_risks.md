@@ -16,6 +16,7 @@ last_updated: 2026-03-08
 | Associações | Gestão coletiva e deliberações em assembleia |
 | Grupos informais ("Sonhos")| Entrada no sistema (Estágio DREAM) |
 | Contadores Sociais [NOVO] | Auditores e facilitadores da conformidade via Painel Multi-tenant |
+| ITCPs e Incubadoras | Apoiadores metodológicos e pedagógicos | Plataforma que permita o acompanhamento da evolução dos grupos incubados e extração de indicadores reais de economia solidária. |
 
 ##### 1.2 Stakeholders Institucionais
 | Stakeholder | Interest |
