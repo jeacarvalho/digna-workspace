@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -29,23 +30,30 @@ func (m *AccountantAuthMiddleware) Handler(next http.Handler) http.Handler {
 			return
 		}
 
+		fmt.Printf("[ACCOUNTANT MIDDLEWARE] Checking accountant route: %s\n", r.URL.Path)
+
 		// Verificar autenticação
 		entityID, valid := m.authHandler.GetCurrentEntity(r)
 		if !valid {
 			// Redirecionar para login
+			fmt.Printf("[ACCOUNTANT MIDDLEWARE] Not authenticated, redirecting to login\n")
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 
 		// Verificar se é contador
 		userType, _ := m.authHandler.GetCurrentUserType(r)
+		fmt.Printf("[ACCOUNTANT MIDDLEWARE] Authenticated: entityID=%s, userType=%s\n", entityID, userType)
+
 		if userType != "contador" {
 			// Se não for contador, redirecionar para dashboard do empreendimento
+			fmt.Printf("[ACCOUNTANT MIDDLEWARE] Not a contador, redirecting to dashboard\n")
 			http.Redirect(w, r, "/dashboard?entity_id="+entityID, http.StatusFound)
 			return
 		}
 
 		// Se for contador, permitir acesso
+		fmt.Printf("[ACCOUNTANT MIDDLEWARE] Access granted to contador\n")
 		next.ServeHTTP(w, r)
 	})
 }

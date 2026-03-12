@@ -297,3 +297,82 @@ accountant_handler, accountant_link_handler, auth_handler, base_handler, budget_
 
 accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
 - **Sessão 20260311_203057:** 11/03/2026 - 0h44m, 2 tarefas (ver `docs/learnings/SESSION_20260311_203057_CONSOLIDATED.md`)
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+- **Sessão 20260312_105735:** 12/03/2026 - 2h56m, 2 tarefas (ver `docs/learnings/SESSION_20260312_105735_CONSOLIDATED.md`)
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+- **Sessão 20260312_135447:** 12/03/2026 - 0h7m, 2 tarefas (ver `docs/learnings/SESSION_20260312_135447_CONSOLIDATED.md`)
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+- **Sessão 20260312_141503:** 12/03/2026 - 1h2m, 2 tarefas (ver `docs/learnings/SESSION_20260312_141503_CONSOLIDATED.md`)

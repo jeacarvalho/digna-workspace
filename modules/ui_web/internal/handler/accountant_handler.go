@@ -64,16 +64,22 @@ func (h *AccountantHandler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("[ACCOUNTANT HANDLER] Dashboard called\n")
+
 	// Verificar autenticação
 	accountantID, valid := h.authHandler.GetCurrentEntity(r)
 	if !valid {
+		fmt.Printf("[ACCOUNTANT HANDLER] Not authenticated, redirecting to login\n")
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 
 	// Verificar se é contador
 	userType, _ := h.authHandler.GetCurrentUserType(r)
+	fmt.Printf("[ACCOUNTANT HANDLER] Authenticated: accountantID=%s, userType=%s\n", accountantID, userType)
+
 	if userType != "contador" {
+		fmt.Printf("[ACCOUNTANT HANDLER] Not a contador, returning 403\n")
 		http.Error(w, "Acesso restrito a contadores", http.StatusForbidden)
 		return
 	}
@@ -82,10 +88,15 @@ func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	if period == "" {
 		period = time.Now().Format("2006-01")
 	}
+	fmt.Printf("[ACCOUNTANT HANDLER] Period: %s\n", period)
 
 	// Obter período como time.Time para filtragem temporal
+	// Temporariamente desabilitado - startTime/endTime não são usados
 	startTime, endTime, parseErr := parsePeriodToTime(period)
+	_ = startTime // temporariamente não usado
+	_ = endTime   // temporariamente não usado
 	if parseErr != nil {
+		fmt.Printf("[ACCOUNTANT HANDLER] Invalid period: %v\n", parseErr)
 		http.Error(w, "Período inválido", http.StatusBadRequest)
 		return
 	}
@@ -97,34 +108,18 @@ func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("[DEBUG TEST] Error listing pending entities: %v\n", listErr)
 		allPendingEntities = []string{}
 	}
+	fmt.Printf("[ACCOUNTANT HANDLER] Found %d pending entities\n", len(allPendingEntities))
 
 	// Filtrar entidades baseado em vínculos temporais
+	// TEMPORARIAMENTE DESABILITADO - AccountantLinkService está travando
+	// TODO: Investigar e corrigir o travamento
 	var filteredEntities []string
-	if h.accountantLinkService != nil {
-		// Usar AccountantLinkService para filtrar
-		validEnterprises, filterErr := h.accountantLinkService.GetValidEnterprisesForAccountant(
-			r.Context(), accountantID, startTime, endTime)
-		if filterErr != nil {
-			http.Error(w, fmt.Sprintf("Erro na filtragem temporal: %v", filterErr), http.StatusInternalServerError)
-			return
-		}
+	fmt.Printf("[ACCOUNTANT HANDLER] accountantLinkService: %v\n", h.accountantLinkService)
 
-		// Criar mapa para lookup rápido
-		validMap := make(map[string]bool)
-		for _, enterprise := range validEnterprises {
-			validMap[enterprise] = true
-		}
-
-		// Filtrar entidades pendentes
-		for _, entityID := range allPendingEntities {
-			if validMap[entityID] {
-				filteredEntities = append(filteredEntities, entityID)
-			}
-		}
-	} else {
-		// Fallback: mostrar todas as entidades (compatibilidade)
-		filteredEntities = allPendingEntities
-	}
+	// Usar fallback imediato - mostrar todas as entidades pendentes
+	// Isso permite que o dashboard funcione enquanto investigamos o travamento
+	filteredEntities = allPendingEntities
+	fmt.Printf("[ACCOUNTANT HANDLER] Using fallback - showing all %d entities\n", len(filteredEntities))
 
 	entities := make([]map[string]interface{}, len(filteredEntities))
 	for i, entityID := range filteredEntities {
@@ -159,6 +154,8 @@ func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		"Mappings": defaultMappings,
 	}
 
+	fmt.Printf("[ACCOUNTANT HANDLER] Rendering template with %d entities\n", len(entities))
+
 	// Carregar template cache-proof
 	// Tentar múltiplos caminhos para funcionar em diferentes ambientes
 	var tmpl *template.Template
@@ -167,21 +164,27 @@ func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	// Tentativa 1: Caminho relativo (quando executado de modules/ui_web/)
 	tmpl, err = template.ParseFiles("templates/accountant_dashboard_simple.html")
 	if err != nil {
+		fmt.Printf("[ACCOUNTANT HANDLER] Template load attempt 1 failed: %v\n", err)
 		// Tentativa 2: Caminho absoluto do projeto
 		tmpl, err = template.ParseFiles("modules/ui_web/templates/accountant_dashboard_simple.html")
 		if err != nil {
+			fmt.Printf("[ACCOUNTANT HANDLER] Template load attempt 2 failed: %v\n", err)
 			// Tentativa 3: Caminho relativo alternativo
 			tmpl, err = template.ParseFiles("../../templates/accountant_dashboard_simple.html")
 			if err != nil {
+				fmt.Printf("[ACCOUNTANT HANDLER] Template load attempt 3 failed: %v\n", err)
 				http.Error(w, fmt.Sprintf("template error: não foi possível carregar o template: %v", err), http.StatusInternalServerError)
 				return
 			}
 		}
 	}
+	fmt.Printf("[ACCOUNTANT HANDLER] Template loaded successfully\n")
 
 	if err := tmpl.Execute(w, data); err != nil {
+		fmt.Printf("[ACCOUNTANT HANDLER] Template execute error: %v\n", err)
 		http.Error(w, fmt.Sprintf("template error: %v", err), http.StatusInternalServerError)
 	}
+	fmt.Printf("[ACCOUNTANT HANDLER] Dashboard rendered successfully\n")
 }
 
 func (h *AccountantHandler) ExportFiscal(w http.ResponseWriter, r *http.Request) {

@@ -140,20 +140,13 @@ func NewAuthHandler(lm lifecycle.LifecycleManager) (*AuthHandler, error) {
 	}
 
 	for _, path := range templatePaths {
+		fmt.Printf("[AUTH HANDLER] Trying template path: %s\n", path)
 		tmpl, err = template.New("login_simple.html").Funcs(funcMap).ParseFiles(path)
 		if err == nil {
+			fmt.Printf("[AUTH HANDLER] Successfully loaded template from: %s\n", path)
 			break
-		}
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse login template: %w", err)
-	}
-
-	for _, path := range templatePaths {
-		tmpl, err = template.New("login_simple.html").Funcs(funcMap).ParseFiles(path)
-		if err == nil {
-			break
+		} else {
+			fmt.Printf("[AUTH HANDLER] Failed to load template from %s: %v\n", path, err)
 		}
 	}
 
@@ -217,9 +210,27 @@ func (h *AuthHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
 
 // HandleLogin processa o login
 func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("[LOGIN DEBUG] HandleLogin started\n")
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
+	}
+
+	// Debug: mostrar cookies recebidos
+	fmt.Printf("[LOGIN DEBUG] Cookies received: %v\n", r.Cookies())
+
+	// Debug: verificar sessão existente
+	existingSessionID := h.getSessionID(r)
+	if existingSessionID != "" {
+		h.sessionMutex.RLock()
+		session, exists := h.sessions[existingSessionID]
+		h.sessionMutex.RUnlock()
+		if exists {
+			fmt.Printf("[LOGIN DEBUG] Existing session found: entityID=%s, userType=%s\n", session.EntityID, session.UserType)
+		} else {
+			fmt.Printf("[LOGIN DEBUG] Cookie exists but session not found in memory: %s\n", existingSessionID)
+		}
 	}
 
 	var entityID, password string
@@ -247,6 +258,8 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		entityID = r.FormValue("entity_id")
 		password = r.FormValue("password")
 	}
+
+	fmt.Printf("[LOGIN DEBUG] Login attempt: entityID=%s\n", entityID)
 
 	// Validar credenciais
 	company, exists := testCompanies[entityID]
@@ -280,6 +293,8 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Printf("[LOGIN DEBUG] Credentials valid, userType=%s\n", company.UserType)
+
 	// Criar banco de dados se não existir
 	// Só criar banco de dados para empreendimentos, não para contadores
 	if company.UserType == "empreendimento" {
@@ -296,6 +311,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Criar sessão
 	sessionID := h.createSession(entityID, company.Name, company.UserType)
+	fmt.Printf("[LOGIN DEBUG] Session created: sessionID=%s, entityID=%s, userType=%s\n", sessionID, entityID, company.UserType)
 
 	// Configurar cookie
 	cookie := &http.Cookie{
@@ -308,6 +324,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   86400, // 24 horas
 	}
 	http.SetCookie(w, cookie)
+	fmt.Printf("[LOGIN DEBUG] Cookie set: %s=%s\n", cookie.Name, cookie.Value)
 
 	// Determinar redirecionamento baseado no tipo de usuário
 	var redirectURL string
@@ -436,11 +453,14 @@ func (h *AuthHandler) CheckSession(w http.ResponseWriter, r *http.Request) {
 
 // Logout encerra a sessão
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("[LOGOUT DEBUG] Logout called\n")
 	sessionID := h.getSessionID(r)
+	fmt.Printf("[LOGOUT DEBUG] Session ID from cookie: %s\n", sessionID)
 	if sessionID != "" {
 		h.sessionMutex.Lock()
 		delete(h.sessions, sessionID)
 		h.sessionMutex.Unlock()
+		fmt.Printf("[LOGOUT DEBUG] Session deleted from memory\n")
 	}
 
 	// Limpar cookie
@@ -452,6 +472,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Unix(0, 0),
 	}
 	http.SetCookie(w, cookie)
+	fmt.Printf("[LOGOUT DEBUG] Cookie cleared\n")
 
 	http.Redirect(w, r, "/login", http.StatusFound)
 }

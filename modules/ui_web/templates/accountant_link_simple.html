@@ -51,16 +51,27 @@
     <header class="digna-gradient text-white py-6 px-4">
         <div class="container mx-auto">
             <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-3xl font-bold">{{.Title}}</h1>
-                    <p class="text-white/80 mt-1">Gerenciamento de vínculos contábeis</p>
+                <div class="flex items-center space-x-3">
+                    <img src="/static/Digna_logo_v2.png" 
+                         alt="Logotipo Digna" 
+                         class="h-10 w-10">
+                    <div>
+                        <h1 class="text-2xl font-bold">{{.Title}}</h1>
+                        <p class="text-white/80 mt-1">Gerenciamento de vínculos contábeis</p>
+                    </div>
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="bg-white/20 px-3 py-1 rounded-full text-sm">
                         {{if eq .UserType "contador"}}Contador{{else}}Empreendimento{{end}}: {{.EntityID}}
                     </span>
                     <a href="/dashboard" class="bg-white text-digna-primary px-4 py-2 rounded-lg font-medium hover:bg-white/90 transition">
-                        Voltar ao Dashboard
+                        Voltar
+                    </a>
+                    <a href="/logout" class="text-sm text-white/80 hover:text-white hover:underline">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        Sair
                     </a>
                 </div>
             </div>

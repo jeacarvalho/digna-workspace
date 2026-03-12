@@ -19,6 +19,7 @@ type SQLiteManager struct {
 	connections           map[string]*sql.DB
 	centralDB             *sql.DB
 	mu                    sync.RWMutex
+	migrationMu           sync.Mutex // Mutex específico para migrações
 	migrator              domain.Migrator
 	centralMigrator       domain.Migrator
 	dataDir               string
@@ -64,7 +65,7 @@ func (m *SQLiteManager) GetConnection(entityID string) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to create data directory: %w", err)
 	}
 
-	dsn := fmt.Sprintf("%s?_journal_mode=WAL&_foreign_keys=ON&_synchronous=NORMAL", dbPath)
+	dsn := fmt.Sprintf("%s?_journal_mode=WAL&_foreign_keys=ON&_synchronous=NORMAL&_busy_timeout=5000", dbPath)
 	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
@@ -80,10 +81,20 @@ func (m *SQLiteManager) GetConnection(entityID string) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to apply pragmas: %w", err)
 	}
 
-	if err := m.migrator.RunMigrations(db); err != nil {
+	// Usar mutex específico para migrações para evitar race conditions
+	m.migrationMu.Lock()
+	err = m.migrator.RunMigrations(db)
+	m.migrationMu.Unlock()
+
+	if err != nil {
 		db.Close()
 		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
+
+	// Configurar pool de conexões
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxLifetime(5 * time.Minute)
 
 	m.connections[entityID] = db
 	return db, nil
@@ -96,6 +107,7 @@ func (m *SQLiteManager) applyPragmas(db *sql.DB) error {
 		"PRAGMA synchronous=NORMAL",
 		"PRAGMA temp_store=MEMORY",
 		"PRAGMA mmap_size=268435456",
+		"PRAGMA busy_timeout=5000",
 	}
 
 	for _, pragma := range pragmas {
@@ -141,7 +153,7 @@ func (m *SQLiteManager) GetCentralConnection() (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to create data directory for central db: %w", err)
 	}
 
-	dsn := fmt.Sprintf("%s?_journal_mode=WAL&_foreign_keys=ON&_synchronous=NORMAL", dbPath)
+	dsn := fmt.Sprintf("%s?_journal_mode=WAL&_foreign_keys=ON&_synchronous=NORMAL&_busy_timeout=5000", dbPath)
 	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open central database: %w", err)
@@ -157,7 +169,12 @@ func (m *SQLiteManager) GetCentralConnection() (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to apply pragmas to central database: %w", err)
 	}
 
-	if err := m.centralMigrator.RunMigrations(db); err != nil {
+	// Usar mutex específico para migrações para evitar race conditions
+	m.migrationMu.Lock()
+	err = m.centralMigrator.RunMigrations(db)
+	m.migrationMu.Unlock()
+
+	if err != nil {
 		db.Close()
 		return nil, fmt.Errorf("failed to run central migrations: %w", err)
 	}

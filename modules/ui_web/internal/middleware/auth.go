@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -47,6 +48,7 @@ func (m *AuthMiddleware) Handler(next http.Handler) http.Handler {
 		if !isPublic {
 			entityID, valid := m.authHandler.GetCurrentEntity(r)
 			if !valid {
+				fmt.Printf("[AUTH MIDDLEWARE] Not valid session for path: %s\n", r.URL.Path)
 				// Se for uma requisição AJAX/HTMX, retornar erro JSON
 				if r.Header.Get("HX-Request") == "true" {
 					w.Header().Set("Content-Type", "application/json")
@@ -58,6 +60,7 @@ func (m *AuthMiddleware) Handler(next http.Handler) http.Handler {
 				http.Redirect(w, r, "/login", http.StatusFound)
 				return
 			}
+			fmt.Printf("[AUTH MIDDLEWARE] Valid session for path: %s, entityID: %s\n", r.URL.Path, entityID)
 
 			// Adicionar entity_id à query string se não estiver presente
 			// Isso garante que todos os handlers recebam o entity_id correto

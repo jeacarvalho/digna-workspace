@@ -201,12 +201,14 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger, 
 	empreendimentoAuthMiddleware := middleware.NewEmpreendimentoAuthMiddleware(authHandler)
 	loggerMiddleware := middleware.NewLoggerMiddleware(logger)
 
-	// Encadeamento: auth -> accountant/empreendimento auth -> logging -> mux
-	// Primeiro verifica autenticação geral, depois tipo de usuário
+	// Encadeamento: auth -> logging -> accountant/empreendimento auth -> mux
+	// Primeiro verifica autenticação geral, depois logging, depois tipo de usuário
+	// A ORDEM É CRÍTICA: accountantAuth deve vir ANTES de empreendimentoAuth
+	// para evitar que contadores sejam redirecionados para /accountant/dashboard em loop
 	handler := authMiddleware.Handler(
-		accountantAuthMiddleware.Handler(
-			empreendimentoAuthMiddleware.Handler(
-				loggerMiddleware.Handler(mux),
+		loggerMiddleware.Handler(
+			accountantAuthMiddleware.Handler(
+				empreendimentoAuthMiddleware.Handler(mux),
 			),
 		),
 	)
