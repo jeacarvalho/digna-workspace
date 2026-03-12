@@ -102,7 +102,6 @@ if [ "$COMPLETED_TASKS" -gt 0 ]; then
         echo "✅ Boa cobertura de testes ($TEST_COVERAGE_PERCENT%)"
     fi
 fi
-fi
 
 # Calcular duração da sessão
 END_TIME=$(date +%s)

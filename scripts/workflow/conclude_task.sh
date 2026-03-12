@@ -239,6 +239,35 @@ else
     echo "   ℹ️  Script de validação de testes não encontrado"
 fi
 
+# 1.7 VALIDAÇÃO CRÍTICA: Requisitos específicos do prompt
+echo "7. Validação de requisitos específicos do prompt..."
+if [ -f "./scripts/validate_task_requirements.sh" ]; then
+    echo "   Executando validação de requisitos..."
+    REQUIREMENTS_OUTPUT=$(./scripts/validate_task_requirements.sh --task=${TASK_ID} 2>&1 | tail -30)
+    REQUIREMENTS_EXIT=$?
+    
+    echo "$REQUIREMENTS_OUTPUT"
+    
+    if [ "$REQUIREMENTS_EXIT" -ne 0 ]; then
+        echo "   🚨 VALIDAÇÃO DE REQUISITOS FALHOU!"
+        echo "   A tarefa NÃO atende aos requisitos específicos do prompt"
+        
+        # Se é tarefa de correção de bug, FAIL HARD
+        if echo "$TASK_NAME" | grep -qi "corrigir\|bug\|erro\|fix"; then
+            echo "   ❌❌❌ TAREFA DE CORREÇÃO DE BUG - NÃO PODE SER CONCLUÍDA ❌❌❌"
+            echo "   Motivo: Requisitos críticos não atendidos"
+            VALIDATION_PASSED=false
+        else
+            echo "   ⚠️  Requisitos não atendidos (permitindo com aviso)"
+        fi
+    else
+        echo "   ✅ Validação de requisitos PASSOU"
+    fi
+else
+    echo "   ℹ️  Script de validação de requisitos não encontrado"
+    echo "   💡 Crie: ./scripts/validate_task_requirements.sh para validação robusta"
+fi
+
 if [ "$VALIDATION_PASSED" = false ]; then
     echo ""
     echo "🚨 VALIDAÇÃO FALHOU!"

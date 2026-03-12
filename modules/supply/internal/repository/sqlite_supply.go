@@ -17,21 +17,36 @@ type SQLiteSupplyRepository struct {
 }
 
 func NewSQLiteSupplyRepository(lm lifecycle.LifecycleManager) *SQLiteSupplyRepository {
-	return &SQLiteSupplyRepository{
+	repo := &SQLiteSupplyRepository{
 		lifecycleManager: lm,
 		dbCache:          make(map[string]*sql.DB),
 	}
+
+	// Se o lifecycle manager implementa uma interface de notificação de fechamento,
+	// poderíamos registrar um callback aqui
+	// Por enquanto, confiamos no PingContext para detectar conexões fechadas
+
+	return repo
+}
+
+// ClearCache limpa o cache de conexões (útil para testes ou quando conexões são fechadas externamente)
+func (r *SQLiteSupplyRepository) ClearCache() {
+	// Nota: não fechamos as conexões aqui, apenas limpamos o cache
+	// O lifecycle manager é responsável por fechar as conexões
+	r.dbCache = make(map[string]*sql.DB)
 }
 
 func (r *SQLiteSupplyRepository) initDB(ctx context.Context, entityID string) (*sql.DB, error) {
 	// Verificar cache primeiro
 	if db, ok := r.dbCache[entityID]; ok {
 		// Verificar se a conexão ainda está válida
-		if err := db.PingContext(ctx); err == nil {
+		if pingErr := db.PingContext(ctx); pingErr == nil {
 			return db, nil
+		} else {
+			// Conexão inválida, remover do cache
+			fmt.Printf("[DEBUG] Connection for entity %s is invalid (ping failed): %v\n", entityID, pingErr)
+			delete(r.dbCache, entityID)
 		}
-		// Conexão inválida, remover do cache
-		delete(r.dbCache, entityID)
 	}
 
 	// Obter nova conexão

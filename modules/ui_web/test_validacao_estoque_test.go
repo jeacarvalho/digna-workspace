@@ -263,7 +263,11 @@ func TestInterface_Completa(t *testing.T) {
 		{"Cash", func() (interface{}, error) { return handler.NewCashHandler(lifecycleMgr) }},
 		{"Supply", func() (interface{}, error) { return handler.NewSupplyHandler(lifecycleMgr) }},
 		{"Budget", func() (interface{}, error) { return handler.NewBudgetHandler(lifecycleMgr) }},
-		{"Accountant", func() (interface{}, error) { return handler.NewAccountantHandler(lifecycleMgr) }},
+		{"Accountant", func() (interface{}, error) {
+			// Criar mock do AuthHandler para o teste
+			authHandler := handler.NewMockAuthHandler(lifecycleMgr)
+			return handler.NewAccountantHandler(lifecycleMgr, authHandler)
+		}},
 	}
 
 	for _, h := range handlers {
