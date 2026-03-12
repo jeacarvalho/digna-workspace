@@ -13,61 +13,58 @@ import (
 
 type SQLiteSupplyRepository struct {
 	lifecycleManager lifecycle.LifecycleManager
-	dbCache          map[string]*sql.DB // Cache de conexões por entityID
 }
 
 func NewSQLiteSupplyRepository(lm lifecycle.LifecycleManager) *SQLiteSupplyRepository {
-	repo := &SQLiteSupplyRepository{
+	return &SQLiteSupplyRepository{
 		lifecycleManager: lm,
-		dbCache:          make(map[string]*sql.DB),
 	}
-
-	// Se o lifecycle manager implementa uma interface de notificação de fechamento,
-	// poderíamos registrar um callback aqui
-	// Por enquanto, confiamos no PingContext para detectar conexões fechadas
-
-	return repo
-}
-
-// ClearCache limpa o cache de conexões (útil para testes ou quando conexões são fechadas externamente)
-func (r *SQLiteSupplyRepository) ClearCache() {
-	// Nota: não fechamos as conexões aqui, apenas limpamos o cache
-	// O lifecycle manager é responsável por fechar as conexões
-	r.dbCache = make(map[string]*sql.DB)
 }
 
 func (r *SQLiteSupplyRepository) initDB(ctx context.Context, entityID string) (*sql.DB, error) {
-	// Verificar cache primeiro
-	if db, ok := r.dbCache[entityID]; ok {
-		// Verificar se a conexão ainda está válida
-		if pingErr := db.PingContext(ctx); pingErr == nil {
-			return db, nil
-		} else {
-			// Conexão inválida, remover do cache
-			fmt.Printf("[DEBUG] Connection for entity %s is invalid (ping failed): %v\n", entityID, pingErr)
-			delete(r.dbCache, entityID)
-		}
-	}
-
-	// Obter nova conexão
+	// Obter conexão do lifecycle manager (que já faz caching)
+	fmt.Printf("[DEBUG] initDB: Getting connection for entity %s\n", entityID)
 	db, err := r.lifecycleManager.GetConnection(entityID)
 	if err != nil {
+		fmt.Printf("[DEBUG] initDB: Error getting connection: %v\n", err)
 		return nil, fmt.Errorf("failed to get database connection: %w", err)
 	}
+	fmt.Printf("[DEBUG] initDB: Got connection %p for entity %s\n", db, entityID)
 
-	// Verificar se a conexão está válida
-	if err := db.PingContext(ctx); err != nil {
-		// Não fechar aqui - deixar o lifecycle manager gerenciar
-		return nil, fmt.Errorf("database connection is closed: %w", err)
+	// Verificar se a conexão está válida (usar Ping() sem contexto para evitar falsos positivos)
+	fmt.Printf("[DEBUG] initDB: Pinging connection for entity %s\n", entityID)
+	if err := db.Ping(); err != nil {
+		fmt.Printf("[DEBUG] initDB: Ping failed: %v. Connection might be closed, will try to get new one.\n", err)
+
+		// Tentar remover a conexão problemática do cache do lifecycle manager
+		fmt.Printf("[DEBUG] initDB: Closing problematic connection for entity %s\n", entityID)
+		if closeErr := r.lifecycleManager.CloseConnection(entityID); closeErr != nil {
+			fmt.Printf("[DEBUG] initDB: Error closing connection: %v\n", closeErr)
+		}
+
+		// Obter nova conexão (agora o lifecycle manager criará uma nova)
+		fmt.Printf("[DEBUG] initDB: Requesting new connection for entity %s\n", entityID)
+		db, err = r.lifecycleManager.GetConnection(entityID)
+		if err != nil {
+			fmt.Printf("[DEBUG] initDB: Error getting new connection: %v\n", err)
+			return nil, fmt.Errorf("failed to get new database connection after ping failure: %w", err)
+		}
+
+		// Verificar a nova conexão
+		fmt.Printf("[DEBUG] initDB: Pinging new connection for entity %s\n", entityID)
+		if err := db.Ping(); err != nil {
+			fmt.Printf("[DEBUG] initDB: New connection also failed ping: %v\n", err)
+			return nil, fmt.Errorf("new database connection also failed: %w", err)
+		}
+		fmt.Printf("[DEBUG] initDB: New connection ping successful for entity %s\n", entityID)
+	} else {
+		fmt.Printf("[DEBUG] initDB: Ping successful for entity %s\n", entityID)
 	}
 
-	// Executar migrações apenas uma vez por conexão
+	// Executar migrações se necessário
 	if err := r.runMigrations(db); err != nil {
 		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
-
-	// Armazenar no cache
-	r.dbCache[entityID] = db
 
 	return db, nil
 }
