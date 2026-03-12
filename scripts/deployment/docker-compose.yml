@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   digna:
-    build: .
+    build:
+      context: ../..
+      dockerfile: scripts/deployment/Dockerfile
     container_name: digna-app
     restart: unless-stopped
     ports:
@@ -13,8 +15,8 @@ services:
       - DIGNA_LOG_LEVEL=${DIGNA_LOG_LEVEL:-info}
     volumes:
       - digna_data:${DIGNA_DATA_DIR:-/var/lib/digna/data}
-      - ./modules/ui_web/templates:/app/templates:ro
-      - ./modules/ui_web/static:/app/static:ro
+      - ../../modules/ui_web/templates:/app/templates:ro
+      - ../../modules/ui_web/static:/app/static:ro
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${DIGNA_PORT:-8090}/health"]
       interval: 30s
