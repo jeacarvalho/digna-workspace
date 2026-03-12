@@ -14,21 +14,21 @@
 git clone [repositório]
 cd digna-workspace
 
-# 2. Iniciar sessão de desenvolvimento (✅ link simbólico)
-./start_session.sh
+# 2. Iniciar sessão de desenvolvimento (com o uso de agentes. Tenho usado opencode)
+orientar o agente: run ./start_session.sh
 
 # 3. Criar primeira tarefa (✅ link simbólico)
-./create_task.sh "Nome da Tarefa" [módulo]
+run ./create_task.sh "Nome da Tarefa" [módulo]
 
 # 4. Seguir fluxo completo (recomendado)
-./process_task.sh --task=[ID] --checklist    # ✅ link
-./process_task.sh --task=[ID] --plan         # ✅ link  
-./process_task.sh --task=[ID] --execute      # ✅ link
-./conclude_task.sh --task=[ID] "Aprendizados" # ✅ link
-./end_session.sh                             # ✅ link
+run ./process_task.sh --task=[ID] --checklist    # ✅ link
+run ./process_task.sh --task=[ID] --plan         # ✅ link  
+run ./process_task.sh --task=[ID] --execute      # ✅ link
+run ./conclude_task.sh --task=[ID] "Aprendizados" # ✅ link
+run ./end_session.sh                             # ✅ link
 
 # 5. Executar testes (✅ link simbólico)
-./run_tests.sh
+run ./run_tests.sh
 ```
 
 ### Para Usuários/Implementadores:
