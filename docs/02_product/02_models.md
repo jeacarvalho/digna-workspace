@@ -1,44 +1,20 @@
-
-#### title: Modelos de Domínio e Dados
-status: implemented
-version: 1.3
-last_updated: 2026-03-08
-
-### Modelos - Projeto Digna
-**Projeto:** Sistema de Gestão Contábil e Pedagógica para Economia Solidária
+###### title: Modelos de Domínio e Dados
+status: implemented version: 1.4 last_updated: 2026-03-13
+##### Modelos - Projeto Digna
+**Projeto:**  Sistema de Gestão Contábil e Pedagógica para Economia Solidária
 
 --------------------------------------------------------------------------------
 
-#### 1. Domain Model (Modelo de Domínio)
+###### 1. Domain Model (Modelo de Domínio)
+O domínio do Digna reflete os princípios da autogestão e da contabilidade invisível, priorizando as relações humanas sobre o capital financeiro, mas agora atuando também como  **ponte institucional**  para a conformidade legal.
 
-O domínio do Digna reflete os princípios da autogestão e da contabilidade invisível, priorizando as relações humanas sobre o capital financeiro, mas agora atuando também como **ponte institucional** para a conformidade legal.
-
-##### 1.1 Entidades Principais
+###### 1.1 Entidades Principais
 
 ###### Enterprise (Empreendimento de Economia Solidária - EES)
 Representa o coletivo produtivo. Pode transitar gradualmente por três estados, respeitando o tempo político do grupo:
-*   **DREAM (Sonho):** Grupo informal, focado na união produtiva inicial.
-*   **INCUBATED (Incubado):** Em processo de estruturação, recebendo apoio pedagógico (ITCPs, ONGs).
-*   **FORMALIZED (Formalizado):** Cooperativa ou Associação com CNPJ e estatuto base (Pronto para CADSOL e obrigações fiscais).
-
-###### Member (Trabalhador/Cooperado)
-Pessoa participante do empreendimento. Suas horas dedicadas são o lastro do capital social (Princípio da Primazia do Trabalho).
-
-###### SocialAccountant (Contador Social) [NOVO]
-Entidade parceira (externa). Não é dona do dado, mas possui permissão delegada de leitura para auditar a conformidade (ITG 2002) e extrair os balancetes através de um Painel Multi-tenant.
-
-###### EnterpriseAccountant (Vínculo Contábil e Responsabilidade Técnica) [NOVO]**
-Entidade de relacionamento temporal que consolida o **RF-12**. Garante o "Exit Power" da cooperativa e protege a responsabilidade do contador.
-*   `ID`: Identificador único (UUID).
-*   `EnterpriseID`: Referência ao Empreendimento (Tenant).
-*   `AccountantID`: Referência ao Contador Social.
-*   `Status`: `ACTIVE` (Apenas 1 permitido no tempo presente) ou `INACTIVE`.
-*   `StartDate`: Data de início da responsabilidade técnica.
-*   `EndDate`: Data do encerramento (Nulo se for o contador atual).
-*   `DelegatedBy`: ID do membro coordenador que aprovou o vínculo (Auditoria).
-
-###### Transaction (Operação Comercial)
-Evento econômico do dia a dia (venda na feira, compra de insumo). Traduzido internamente para partidas dobradas.
+*   **DREAM (Sonho):**  Grupo informal, focado na união produtiva inicial.
+*   **INCUBATED (Incubado):**  Em processo de estruturação, recebendo apoio pedagógico (ITCPs, ONGs).
+*   **FORMALIZED (Formalizado):**  Cooperativa ou Associação com CNPJ e estatuto base (Pronto para CADSOL e obrigações fiscais).
 
 ###### WorkLog (Registro ITG 2002)
 Registro de trabalho cooperativo. Converte o suor em Capital Social de Trabalho (mensurado em minutos).
@@ -46,100 +22,58 @@ Registro de trabalho cooperativo. Converte o suor em Capital Social de Trabalho 
 ###### Decision (Decisão Democrática)
 Decisão coletiva tomada e registrada em Assembleia. Base para a geração das Atas em Markdown (CADSOL).
 
-###### LegalDocument (Dossiê CADSOL)**
-Agrupamento das `Decisions` exportado em formato Markdown/PDF para fins legais, comprovando a gestão democrática perante o Estado.
-
+###### LegalDocument (Dossiê CADSOL e Atas)
+*   **Camada Cotidiana:** O livro de atas oficial do grupo. Agrupamento das decisões exportado para provar que a gestão é democrática. Com a nova atualização, o presidente assina pelo celular com a senha oficial do Gov.br, sem precisar pisar no cartório, e o voto secreto de cada um é garantido pelo sistema.
+*   **Camada Técnica:** Agrupamento das `Decisions` exportado em formato Markdown/PDF para fins legais, comprovando a gestão democrática perante o Estado. O sistema agora supera o mero uso de Hash SHA256 integrando Assinatura Eletrônica Avançada/Qualificada (ICP-Brasil/Gov.br) para a mesa diretora e assegurando a anonimização em votações (IN DREI nº 79/2020 e Lei nº 14.063/2020).
 
 ###### Fund (Fundos Obrigatórios)
 Reservas estatutárias e legais blindadas pelo sistema (Ex: Reserva Legal e FATES).
 
-###### FiscalBatch (Lote Fiscal) [NOVO]
-Conjunto imutável de transações agregadas e exportadas para o formato exigido pela Receita Federal (ex: SPED) ou softwares de escrituração contábil externos.
+###### EnterpriseAccountant (Vínculo Contábil Temporal) [NOVO]
+*   **Camada Cotidiana:** A "chave temporária" que a cooperativa empresta para o contador social arrumar a casa, podendo ser recolhida a qualquer hora.
+*   **Camada Técnica:** Relacionamento N:N que estabelece a delegação de acesso temporal entre um `Enterprise` e um Contador parceiro. Atua como um "Filtro de Vigência", liberando acesso ao painel unicamente em modo `Read-Only` para os períodos fiscais previamente autorizados pela autogestão.
 
-##### 1.2 Value Objects
+###### TaxCompliance & ReinfEvent [NOVO]
+*   **Camada Cotidiana:** O mensageiro silencioso do aplicativo. Ele avisa os robôs da Receita Federal sobre pagamentos de frete e serviços para a cooperativa não ser multada, e garante que o dinheiro do "Ato Cooperativo" não sofra a mesma mordida de imposto das grandes empresas.
+*   **Camada Técnica:** Motor de geração de XMLs de retenção (assinados via certificado A1/A3) e envio síncrono/assíncrono para Web Services da EFD-Reinf (ex: evento de fechamento R-2099) para alimentar a DCTFWeb. Detém a inteligência contábil de expurgar as receitas de Atos Cooperativos na composição do Bloco M da ECF (e-Lalur/e-Lacs), blindando a isenção prevista na Lei 5.764/71 e LC 214/2025.
 
-| Value Object | Formato Técnico | Justificativa Sociotécnica |
-| ------ | ------ | ------ |
-| **Money** | `int64` (centavos) | Evita erros de arredondamento capitalista (IEEE 754). Garante exatidão total para o trabalhador. |
-| **Time/Labor** | `int64` (minutos) | Unidade de medida do Capital Social. |
-| **AccountCode**| `string` (ex: 1.1.01)| Padronização invisível ao usuário, usada para tradução fiscal. |
-| **Period** | `YYYY-MM` | Ciclo contábil e de prestação de contas. |
-
---------------------------------------------------------------------------------
-
-#### 2. Data Model (Schema v1)
-
-O banco de dados é instanciado fisicamente de forma isolada por `Enterprise` (Soberania do Dado local). 
-*Nota Arquitetural:* O Painel do Contador Social **não possui** banco de transações próprio; ele atua apenas consumindo dados em modo de leitura (Read-Only) dos micro-databases autorizados. E como um contador social pode estar cuidando de várias entidades, as funcionalidades a ele relacionadas devem estar preparadas para pesquisar em diversos db sqlite
-
-    TABELAS PRINCIPAIS (SQLite)
-    
-    [ accounts ]          --> Plano de contas hierárquico (Padrão ITG 2002)
-    [ entries ]           --> Lançamentos contábeis (O evento principal)
-    [ postings ]          --> Partidas dobradas (Débito e Crédito associados à Entry)
-    [ work_logs ]         --> Tabela de valoração social (Registro de minutos trabalhados)
-    [ decisions_log ]     --> Registro de governança em Assembleia (Gera a Ata)
-    [ sync_metadata ]     --> Delta tracking para resiliência Offline-First
-    [ fiscal_exports ]    --> [NOVO] Log de extrações SPED realizadas pelo Contador Social (evita envios duplicados)
+###### SanitaryDossier (MTSE) [NOVO]
+*   **Camada Cotidiana:** O gerador automatizado do "caderno da fábrica", ajudando a pequena agroindústria (queijaria, casa de mel, pescados) a desenhar sua planta e procedimentos de higiene para conquistar o selo de venda oficial sem precisar de consultorias caras.
+*   **Camada Técnica:** Estrutura de dados que parametriza fluxogramas de maquinário, capacidade diária e potabilidade de água, exportando automaticamente o Memorial Técnico Sanitário de Estabelecimento (MTSE) em conformidade estrita com o RIISPOA (Portaria MAPA nº 393/2021) para peticionamento no sistema SEI.
 
 --------------------------------------------------------------------------------
 
-#### 3. Algoritmos de Negócio e Governança
+###### 2. Data Model (Schema v1)
+O banco de dados é instanciado fisicamente de forma isolada por Enterprise (Soberania do Dado local).  *Nota Arquitetural:*  O Painel do Contador Social  **não possui**  banco de transações próprio; ele atua apenas consumindo dados em modo de leitura (Read-Only) dos micro-databases autorizados. E como um contador social pode estar cuidando de várias entidades, as funcionalidades a ele relacionadas devem estar preparadas para pesquisar em diversos db sqlite utilizando o filtro do `EnterpriseAccountant`.
 
-##### 3.1 Algoritmo de Rateio Social (Transparência Algorítmica Visual)
-**Objetivo:** Distribuir o excedente financeiro de forma justa, baseada na Primazia do Trabalho.
-**Regra Sociotécnica:** O cálculo não deve ser obscuro. O algoritmo DEVE emitir uma saída (gráfico/tabela) didática para ser lida em Assembleia Geral.
-**Entrada:** `totalSurplus` (int64), `memberHours` (Mapa de member_id -> minutos).
+--------------------------------------------------------------------------------
 
-    Exemplo Didático Gerado pelo Algoritmo para a Assembleia:
-    Sobras Totais do Mês: R$ 100,00
-    --------------------------------------------------------------
-    Trabalhador   | Suor (Minutos) | % do Total | Valor a Receber
-    --------------------------------------------------------------
-    Maria (001)   | 600 min        | 66.67%     | R$ 66,66
-    João  (002)   | 300 min        | 33.33%     | R$ 33,33
-    --------------------------------------------------------------
+###### 3. Algoritmos de Negócio e Compliance
 
-##### 3.2 Algoritmo de Reservas Obrigatórias (Segregação de Fundos)
-**Objetivo:** Garantir a conformidade legal (Lei Paul Singer) e a sustentabilidade de longo prazo antes de qualquer rateio.
-**Processo:** 
-1. Apura o resultado positivo do período.
-2. Bloqueia 10% para o Fundo de Reserva Legal.
-3. Bloqueia 5% para o FATES (Assistência Técnica Educacional).
-4. Libera o saldo (85%) para a lógica do Algoritmo 3.1.
-
-##### 3.3 Algoritmo de Partidas Dobradas Invisíveis
-**Objetivo:** Validar a integridade financeira (Soma Zero).
-**Processo:** `soma(débitos) + soma(créditos) == 0`. Acionado silenciosamente no backend a cada ação comercial (venda/compra) feita no PDV.
-
-##### 3.4 Algoritmo de Formalização Gradual
-**Objetivo:** Avaliar a maturidade institucional para permitir a transição `DREAM` -> `FORMALIZED`.
+###### 3.4 Algoritmo de Formalização Gradual e Integração CADSOL
+**Objetivo:**  Avaliar a maturidade institucional para permitir a transição DREAM -> FORMALIZED.
 **Critérios Automatizados:**
-*   Mínimo de 3 registros de `Decision` (Assembleias realizadas provando autogestão).
-*   Mínimo de 1 membro ativo com histórico de `WorkLog`.
-*   Criação automática do Dossiê Hash SHA256.
+*  Mínimo de 3 registros de Decision (Assembleias realizadas provando autogestão).
+*  Mínimo de 1 membro ativo com histórico de WorkLog.
+*  Criação automática do Dossiê Hash SHA256 com validação de Assinaturas ICP-Brasil/Gov.br.
+*  **Integração Automática (MTE):** Consumo via integração (módulo `integrations`) das futuras APIs do SINAES/CADSOL (Decreto nº 12.784/2025), substituindo envios em papel pela interoperabilidade digital assim que o grupo atingir o estágio FORMALIZED.
 
-##### 3.5 Algoritmo de Tradução Fiscal (Ponte do Contador) [NOVO]
-**Objetivo:** Converter a contabilidade social gerada invisivelmente pelo produtor em linguagem de conformidade estatal (SPED/Lotes Fiscais).
-**Processo:**
-1. Painel do Contador solicita dados de um `Period` fechado.
-2. O algoritmo compila todas as `entries` de soma zero.
+###### 3.5 Algoritmo de Tradução Fiscal (Ponte do Contador) [NOVO]
+**Objetivo:**  Converter a contabilidade social gerada invisivelmente pelo produtor em linguagem de conformidade estatal (SPED/Lotes Fiscais/Reinf).  **Processo:**
+1. Painel do Contador solicita dados de um Period fechado via filtro temporal `EnterpriseAccountant`.
+2. O algoritmo compila todas as entries de soma zero (respeitando a ITG 2002).
 3. Mapeia as contas locais amigáveis ("Gaveta") para o Plano de Contas Referencial da Receita Federal.
-4. Gera o pacote CSV/SPED e salva o evento de exportação na tabela `fiscal_exports`.
+4. **Isolamento do Ato Cooperativo:** O sistema segrega as transações com terceiros não cooperados (destinando sobras ao FATES) e estrutura a base de cálculo tributável. As receitas do trabalho intercooperativo são expurgadas automaticamente para preenchimento na Parte A do e-Lalur/e-Lacs (Bloco M da ECF).
+5. Gera o pacote CSV/SPED/XMLs da EFD-Reinf e salva o evento de exportação na tabela fiscal_exports.
 
 --------------------------------------------------------------------------------
 
-#### 4. Seed Data (Carga Inicial Padrão)
-
+###### 4. Seed Data (Carga Inicial Padrão)
 Toda nova base SQLite de um EES nasce com este plano de contas enxuto e adaptado:
-
 | ID | Código | Nome Amigável | Natureza Contábil (Invisível) | Mapeamento Fiscal [NOVO] |
-| -- | ------ | ------------- | ----------------------------- | ------------------------ |
-| 1  | 1.1.01 | Gaveta / Caixa| ASSET (Ativo)                 | Disponibilidades (Ativo) |
-| 2  | 3.1.01 | Nossas Vendas | REVENUE (Receita)             | Receita Bruta            |
-| 3  | 1.1.02 | Banco / Conta | ASSET (Ativo)                 | Contas Bancárias         |
-| 4  | 2.1.01 | Quem Fornece  | LIABILITY (Passivo)           | Fornecedores a Pagar     |
-| 5  | 3.2.01 | Fundo FATES   | EQUITY (Patrimônio Líquido)   | Reservas Estatutárias    |
-```
-
-***
+| ------ | ------ | ------ | ------ | ------ |
+| 1 | 1.1.01 | Gaveta / Caixa | ASSET (Ativo) | Disponibilidades (Ativo) |
+| 2 | 3.1.01 | Nossas Vendas | REVENUE (Receita) | Receita Bruta |
+| 3 | 1.1.02 | Banco / Conta | ASSET (Ativo) | Contas Bancárias |
+| 4 | 2.1.01 | Quem Fornece | LIABILITY (Passivo) | Fornecedores a Pagar |
+| 5 | 3.2.01 | Fundo FATES | EQUITY (Patrimônio Líquido) | Reservas Estatutárias |

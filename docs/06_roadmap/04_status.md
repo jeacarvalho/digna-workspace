@@ -1,16 +1,14 @@
-# Status Atual - Digna
+### Status Atual - Digna
+**Última Atualização:**  2026-03-13 (Sessão de Adequação Estatal e Conformidade Digital)  
+**Fase Atual:**  Sprint 16 (Identidade Visual e Sistema 100% Funcional) ✅ COMPLETE  
+**Status:**  🟡  **SISTEMA OPERACIONAL - INICIANDO ADEQUAÇÃO ESTATAL**   
+**Próximo Marco:**  Adequação Estatal e Blindagem Digital (Marco 09) ANTES do Production Deploy
 
-**Última Atualização:** 2026-03-10 (Sessão de Normalização de Templates)
-**Fase Atual:** Sprint 16 (Identidade Visual e Sistema 100% Funcional) ✅ COMPLETE
-**Status:** 🟢 **SISTEMA 100% OPERACIONAL - ESTABILIZADO**
-**Próximo Marco:** Production Deploy (Marco 05) - PRONTO PARA IMPLANTAÇÃO
+--------------------------------------------------------------------------------
 
----
-
-## Phase Status Overview
-
+#### Phase Status Overview
 | Phase | Marco | Status | Conclusão |
-|-------|-------|--------|-----------|
+| ------ | ------ | ------ | ------ |
 | Concepção | Marco 00 | ✅ COMPLETE | 100% |
 | Foundation Setup | Marco 01 | ✅ COMPLETE | 100% |
 | Core Operations | Marco 02 | ✅ COMPLETE | 100% |
@@ -19,9 +17,20 @@
 | Integração e Aliança Contábil (Phase 2) | Marco 07 | ✅ COMPLETE | 100% |
 | Gestão de Compras e Estoque (Phase 3) | Marco 08 | ✅ COMPLETE | 100% |
 | Gestão Orçamentária e Planejamento Financeiro (Phase 3) | Marco 06 | ✅ COMPLETE | 100% |
+| **Adequação Estatal e Conformidade (Phase 2) [NOVO]** | **Marco 09** | 🟡 **EM DESENVOLVIMENTO** | **0%** |
 | Production Deploy | Marco 05 | 🟢 READY | 95% |
 
----
+--------------------------------------------------------------------------------
+
+#### 🏛️ Foco Atual: Adequação Estatal e Conformidade Digital [NOVO]
+*O projeto atingiu a maturidade operacional contábil (Soma Zero / int64) na Sprint 16 e foca agora na construção de pontes automáticas de conformidade institucional para proteger as EES antes de ir para a produção final.*
+
+*   **[Tributário] Blindagem do Ato Cooperativo:** Implementação do módulo `tax_compliance` para a mensageria de retenções (Web Services da EFD-Reinf) e o expurgo rigoroso de receitas de Atos Cooperativos na Parte A do e-Lalur/e-Lacs (Bloco M da ECF), evitando bitributação (Lei nº 5.764/71 e LC nº 214/2025).
+*   **[Sanitário] Emancipação Produtiva (MAPA):** Desenvolvimento do gerador automatizado de Memorial Técnico Sanitário (MTSE) no módulo `sanitary_compliance` para cumprimento da Portaria MAPA nº 393/2021.
+*   **[Governança] Assembleias Digitais:** Integração de APIs de Assinatura Qualificada Gov.br (Lei nº 14.063/2020) e algoritmo de anonimização de votos (IN DREI nº 79/2020) no `legal_facade`.
+*   **[Institucional] CADSOL Direto:** Consumo nativo de Web Services do MTE (Decreto nº 12.784/2025) para o registro automático de entidades.
+
+--------------------------------------------------------------------------------
 
 ## Sprint Status
 
