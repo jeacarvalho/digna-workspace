@@ -142,20 +142,20 @@ type SQLiteLedgerRepository struct {
 
 ## 5. Módulos Implementados e Sprints
 
-| Sprint | Módulo | Status | Testes |
-| ------ | ------ | ------ | ------ |
-| 01 | lifecycle | ✅ | 6/6 |
-| 02 | core_lume + pdv_ui | ✅ | 8/8 |
-| 03 | reporting + legal_facade | ✅ | 8/8 |
-| 04 | sync_engine | ✅ | 9/9 |
-| 05 | ui_web | ✅ | 9/9 |
-| 06 | cash_flow | ✅ | 3/3 |
-| 07 | DDD Refactoring | ✅ | 43/43 |
-| 08 | integrations | ✅ | 5/5 |
-| 09 | accountant_dashboard | ✅ | 8/8 |
-| 10 | member_management | ✅ | 19/19 |
-| 11 | formalization_e2e | ✅ | 5/5 |
-| 12 | accountant_dashboard_complete | ✅ | 8/8 |
+| Sprint | Módulo | Status | Testes | Observações |
+| ------ | ------ | ------ | ------ | ----------- |
+| 01 | lifecycle | ✅ | 6/6 | - |
+| 02 | core_lume + pdv_ui | ✅ | 8/8 | - |
+| 03 | reporting + legal_facade | ⚠️ | 8/8 | Funcionalidades básicas implementadas, modularização pendente |
+| 04 | sync_engine | ⚠️ | 9/9 | Funcionalidades básicas implementadas, UI e integração pendente |
+| 05 | ui_web | ✅ | 9/9 | - |
+| 06 | cash_flow | ✅ | 3/3 | - |
+| 07 | DDD Refactoring | ✅ | 43/43 | - |
+| 08 | integrations | ✅ | 5/5 | - |
+| 09 | accountant_dashboard | ✅ | 8/8 | - |
+| 10 | member_management | ⚠️ | 19/19 | **IMPLEMENTADO DE FORMA ESPALHADA** - Ver backlog para modularização |
+| 11 | formalization_e2e | ✅ | 5/5 | Implementado no módulo `legal_facade` |
+| 12 | accountant_dashboard_complete | ✅ | 8/8 | - |
 
 ### 5.1 integrations (Sprint 08) ✅
 **Responsabilidade:** Integrações externas governamentais.
@@ -170,6 +170,34 @@ type SQLiteLedgerRepository struct {
 - **Tradução Fiscal:** Mapeia as *Entries* geradas pelo Core Lume para os leiautes padrão da Receita Federal (SPED/CSV), acabando com o trabalho braçal de digitação do contador.
 - **Anti-Float:** Todos os valores monetários usam `int64`, sem `float`.
 - **Test Coverage:** Domain: 100%, Handler: 97.1%, Repository: 87.2%, Service: 91.3%, Public API: 26.7%
+
+### 5.3 Modularização Pendente ⚠️
+**Status:** Algumas funcionalidades foram implementadas de forma distribuída entre múltiplos módulos, violando o princípio SRP. O backlog de modularização está documentado em `docs/NEXT_STEPS.md`.
+
+#### Funcionalidades Espalhadas:
+
+**1. `member_management` (Sprint 10)**
+- **Localização atual:** Distribuído entre `core_lume` e `ui_web`
+- **Problema:** Domínio de membros em `core_lume`, UI em `ui_web` - sem módulo dedicado
+- **Solução planejada:** Criar módulo `member_management` separado
+- **Esforço estimado:** 2-3 dias
+
+**2. `reporting` (Sprint 03)**
+- **Localização atual:** Módulo `reporting` básico existe
+- **Problema:** Apenas cálculo de sobras implementado, falta UI e exportação
+- **Solução planejada:** Expandir com handlers no `ui_web` e exportação PDF/CSV/Excel
+- **Esforço estimado:** 2-3 dias
+
+**3. `sync_engine` (Sprint 04)**
+- **Localização atual:** Módulo `sync_engine` existe
+- **Problema:** Funcionalidades básicas implementadas, mas sem UI e integração com outros módulos
+- **Solução planejada:** Criar handlers no `ui_web` e integrar com `supply` e `distribution`
+- **Esforço estimado:** 2-3 dias
+
+**4. `formalization_e2e` (Sprint 11)**
+- **Localização atual:** Implementado no `legal_facade`
+- **Status:** ✅ Funcionalidade completa, apenas necessita de melhorias na UI
+- **Observação:** Não requer modularização, apenas integração melhorada
 
 --------------------------------------------------------------------------------
 

@@ -60,23 +60,67 @@ O **Projeto Digna** é um sistema completo de economia solidária desenvolvido e
 
 ## 🏗️ ARQUITETURA DO SISTEMA
 
-### Módulos Principais:
+### Módulos Implementados:
 ```
 modules/
 ├── core_lume/              # Domínio e serviços centrais
-│   ├── internal/domain/    # Entidades de domínio
+│   ├── internal/domain/    # Entidades de domínio (Member, Ledger, etc.)
 │   ├── internal/service/   # Serviços de aplicação
 │   └── internal/repository # Repositórios e interfaces
-├── ui_web/                 # Interface web
-│   ├── internal/handler/   # Handlers HTTP
+├── ui_web/                 # Interface web principal
+│   ├── internal/handler/   # Handlers HTTP (Member, Supply, Legal, etc.)
 │   ├── templates/          # Templates HTML (*_simple.html)
 │   └── main.go             # Ponto de entrada
 ├── legal_facade/           # Facade jurídica
-│   ├── internal/document/  # Geração de documentos
+│   ├── internal/document/  # Geração de documentos (Formalization, Statute)
 │   └── pkg/document/       # API pública
-└── [accountant_dashboard, budget, cash_flow, distribution, 
-     integrations, pdv_ui, supply, sync_engine]/
+├── lifecycle/              # Gerenciamento de ciclo de vida e banco central
+├── accountant_dashboard/   # Dashboard contábil
+├── budget/                 # Orçamento e planejamento
+├── cash_flow/              # Fluxo de caixa
+├── distribution/           # Distribuição de sobras
+├── integrations/           # Integrações externas
+├── pdv_ui/                 # Ponto de Venda (PDV)
+├── supply/                 # Compras e estoque
+├── reporting/              # Relatórios (⚠️ Implementação básica)
+├── sync_engine/            # Sincronização (⚠️ Implementação básica)
+└── integration_test/       # Testes de integração
 ```
+
+### ⚠️ Modularização Pendente:
+Algumas funcionalidades foram implementadas de forma distribuída e precisam ser modularizadas:
+
+**1. `member_management` (BACKLOG)**
+- **Status:** Funcionalidade espalhada entre `core_lume` (domínio) e `ui_web` (UI)
+- **Problema:** Não existe módulo dedicado - viola SRP
+- **Solução:** Criar módulo separado movendo:
+  - `core_lume/internal/domain/member.go` → `member_management/internal/domain/`
+  - `core_lume/internal/service/member_service.go` → `member_management/internal/service/`
+  - `ui_web/internal/handler/member_handler.go` → usar novo módulo
+- **Prioridade:** ALTA
+
+**2. `reporting` (BACKLOG)**
+- **Status:** Módulo existe mas com funcionalidade mínima
+- **Implementado:** Cálculo básico de sobras (`pkg/surplus/`)
+- **Faltando:** 
+  - Handlers no `ui_web` para relatórios
+  - Templates HTML
+  - Exportação PDF/CSV/Excel
+  - Relatórios específicos (mensal, anual, por membro)
+- **Prioridade:** MÉDIA
+
+**3. `sync_engine` (BACKLOG)**
+- **Status:** Módulo existe mas isolado
+- **Implementado:** Troca intercooperativa e rastreamento delta
+- **Faltando:**
+  - Handler no `ui_web` para interface
+  - Integração com outros módulos
+  - Sincronização bidirecional
+  - Conexão com serviços cloud
+- **Prioridade:** MÉDIA
+
+### 📋 Detalhes do Backlog:
+Ver `docs/NEXT_STEPS.md` para backlog completo de modularização.
 
 ### Padrões Técnicos:
 1. **Handlers HTTP:** Estendem `BaseHandler`, usam HTMX para interatividade

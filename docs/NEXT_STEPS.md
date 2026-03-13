@@ -1,7 +1,7 @@
 # 🎯 Próximos Passos - Projeto Digna
 
-**Última atualização:** 11/03/2026  
-**Status:** ⚠️ RF-12 85% COMPLETO (BLOQUEADO) | ✅ PROCESSO CORRIGIDO
+**Última atualização:** 13/03/2026  
+**Status:** ✅ DOCUMENTAÇÃO DE MODULARIZAÇÃO ATUALIZADA | ⚠️ RF-12 85% COMPLETO (BLOQUEADO) | ✅ PROCESSO CORRIGIDO
 
 ---
 
@@ -176,6 +176,239 @@ Escolha uma tarefa do backlog ou crie uma nova:
     - **Autenticação:** MFA (Multi-Factor Authentication)
     - **Auditoria:** Logs detalhados de todas as operações
     - **Conformidade:** Relatórios para órgãos reguladores
+
+---
+
+## 🏗️ BACKLOG DE MODULARIZAÇÃO
+
+**Criado em:** 13/03/2026  
+**Status:** Documentação atualizada, implementação pendente
+
+**Contexto:** Algumas funcionalidades foram implementadas de forma distribuída entre múltiplos módulos, violando o princípio SRP (Single Responsibility Principle). Esta seção documenta o plano de modularização para alinhar a implementação com a arquitetura Clean Architecture + DDD.
+
+### 📊 Resumo do Backlog
+
+| Módulo | Status Atual | Prioridade | Esforço Estimado | Status Documentação |
+|--------|--------------|------------|------------------|---------------------|
+| `member_management` | ⚠️ Espalhado | **ALTA** | 2-3 dias | ✅ Documentado |
+| `reporting` | ⚠️ Básico | MÉDIA | 2-3 dias | ✅ Documentado |
+| `sync_engine` | ⚠️ Isolado | MÉDIA | 2-3 dias | ✅ Documentado |
+
+### 1. Modularização: `member_management` (PRIORIDADE ALTA)
+
+**Problema:** Funcionalidade de gerenciamento de membros distribuída entre `core_lume` (domínio/serviço) e `ui_web` (UI com dados mock).
+
+**Localização Atual:**
+- `modules/core_lume/internal/domain/member.go` - Entidade Member
+- `modules/core_lume/internal/service/member_service.go` - Serviço
+- `modules/core_lume/internal/repository/member_test.go` - Testes
+- `modules/ui_web/internal/handler/member_handler.go` - Handler UI (usa dados mock)
+
+**Estrutura Planejada:**
+```
+modules/member_management/
+├── go.mod
+├── internal/
+│   ├── domain/member.go              # Mover de core_lume
+│   ├── service/member_service.go     # Mover de core_lume
+│   └── repository/
+│       ├── interfaces.go
+│       └── sqlite_member.go
+├── pkg/member/
+│   ├── api.go                        # API pública
+│   └── types.go                      # Tipos exportados
+└── README.md
+```
+
+**Tarefas:**
+1. ✅ **Documentar** - Estrutura e dependências (CONCLUÍDO 13/03/2026)
+2. ⏳ **Criar módulo** - Estrutura de diretórios e go.mod
+3. ⏳ **Mover arquivos** - Dominio, serviço, testes do core_lume
+4. ⏳ **Atualizar core_lume** - Remover arquivos movidos, atualizar imports
+5. ⏳ **Atualizar ui_web** - Usar novo módulo, remover dados mock
+6. ⏳ **Testar** - Testes unitários e E2E
+7. ⏳ **Validar** - Documentação e integração
+
+**Dependências:**
+- `lifecycle` (gerenciamento de banco)
+- `core_lume` (apenas tipos compartilhados se necessário)
+
+**Esforço Estimado:** 2-3 dias
+**Bloqueadores:** Nenhum (pode começar imediatamente)
+
+---
+
+### 2. Expansão: `reporting` (PRIORIDADE MÉDIA)
+
+**Problema:** Módulo existe com funcionalidade mínima (apenas cálculo de sobras), falta UI e exportação.
+
+**Localização Atual:**
+- `modules/reporting/internal/surplus/calculator.go` - Cálculo básico
+- `modules/reporting/pkg/surplus/surplus.go` - API pública
+
+**Funcionalidades Faltantes:**
+- Handler no `ui_web` para relatórios
+- Templates HTML (`templates/reporting_simple.html`)
+- Exportação em múltiplos formatos (PDF, CSV, Excel)
+- Relatórios específicos (mensal, anual, por membro)
+
+**Estrutura Planejada:**
+```
+modules/reporting/ (EXPANDIR)
+├── internal/
+│   ├── surplus/
+│   │   ├── calculator.go              # ✅ Já existe
+│   │   └── calculator_test.go         # ❌ Adicionar
+│   ├── reports/                       # ❌ Novo
+│   │   ├── monthly_report.go
+│   │   ├── annual_report.go
+│   │   └── member_report.go
+│   └── export/                        # ❌ Novo
+│       ├── pdf_exporter.go
+│       ├── csv_exporter.go
+│       └── excel_exporter.go
+└── pkg/reporting/                     # ❌ Expandir
+    ├── api.go
+    ├── types.go
+    └── export.go
+```
+
+**Tarefas:**
+1. ✅ **Documentar** - Estrutura e funcionalidades (CONCLUÍDO 13/03/2026)
+2. ⏳ **Expandir módulo** - Adicionar estrutura de reports e export
+3. ⏳ **Criar handler** - `ui_web/internal/handler/reporting_handler.go`
+4. ⏳ **Criar templates** - `ui_web/templates/reporting_simple.html`
+5. ⏳ **Implementar exportação** - PDF, CSV, Excel
+6. ⏳ **Criar relatórios** - Mensal, anual, por membro
+7. ⏳ **Testar** - Testes de exportação e relatórios
+
+**Dependências:**
+- `core_lume` (ledger e work)
+- `lifecycle` (acesso a dados)
+- `ui_web` (para handlers)
+
+**Esforço Estimado:** 2-3 dias
+**Bloqueadores:** Nenhum (pode começar imediatamente)
+
+---
+
+### 3. Integração: `sync_engine` (PRIORIDADE MÉDIA)
+
+**Problema:** Módulo isolado com funcionalidades básicas, sem UI e integração com outros módulos.
+
+**Localização Atual:**
+- `modules/sync_engine/internal/exchange/intercoop.go` - Troca intercooperativa
+- `modules/sync_engine/internal/tracker/sqlite_delta.go` - Rastreamento delta
+- `modules/sync_engine/internal/client/sync_repository.go` - Repositório
+- `modules/sync_engine/sprint04_test.go` - Testes
+
+**Funcionalidades Faltantes:**
+- Handler no `ui_web` para interface de sincronização
+- Integração com `supply` e `distribution`
+- Sincronização bidirecional
+- API para serviços externos (cloud)
+- Templates HTML
+
+**Estrutura Planejada:**
+```
+modules/sync_engine/ (EXPANDIR)
+├── internal/
+│   ├── exchange/intercoop.go        # ✅ Já existe
+│   ├── tracker/sqlite_delta.go      # ✅ Já existe
+│   ├── client/sync_repository.go    # ✅ Já existe
+│   ├── sync/                        # ❌ Novo
+│   │   ├── sync_service.go
+│   │   ├── cloud_sync.go
+│   │   └── conflict_resolver.go
+│   └── api/
+│       └── external_api.go          # ❌ Novo
+└── pkg/sync/
+    ├── api.go                       # ❌ Novo
+    └── types.go                     # ❌ Novo
+```
+
+**Tarefas:**
+1. ✅ **Documentar** - Estrutura e integrações (CONCLUÍDO 13/03/2026)
+2. ⏳ **Expandir módulo** - Adicionar serviços de sync
+3. ⏳ **Criar handler** - `ui_web/internal/handler/sync_handler.go`
+4. ⏳ **Criar templates** - `ui_web/templates/sync_simple.html`
+5. ⏳ **Implementar integração** - Com supply e distribution
+6. ⏳ **Implementar sync cloud** - Sincronização bidirecional
+7. ⏳ **Testar** - Testes de sincronização e conflitos
+
+**Dependências:**
+- `lifecycle` (acesso a dados)
+- `supply` (para integração)
+- `distribution` (para integração)
+- `ui_web` (para handlers)
+
+**Esforço Estimado:** 2-3 dias
+**Bloqueadores:** Nenhum (pode começar imediatamente)
+
+---
+
+### 📋 Sequência de Implementação Recomendada
+
+**Fase 1 (Semanas 1-2):** `member_management`
+- Maior impacto na arquitetura
+- Resolve violação SRP mais crítica
+- Facilita manutenção futura
+
+**Fase 2 (Semanas 3-4):** `reporting`
+- Valor de negócio alto (relatórios)
+- Não tem dependências críticas
+- Pode ser feito em paralelo se necessário
+
+**Fase 3 (Semanas 5-6):** `sync_engine`
+- Mais complexo (integrações)
+- Depende de entendimento dos outros módulos
+- Recomendado fazer por último
+
+### 🔄 Processo de Modularização
+
+Para cada módulo, seguir o processo:
+
+1. **Preparação**
+   - Criar branch específica
+   - Fazer backup dos arquivos
+   - Revisar documentação do plano
+
+2. **Criação da Estrutura**
+   - Criar diretórios (sem mover código ainda)
+   - Configurar go.mod
+   - Preparar imports
+
+3. **Migração**
+   - Mover arquivos conforme planejado
+   - Atualizar imports nos arquivos movidos
+   - Remover arquivos antigos
+
+4. **Integração**
+   - Atualizar módulos dependentes
+   - Configurar replace directives no go.work
+   - Resolver dependências cíclicas
+
+5. **Testes**
+   - Executar testes unitários
+   - Executar testes de integração
+   - Executar testes E2E
+
+6. **Validação**
+   - Verificar build de todos os módulos
+   - Documentar no `docs/learnings/`
+   - Atualizar `docs/NEXT_STEPS.md`
+
+7. **Merge**
+   - Code review
+   - Merge para main
+   - Tag de versão
+
+### 📚 Documentação Relacionada
+
+- `docs/03_architecture/01_system.md` - Arquitetura do sistema e tabela de sprints atualizada
+- `docs/README.md` - Estrutura de módulos atualizada
+- `docs/QUICK_REFERENCE.md` - Referência rápida de módulos
+- `docs/learnings/` - Aprendizados de implementações anteriores
 
 ---
 

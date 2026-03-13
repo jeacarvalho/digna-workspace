@@ -83,21 +83,69 @@ internal/handler/    # HTTP handlers (UI Web)
 
 ## 📁 **Estrutura de Módulos**
 
-### **Módulos Principais (100% testados)**
+### **Módulos Implementados**
+
+#### ✅ **Módulos Completos**
 ```
 modules/
 ├── accountant_dashboard/  # Dashboard contábil, SPED
 ├── budget/               # Orçamento, planejamento
 ├── cash_flow/           # Fluxo de caixa
-├── core_lume/           # Domínio central (Membros, Ledger)
+├── core_lume/           # Domínio central (Ledger, WorkLog)
+│   ├── internal/domain/member.go      # ⚠️ Será movido para member_management
+│   └── internal/service/member_service.go  # ⚠️ Será movido para member_management
 ├── distribution/        # Distribuição de sobras
 ├── integrations/        # Integrações externas
+├── legal_facade/        # Facade jurídica (Formalização, Documentos)
 ├── lifecycle/           # LifecycleManager, isolamento SQLite
 ├── pdv_ui/             # Ponto de Venda
 ├── supply/             # Compras, estoque, fornecedores
-├── sync_engine/        # Sincronização delta
 └── ui_web/             # Interface web principal
+    ├── internal/handler/member_handler.go    # ⚠️ Usará novo módulo member_management
+    ├── internal/handler/legal_handler.go      # Integrado com legal_facade
+    └── ...                                    # Outros handlers
 ```
+
+#### ⚠️ **Módulos em Desenvolvimento/Backlog**
+```
+modules/
+├── reporting/           # Relatórios (cálculo básico implementado)
+│   ├── internal/surplus/calculator.go       # ✅ Cálculo de sobras
+│   └── pkg/surplus/surplus.go               # ✅ API pública
+│   ⚠️ Faltando: Handlers UI, templates, exportação PDF/CSV/Excel
+│
+├── sync_engine/        # Sincronização (funcionalidades básicas)
+│   ├── internal/exchange/intercoop.go       # ✅ Troca intercooperativa
+│   ├── internal/tracker/sqlite_delta.go     # ✅ Rastreamento delta
+│   └── internal/client/sync_repository.go   # ✅ Repositório de sync
+│   ⚠️ Faltando: Handler UI, integração com outros módulos, sincronização cloud
+│
+└── member_management/  # ⚠️ NÃO EXISTE - Funcionalidade espalhada
+    📍 Localização atual:
+       - core_lume/internal/domain/member.go (domínio)
+       - core_lume/internal/service/member_service.go (serviço)
+       - ui_web/internal/handler/member_handler.go (UI com dados mock)
+    🔧 Ação: Criar módulo separado movendo arquivos do core_lume
+```
+
+#### 📋 **Módulos de Teste**
+```
+modules/
+├── integration_test/    # Testes de integração e E2E
+│   ├── journey_e2e_test.go          # Testes de jornada completa
+│   ├── integrations_e2e_test.go     # Testes de integração
+│   └── functional_test.go           # Testes funcionais
+```
+
+### **Estrutura de Módulos Backlog (Próximos Passos)**
+
+| Módulo | Status | Prioridade | Esforço Estimado |
+|--------|--------|------------|------------------|
+| `member_management` | ⚠️ Espalhado | **ALTA** | 2-3 dias |
+| `reporting` | ⚠️ Básico | MÉDIA | 2-3 dias |
+| `sync_engine` | ⚠️ Isolado | MÉDIA | 2-3 dias |
+
+**Ver:** `docs/NEXT_STEPS.md` para detalhes completos do backlog
 
 
 ---
@@ -376,3 +424,4 @@ accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, ba
 
 accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
 - **Sessão 20260312_141503:** 12/03/2026 - 1h2m, 2 tarefas (ver `docs/learnings/SESSION_20260312_141503_CONSOLIDATED.md`)
+- **Sessão unknown:** 13/03/2026 - 0h0m, 0 tarefas (ver `docs/learnings/SESSION_unknown_CONSOLIDATED.md`)
