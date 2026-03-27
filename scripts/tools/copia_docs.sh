@@ -16,7 +16,11 @@ echo ""
 
 TMP_LIST=$(mktemp)
 
-find "$SRC_DIR" -type f -name "*.md" | sort > "$TMP_LIST"
+# Apenas pastas começando com 01 a 07
+find "$SRC_DIR" -type f -name "*.md" \
+  -regextype posix-extended \
+  -regex ".*/0[1-7][^/]*/.*\.md" \
+  | sort > "$TMP_LIST"
 
 # limpa saída
 > "$OUTPUT_FILE"

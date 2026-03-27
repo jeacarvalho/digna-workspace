@@ -36,6 +36,21 @@ func NewPDVHandler(lm lifecycle.LifecycleManager) (*PDVHandler, error) {
 		"formatDate": func(t time.Time) string {
 			return t.Format("02/01/2006 15:04")
 		},
+		// dict creates a map from key-value pairs for template usage
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, fmt.Errorf("dict requires even number of arguments")
+			}
+			dict := make(map[string]interface{})
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, fmt.Errorf("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
 		// Adicionar funções necessárias para templates compartilhados
 		"getAlertStatusLabel": func(status string) string {
 			switch status {
@@ -85,7 +100,7 @@ func NewPDVHandler(lm lifecycle.LifecycleManager) (*PDVHandler, error) {
 	}
 
 	// Criar template simples para evitar problemas de cache
-	tmpl, err := template.New("pdv_simple.html").Funcs(funcMap).ParseFiles("templates/pdv_simple.html")
+	tmpl, err := template.New("pdv_simple.html").Funcs(funcMap).ParseFiles("templates/pdv_simple.html", "templates/components/help_tooltip.html")
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse pdv template: %w", err)
 	}

@@ -121,8 +121,8 @@
                 
                 <div class="flex items-center justify-between">
                     <div class="text-sm text-gray-500">
-                        <p>⚠️ <strong>Exit Power:</strong> Apenas você pode desativar este vínculo.</p>
-                        <p>⚠️ <strong>Cardinalidade:</strong> Se já houver um contador ativo, ele será desativado.</p>
+                        <p>⚠️ <strong>Exit Power</strong>{{template "help_tooltip" dict "Key" "exit_power" "Title" "Exit Power"}}: Apenas você pode desativar este vínculo.</p>
+                        <p>⚠️ <strong>Cardinalidade</strong>{{template "help_tooltip" dict "Key" "cardinalidade_temporal" "Title" "Cardinalidade Temporal"}}: Se já houver um contador ativo, ele será desativado.</p>
                     </div>
                     <button type="submit"
                             class="bg-digna-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">
@@ -197,15 +197,15 @@
             <h3 class="text-lg font-semibold text-digna-primary mb-3">Sobre a RF-12 - Gestão de Vínculo Contábil</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-blue-800 mb-2">Exit Power</h4>
+                    <h4 class="font-medium text-blue-800 mb-2">Exit Power {{template "help_tooltip" dict "Key" "exit_power" "Title" "Exit Power"}}</h4>
                     <p class="text-blue-700 text-sm">Apenas a cooperativa que criou o vínculo pode desativá-lo. Isso garante a soberania da cooperativa sobre suas relações contábeis.</p>
                 </div>
                 <div class="bg-green-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-green-800 mb-2">Cardinalidade Temporal</h4>
+                    <h4 class="font-medium text-green-800 mb-2">Cardinalidade Temporal {{template "help_tooltip" dict "Key" "cardinalidade_temporal" "Title" "Cardinalidade Temporal"}}</h4>
                     <p class="text-green-700 text-sm">Apenas um contador pode estar ativo por cooperativa por vez. Novos vínculos desativam automaticamente os anteriores.</p>
                 </div>
                 <div class="bg-orange-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-orange-800 mb-2">Filtragem Temporal</h4>
+                    <h4 class="font-medium text-orange-800 mb-2">Filtragem Temporal {{template "help_tooltip" dict "Key" "filtragem_temporal" "Title" "Filtragem Temporal"}}</h4>
                     <p class="text-orange-700 text-sm">Contadores inativos têm acesso apenas aos dados do período em que estiveram ativos. Isso protege a privacidade dos dados.</p>
                 </div>
                 <div class="bg-purple-50 p-4 rounded-lg">

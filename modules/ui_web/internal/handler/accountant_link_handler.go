@@ -5,9 +5,18 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/providentia/digna/lifecycle/pkg/lifecycle"
 )
+
+// formatEndDate formata data de término (pode ser nil)
+func formatEndDate(endDate *time.Time) string {
+	if endDate == nil {
+		return "-"
+	}
+	return endDate.Format("02/01/2006")
+}
 
 type AccountantLinkHandler struct {
 	*BaseHandler
@@ -45,11 +54,51 @@ func (h *AccountantLinkHandler) ListLinks(w http.ResponseWriter, r *http.Request
 	// Verificar tipo de usuário
 	userType, _ := h.authHandler.GetCurrentUserType(r)
 
+	// Obter links baseado no tipo de usuário
+	var links []*lifecycle.EnterpriseAccountantPublic
+	var err error
+
+	// Verificar se lifecycleManager implementa AccountantLinkService
+	accountantLinkService, ok := h.lifecycleManager.(lifecycle.AccountantLinkService)
+	if ok {
+		if userType == "empreendimento" {
+			// Empreendimento vê seus próprios links
+			links, err = accountantLinkService.GetEnterpriseLinks(entityID)
+		} else if userType == "contador" {
+			// Contador vê seus próprios links
+			links, err = accountantLinkService.GetAccountantLinks(entityID)
+		}
+		if err != nil {
+			fmt.Printf("[AccountantLinkHandler] Error getting links: %v\n", err)
+			// Continuar com lista vazia em caso de erro
+		}
+	}
+
+	// Converter links para formato de template
+	linkData := make([]map[string]interface{}, len(links))
+	for i, link := range links {
+		linkData[i] = map[string]interface{}{
+			"ID":           link.ID,
+			"EnterpriseID": link.EnterpriseID,
+			"AccountantID": link.AccountantID,
+			"Status":       link.Status,
+			"StartDate":    link.StartDate.Format("02/01/2006"),
+			"EndDate":      formatEndDate(link.EndDate),
+			"DelegatedBy":  link.DelegatedBy,
+		}
+	}
+
+	// Verificar mensagens de sucesso/erro
+	success := r.URL.Query().Get("success")
+	errorMsg := r.URL.Query().Get("error")
+
 	data := map[string]interface{}{
 		"Title":    "Gerenciar Vínculos Contábeis",
 		"UserType": userType,
 		"EntityID": entityID,
-		"Links":    []map[string]interface{}{}, // Será preenchido quando tivermos repositório
+		"Links":    linkData,
+		"Success":  success,
+		"Error":    errorMsg,
 	}
 
 	// Carregar template
@@ -165,14 +214,34 @@ func (h *AccountantLinkHandler) loadTemplate(filename string) (*template.Templat
 	var tmpl *template.Template
 	var err error
 
+	componentFile := "components/help_tooltip.html"
+
+	// Create function map with dict support
+	funcMap := template.FuncMap{
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, fmt.Errorf("dict requires even number of arguments")
+			}
+			dict := make(map[string]interface{})
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, fmt.Errorf("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
+	}
+
 	// Tentativa 1: Caminho relativo (quando executado de modules/ui_web/)
-	tmpl, err = template.ParseFiles("templates/" + filename)
+	tmpl, err = template.New(filename).Funcs(funcMap).ParseFiles("templates/"+filename, "templates/"+componentFile)
 	if err != nil {
 		// Tentativa 2: Caminho absoluto do projeto
-		tmpl, err = template.ParseFiles("modules/ui_web/templates/" + filename)
+		tmpl, err = template.New(filename).Funcs(funcMap).ParseFiles("modules/ui_web/templates/"+filename, "modules/ui_web/templates/"+componentFile)
 		if err != nil {
 			// Tentativa 3: Caminho relativo alternativo
-			tmpl, err = template.ParseFiles("../../templates/" + filename)
+			tmpl, err = template.New(filename).Funcs(funcMap).ParseFiles("../../templates/"+filename, "../../templates/"+componentFile)
 			if err != nil {
 				return nil, fmt.Errorf("não foi possível carregar o template: %v", err)
 			}

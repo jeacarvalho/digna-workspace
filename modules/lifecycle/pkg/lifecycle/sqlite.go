@@ -309,12 +309,26 @@ func (m *SQLiteManager) ValidateAccountantAccess(ctx context.Context, accountant
 }
 
 // CreateLink creates a new accountant-enterprise link
-func (m *SQLiteManager) CreateLink(enterpriseID, accountantID, delegatedBy string) (*domain.EnterpriseAccountant, error) {
+func (m *SQLiteManager) CreateLink(enterpriseID, accountantID, delegatedBy string) (*EnterpriseAccountantPublic, error) {
 	svc, err := m.getAccountantLinkService()
 	if err != nil {
 		return nil, err
 	}
-	return svc.CreateLink(enterpriseID, accountantID, delegatedBy)
+	internalLink, err := svc.CreateLink(enterpriseID, accountantID, delegatedBy)
+	if err != nil {
+		return nil, err
+	}
+	return &EnterpriseAccountantPublic{
+		ID:           internalLink.ID,
+		EnterpriseID: internalLink.EnterpriseID,
+		AccountantID: internalLink.AccountantID,
+		Status:       string(internalLink.Status),
+		StartDate:    internalLink.StartDate,
+		EndDate:      internalLink.EndDate,
+		DelegatedBy:  internalLink.DelegatedBy,
+		CreatedAt:    internalLink.CreatedAt,
+		UpdatedAt:    internalLink.UpdatedAt,
+	}, nil
 }
 
 // DeactivateLink deactivates a link (Exit Power)
@@ -351,4 +365,49 @@ func (m *SQLiteManager) GetActiveAccountant(enterpriseID string) (*domain.Enterp
 		return nil, err
 	}
 	return svc.GetActiveAccountant(enterpriseID)
+}
+
+// GetEnterpriseLinks returns all links for an enterprise
+func (m *SQLiteManager) GetEnterpriseLinks(enterpriseID string) ([]*EnterpriseAccountantPublic, error) {
+	svc, err := m.getAccountantLinkService()
+	if err != nil {
+		return nil, err
+	}
+	internalLinks, err := svc.GetEnterpriseLinks(enterpriseID)
+	if err != nil {
+		return nil, err
+	}
+	return convertToPublicLinks(internalLinks), nil
+}
+
+// GetAccountantLinks returns all links for an accountant
+func (m *SQLiteManager) GetAccountantLinks(accountantID string) ([]*EnterpriseAccountantPublic, error) {
+	svc, err := m.getAccountantLinkService()
+	if err != nil {
+		return nil, err
+	}
+	internalLinks, err := svc.GetAccountantLinks(accountantID)
+	if err != nil {
+		return nil, err
+	}
+	return convertToPublicLinks(internalLinks), nil
+}
+
+// convertToPublicLinks converte links internos para públicos
+func convertToPublicLinks(internalLinks []*domain.EnterpriseAccountant) []*EnterpriseAccountantPublic {
+	publicLinks := make([]*EnterpriseAccountantPublic, len(internalLinks))
+	for i, link := range internalLinks {
+		publicLinks[i] = &EnterpriseAccountantPublic{
+			ID:           link.ID,
+			EnterpriseID: link.EnterpriseID,
+			AccountantID: link.AccountantID,
+			Status:       string(link.Status),
+			StartDate:    link.StartDate,
+			EndDate:      link.EndDate,
+			DelegatedBy:  link.DelegatedBy,
+			CreatedAt:    link.CreatedAt,
+			UpdatedAt:    link.UpdatedAt,
+		}
+	}
+	return publicLinks
 }

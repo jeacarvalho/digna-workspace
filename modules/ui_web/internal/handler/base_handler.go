@@ -45,6 +45,22 @@ func NewBaseHandler(lm lifecycle.LifecycleManager, devMode bool) *BaseHandler {
 		return a * b
 	})
 
+	// dict creates a map from key-value pairs for template usage (needed for help_tooltip component)
+	tm.AddFunc("dict", func(values ...interface{}) (map[string]interface{}, error) {
+		if len(values)%2 != 0 {
+			return nil, fmt.Errorf("dict requires even number of arguments")
+		}
+		dict := make(map[string]interface{})
+		for i := 0; i < len(values); i += 2 {
+			key, ok := values[i].(string)
+			if !ok {
+				return nil, fmt.Errorf("dict keys must be strings")
+			}
+			dict[key] = values[i+1]
+		}
+		return dict, nil
+	})
+
 	tm.AddFunc("getAlertStatusLabel", func(status string) string {
 		switch status {
 		case "SAFE":

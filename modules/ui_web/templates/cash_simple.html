@@ -115,7 +115,7 @@
             <div class="lg:col-span-2">
                 <!-- Saldo Atual -->
                 <div class="digna-card p-6 mb-6">
-                    <h2 class="text-xl font-semibold text-digna-text mb-4">Saldo Atual</h2>
+                    <h2 class="text-xl font-semibold text-digna-text mb-4">Saldo Atual {{template "help_tooltip" dict "Key" "fluxo_caixa" "Title" "Fluxo de Caixa"}}</h2>
                     <div class="text-4xl font-bold text-green-600">
                         R$ {{printf "%.2f" .Balance}}
                     </div>

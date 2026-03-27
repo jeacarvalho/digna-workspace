@@ -65,6 +65,24 @@ func (tm *TemplateManager) loadSingleTemplate(name string) (*templateEntry, erro
 		return nil, fmt.Errorf("failed to parse template %s: %w", name, err)
 	}
 
+	// Carregar componentes reutilizáveis (help_tooltip, etc.)
+	componentPath := filepath.Join(tm.templateDir, "components", "help_tooltip.html")
+	if componentInfo, err := os.Stat(componentPath); err == nil {
+		componentContent, err := os.ReadFile(componentPath)
+		if err == nil {
+			tmpl, err = tmpl.Parse(string(componentContent))
+			if err != nil {
+				// Log mas não falha - componente é opcional
+				fmt.Printf("Warning: failed to parse component: %v\n", err)
+			} else {
+				// Usar o timestamp mais recente entre template e componente
+				if componentInfo.ModTime().After(info.ModTime()) {
+					info = componentInfo
+				}
+			}
+		}
+	}
+
 	return &templateEntry{
 		template: tmpl,
 		modTime:  info.ModTime(),

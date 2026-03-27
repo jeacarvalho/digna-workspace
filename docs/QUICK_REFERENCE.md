@@ -1,7 +1,7 @@
 # 🚀 Quick Reference - Projeto Digna
 
-**Última atualização:** 11/03/2026
-**Status:** ✅ PRODUCTION READY (149/149 testes passando) + RF-12 IMPLEMENTADO
+**Última atualização:** 13/03/2026
+**Status:** ✅ PRODUCTION READY (149/149 testes passando) + RF-12 95% COMPLETO (FUNCIONAL)
 
 ---
 
@@ -425,3 +425,33 @@ accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, ba
 accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
 - **Sessão 20260312_141503:** 12/03/2026 - 1h2m, 2 tarefas (ver `docs/learnings/SESSION_20260312_141503_CONSOLIDATED.md`)
 - **Sessão unknown:** 13/03/2026 - 0h0m, 0 tarefas (ver `docs/learnings/SESSION_unknown_CONSOLIDATED.md`)
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+- **Sessão 20260313_163003:** 13/03/2026 - 1h2m, 2 tarefas (ver `docs/learnings/SESSION_20260313_163003_CONSOLIDATED.md`)
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, das_mei_handler, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, das_mei_handler, eligibility_handler, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, das_mei_handler, eligibility_handler, help_handler, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+
+## 🏗️ Handlers Existentes
+
+accountant_handler, accountant_link_handler, auth_handler, auth_handler_mock, base_handler, budget_handler, budget_templates, cash_handler, dashboard, das_mei_handler, eligibility_handler, help_handler, legal_handler, member_handler, pdv_handler, supply_handler, supply_templates
+- **Sessão 20260326_175404:** 27/03/2026 - 6h29m, 8 tarefas (ver `docs/learnings/SESSION_20260326_175404_CONSOLIDATED.md`)

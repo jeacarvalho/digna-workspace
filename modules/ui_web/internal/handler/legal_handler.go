@@ -111,13 +111,42 @@ func (h *LegalHandler) DossierPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Carregar template (cache-proof)
-	tmpl, err := template.ParseFiles("modules/ui_web/templates/legal_dossier_simple.html")
+	funcMap := template.FuncMap{
+		"formatDecisionCount": func(count int) string {
+			if count == 0 {
+				return "Nenhuma decisão registrada"
+			}
+			if count == 1 {
+				return "1 decisão registrada"
+			}
+			return fmt.Sprintf("%d decisões registradas", count)
+		},
+		"formatCurrency": func(amount int64) string {
+			return fmt.Sprintf("R$ %.2f", float64(amount)/100)
+		},
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, fmt.Errorf("dict requires even number of arguments")
+			}
+			dict := make(map[string]interface{})
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, fmt.Errorf("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
+	}
+
+	tmpl, err := template.New("legal_dossier_simple.html").Funcs(funcMap).ParseFiles("modules/ui_web/templates/legal_dossier_simple.html", "modules/ui_web/templates/components/help_tooltip.html")
 	if err != nil {
 		h.renderError(w, "Template não encontrado: "+err.Error())
 		return
 	}
 
-	// Adicionar funções do template manager ao template
+	// Adicionar funções adicionais ao template
 	tmpl.Funcs(template.FuncMap{
 		"formatDecisionCount": func(count int) string {
 			if count == 0 {

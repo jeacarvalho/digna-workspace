@@ -111,15 +111,45 @@ func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("[ACCOUNTANT HANDLER] Found %d pending entities\n", len(allPendingEntities))
 
 	// Filtrar entidades baseado em vínculos temporais
-	// TEMPORARIAMENTE DESABILITADO - AccountantLinkService está travando
-	// TODO: Investigar e corrigir o travamento
 	var filteredEntities []string
-	fmt.Printf("[ACCOUNTANT HANDLER] accountantLinkService: %v\n", h.accountantLinkService)
 
-	// Usar fallback imediato - mostrar todas as entidades pendentes
-	// Isso permite que o dashboard funcione enquanto investigamos o travamento
-	filteredEntities = allPendingEntities
-	fmt.Printf("[ACCOUNTANT HANDLER] Using fallback - showing all %d entities\n", len(filteredEntities))
+	// Verificar se temos serviço de vínculos contábeis
+	if h.accountantLinkService != nil {
+		// Obter ID do contador do contexto (do middleware temporal_filter)
+		// Para testes, usar um ID padrão
+		accountantID := "contador_social" // TODO: Obter do contexto de autenticação
+
+		// Parse do período para obter intervalo temporal
+		startTime, endTime, err := parsePeriodToTime(period)
+		if err != nil {
+			fmt.Printf("[ACCOUNTANT HANDLER] Error parsing period: %v\n", err)
+			filteredEntities = allPendingEntities
+		} else {
+			// Obter entidades válidas para este contador no período
+			validEnterprises, err := h.accountantLinkService.GetValidEnterprisesForAccountant(r.Context(), accountantID, startTime, endTime)
+			if err != nil {
+				fmt.Printf("[ACCOUNTANT HANDLER] Error getting valid enterprises: %v\n", err)
+				filteredEntities = allPendingEntities
+			} else {
+				// Filtrar entidades pendentes baseado nas válidas
+				validMap := make(map[string]bool)
+				for _, enterprise := range validEnterprises {
+					validMap[enterprise] = true
+				}
+
+				for _, entity := range allPendingEntities {
+					if validMap[entity] {
+						filteredEntities = append(filteredEntities, entity)
+					}
+				}
+				fmt.Printf("[ACCOUNTANT HANDLER] Filtered %d entities (from %d total)\n", len(filteredEntities), len(allPendingEntities))
+			}
+		}
+	} else {
+		// Fallback se não houver serviço
+		fmt.Printf("[ACCOUNTANT HANDLER] No accountantLinkService available, using all entities\n")
+		filteredEntities = allPendingEntities
+	}
 
 	entities := make([]map[string]interface{}, len(filteredEntities))
 	for i, entityID := range filteredEntities {
@@ -161,16 +191,36 @@ func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	var tmpl *template.Template
 	var err error
 
+	// Create function map with dict support
+	funcMap := template.FuncMap{
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, fmt.Errorf("dict requires even number of arguments")
+			}
+			dict := make(map[string]interface{})
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, fmt.Errorf("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
+	}
+
+	filename := "accountant_dashboard_simple.html"
+
 	// Tentativa 1: Caminho relativo (quando executado de modules/ui_web/)
-	tmpl, err = template.ParseFiles("templates/accountant_dashboard_simple.html")
+	tmpl, err = template.New(filename).Funcs(funcMap).ParseFiles("templates/accountant_dashboard_simple.html", "templates/components/help_tooltip.html")
 	if err != nil {
 		fmt.Printf("[ACCOUNTANT HANDLER] Template load attempt 1 failed: %v\n", err)
 		// Tentativa 2: Caminho absoluto do projeto
-		tmpl, err = template.ParseFiles("modules/ui_web/templates/accountant_dashboard_simple.html")
+		tmpl, err = template.New(filename).Funcs(funcMap).ParseFiles("modules/ui_web/templates/accountant_dashboard_simple.html", "modules/ui_web/templates/components/help_tooltip.html")
 		if err != nil {
 			fmt.Printf("[ACCOUNTANT HANDLER] Template load attempt 2 failed: %v\n", err)
 			// Tentativa 3: Caminho relativo alternativo
-			tmpl, err = template.ParseFiles("../../templates/accountant_dashboard_simple.html")
+			tmpl, err = template.New(filename).Funcs(funcMap).ParseFiles("../../templates/accountant_dashboard_simple.html", "../../templates/components/help_tooltip.html")
 			if err != nil {
 				fmt.Printf("[ACCOUNTANT HANDLER] Template load attempt 3 failed: %v\n", err)
 				http.Error(w, fmt.Sprintf("template error: não foi possível carregar o template: %v", err), http.StatusInternalServerError)

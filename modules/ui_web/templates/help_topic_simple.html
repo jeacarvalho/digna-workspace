@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Topic.Title}} - Central de Ajuda - Digna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F9F9F6; }
+        h1, h2, h3 { font-family: 'Ubuntu', sans-serif; }
+        .soberania-blue { color: #2A5CAA; }
+        .soberania-bg { background-color: #2A5CAA; }
+        .suor-green { color: #4A7F3E; }
+        .suor-bg { background-color: #4A7F3E; }
+        .energia-orange { color: #F57F17; }
+        .energia-bg { background-color: #F57F17; }
+        .prose p { margin-bottom: 1rem; line-height: 1.7; }
+        .prose h2 { margin-top: 2rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="soberania-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <a href="/help" class="text-white hover:text-blue-100 transition-colors">← Central de Ajuda</a>
+                    <span class="text-xl font-bold">{{.Topic.Title}}</span>
+                </div>
+                <a href="/" class="text-white hover:text-blue-100 text-sm">Voltar ao Digna →</a>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="container mx-auto px-4 py-8">
+        <!-- Breadcrumb -->
+        <nav class="text-sm text-gray-500 mb-4">
+            <a href="/" class="hover:text-gray-700">Início</a>
+            <span class="mx-2">/</span>
+            <a href="/help" class="hover:text-gray-700">Central de Ajuda</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-800">{{.Topic.Title}}</span>
+        </nav>
+
+        <!-- Topic Content -->
+        <article class="bg-white rounded-xl shadow-lg p-8 mb-6">
+            <!-- Header -->
+            <header class="mb-8 pb-6 border-b border-gray-200">
+                <div class="flex items-center gap-2 mb-4">
+                    {{if eq .Topic.Category "CREDITO"}}
+                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Crédito</span>
+                    {{else if eq .Topic.Category "TRIBUTARIO"}}
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Tributário</span>
+                    {{else if eq .Topic.Category "GOVERNANCA"}}
+                    <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">Governança</span>
+                    {{else}}
+                    <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">Geral</span>
+                    {{end}}
+                </div>
+                
+                <h1 class="text-3xl font-bold text-gray-800 mb-4">{{.Topic.Title}}</h1>
+                <p class="text-xl text-gray-600">{{.Topic.Summary}}</p>
+                
+                <div class="mt-4 flex items-center text-sm text-gray-500">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    {{.Topic.ViewCount}} pessoas já leram este tópico
+                </div>
+            </header>
+            
+            <!-- Content -->
+            <div class="prose max-w-none text-gray-700">
+                <!-- What is it? -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 text-sm">1</span>
+                        O que é?
+                    </h2>
+                    <p class="text-lg leading-relaxed">{{.Topic.Explanation}}</p>
+                </section>
+                
+                <!-- Why we ask -->
+                <section class="mb-8 bg-yellow-50 rounded-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mr-3 text-sm">2</span>
+                        Por que perguntamos isso no Digna?
+                    </h2>
+                    <p class="text-lg leading-relaxed">{{.Topic.WhyAsked}}</p>
+                </section>
+                
+                <!-- Next Steps -->
+                <section class="mb-8 bg-green-50 rounded-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-3 text-sm">3</span>
+                        O que você precisa fazer
+                    </h2>
+                    <p class="text-lg leading-relaxed">{{.Topic.NextSteps}}</p>
+                </section>
+                
+                <!-- Legislation -->
+                {{if .Topic.Legislation}}
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 text-sm">4</span>
+                        Legislação
+                    </h2>
+                    <p class="text-gray-600">{{.Topic.Legislation}}</p>
+                </section>
+                {{end}}
+                
+                <!-- Official Link -->
+                {{if .Topic.OfficialLink}}
+                <section class="mt-8 pt-6 border-t border-gray-200">
+                    <a href="{{.Topic.OfficialLink}}" target="_blank" rel="noopener noreferrer"
+                       class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <span>Saiba mais na fonte oficial</span>
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                    </a>
+                    <p class="text-sm text-gray-500 mt-2">Você será direcionado para um site do governo</p>
+                </section>
+                {{end}}
+            </div>
+        </article>
+        
+        <!-- Related Topics -->
+        {{if .Related}}
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Tópicos Relacionados</h2>
+            <div class="grid gap-4 md:grid-cols-3">
+                {{range .Related}}
+                <a href="/help/topic/{{.Key}}" class="block bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+                    <h3 class="font-semibold text-soberania-blue mb-2">{{.Title}}</h3>
+                    <p class="text-sm text-gray-600 line-clamp-2">{{.Summary}}</p>
+                </a>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+        
+        <!-- Back to Help -->
+        <div class="mt-8 text-center">
+            <a href="/help" class="inline-flex items-center text-soberania-blue hover:underline">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Voltar para Central de Ajuda
+            </a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 mt-12 py-6">
+        <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
+            <p>Digna - Sistema de Economia Solidária</p>
+            <p class="mt-1">Nenhum usuário deve se sentir humilhado por não entender um termo</p>
+        </div>
+    </footer>
+</body>
+</html>

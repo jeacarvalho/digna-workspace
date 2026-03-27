@@ -104,13 +104,27 @@ func NewDashboardHandler(lm lifecycle.LifecycleManager) (*DashboardHandler, erro
 			}
 			return category
 		},
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, fmt.Errorf("dict requires even number of arguments")
+			}
+			dict := make(map[string]interface{})
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, fmt.Errorf("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
 	}
 
 	// Criar template vazio - vamos carregar templates do disco quando necessário
 	tmpl := template.New("").Funcs(funcMap)
 
 	// Parsear templates necessários
-	_, err := tmpl.ParseFiles("templates/dashboard_simple.html", "templates/social_clock.html")
+	_, err := tmpl.ParseFiles("templates/dashboard_simple.html", "templates/social_clock.html", "templates/components/help_tooltip.html")
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse templates: %w", err)
 	}

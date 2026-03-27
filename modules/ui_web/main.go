@@ -183,6 +183,36 @@ func createServer(lifecycleMgr lifecycle.LifecycleManager, logger *slog.Logger, 
 		fmt.Println("✅ Legal handler registered")
 	}
 
+	// DAS MEI handler (RF-27)
+	dasMEIHandler, err := handler.NewDASMEIHandler(lifecycleMgr)
+	if err != nil {
+		// Log mas não falha - pode ser implementação parcial
+		fmt.Printf("⚠️ DAS MEI handler creation warning: %v\n", err)
+	} else {
+		dasMEIHandler.RegisterRoutes(mux)
+		fmt.Println("✅ DAS MEI handler registered (RF-27)")
+	}
+
+	// Eligibility Profile handler (RF-19)
+	eligibilityHandler, err := handler.NewEligibilityHandler(lifecycleMgr)
+	if err != nil {
+		// Log mas não falha - pode ser implementação parcial
+		fmt.Printf("⚠️ Eligibility handler creation warning: %v\n", err)
+	} else {
+		eligibilityHandler.RegisterRoutes(mux)
+		fmt.Println("✅ Eligibility handler registered (RF-19)")
+	}
+
+	// Help System handler (RF-30)
+	helpHandler, err := handler.NewHelpHandler(lifecycleMgr)
+	if err != nil {
+		// Log mas não falha - pode ser implementação parcial
+		fmt.Printf("⚠️ Help handler creation warning: %v\n", err)
+	} else {
+		helpHandler.RegisterRoutes(mux)
+		fmt.Println("✅ Help handler registered (RF-30)")
+	}
+
 	// Health check
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

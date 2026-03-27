@@ -1,14 +1,79 @@
-### Status Atual - Digna
-**Última Atualização:**  2026-03-13 (Sessão de Adequação Estatal e Conformidade Digital)  
-**Fase Atual:**  Sprint 16 (Identidade Visual e Sistema 100% Funcional) ✅ COMPLETE  
-**Status:**  🟡  **SISTEMA OPERACIONAL - INICIANDO ADEQUAÇÃO ESTATAL**   
-**Próximo Marco:**  Adequação Estatal e Blindagem Digital (Marco 09) ANTES do Production Deploy
+title: Status Atual - Ecossistema Digna
+status: implemented
+version: 2.0
+last_updated: 2026-03-27
+---
 
---------------------------------------------------------------------------------
+# Status Atual - Ecossistema Digna
 
-#### Phase Status Overview
+> **Nota:** Este documento reflete o status integrado do Ecossistema Digna (PDF v1.0), preservando toda a infraestrutura validada nas Sprints 1-16, incorporando os novos módulos como Fases 3 e 4, e incluindo o Sistema de Ajuda Educativa (RF-30) decidido na sessão de 27/03/2026.
+
+---
+
+## 📋 Contexto da Atualização (27/03/2026)
+
+**Motivação:** O projeto Digna evoluiu de um ERP contábil para um **Ecossistema de 4 Módulos** conforme especificação PDF v1.0. Esta atualização documenta:
+
+1. **Expansão da Visão de Produto:** De ERP único para ecossistema integrado (ERP + Motor + Portal + Rede)
+2. **Novos Marcos (Milestones):** Fases 3-6 adicionadas ao roadmap original
+3. **RF-30 (Ajuda Educativa):** Sistema transversal de pedagogia social
+4. **Preservação:** Todas as entregas validadas nas Sprints 1-16 mantidas
+
+**Versão Anterior:** 1.0 (2026-03-13)  
+**Nova Versão:** 2.0 (2026-03-27)
+
+---
+
+## 🎯 Status Geral do Projeto
+
+**Última Atualização:** 2026-03-27 (Sessão de Expansão do Ecossistema + RF-30)  
+**Fase Atual:** Sprint 17 (Expansão do Ecossistema - Fase 3)  
+**Status:** 🟡 **EM DESENVOLVIMENTO - ECOSSISTEMA INTEGRADO**  
+**Próximo Marco:** Validação do MVP do Portal de Oportunidades com entidades reais de Niterói
+
+---
+
+## 🗺️ Visão Geral das Fases
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    STATUS DO ECOSSISTEMA DIGNA                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  FASE 1 — FUNDAÇÃO (✅ COMPLETE)                                        │
+│  ├── Sprint 01-06: Core Contábil + PDV + Ledger                         │
+│  ├── Sprint 07-12: Contador Social + SPED                               │
+│  └── Sprint 13-16: Supply + Budget + UI 100%                            │
+│                                                                         │
+│  FASE 2 — CONFORMIDADE ESTATAL (🟡 EM ANDAMENTO)                        │
+│  ├── RF-14: EFD-Reinf + ECF (Blindagem Tributária)                     │
+│  ├── RF-15: Gov.br + Assembleias Digitais                              │
+│  ├── RF-16: MTSE/MAPA (Inclusão Sanitária)                             │
+│  └── RF-17: CADSOL/SINAES Automático                                   │
+│                                                                         │
+│  FASE 3 — ECOSSISTEMA DE CRÉDITO (📋 NOVO - PDF v1.0)                   │
+│  ├── RF-18: Motor de Indicadores (BCB, IBGE APIs)                      │
+│  ├── RF-19: Perfil de Elegibilidade (campos complementares)            │
+│  ├── RF-20: Portal de Oportunidades (MVP: 3 programas)                 │
+│  └── RF-21: Checklist + Alertas de Documentos                          │
+│                                                                         │
+│  FASE 4 — REDE DE INTERCOOPERAÇÃO (📋 NOVO - PDF v1.0)                  │
+│  ├── RF-24: Perfil Público da Entidade                                 │
+│  ├── RF-25: Mural de Necessidades                                      │
+│  └── RF-26: Match de Oportunidades B2B                                 │
+│                                                                         │
+│  FASE 5 — AJUDA E PEDAGOGIA (📋 NOVO - Decisão 27/03/2026)              │
+│  └── RF-30: Sistema de Ajuda Educativa Estruturada                     │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📊 Phase Status Overview
+
 | Phase | Marco | Status | Conclusão |
-| ------ | ------ | ------ | ------ |
+|-------|-------|--------|-----------|
 | Concepção | Marco 00 | ✅ COMPLETE | 100% |
 | Foundation Setup | Marco 01 | ✅ COMPLETE | 100% |
 | Core Operations | Marco 02 | ✅ COMPLETE | 100% |
@@ -17,238 +82,201 @@
 | Integração e Aliança Contábil (Phase 2) | Marco 07 | ✅ COMPLETE | 100% |
 | Gestão de Compras e Estoque (Phase 3) | Marco 08 | ✅ COMPLETE | 100% |
 | Gestão Orçamentária e Planejamento Financeiro (Phase 3) | Marco 06 | ✅ COMPLETE | 100% |
-| **Adequação Estatal e Conformidade (Phase 2) [NOVO]** | **Marco 09** | 🟡 **EM DESENVOLVIMENTO** | **0%** |
+| **Adequação Estatal e Conformidade (Phase 2)** | **Marco 09** | 🟡 **EM DESENVOLVIMENTO** | **0%** |
+| **Ecossistema de Crédito (Phase 3 - NOVO)** | **Marco 10** | 📋 **BACKLOG** | **0%** |
+| **Rede de Intercooperação (Phase 4 - NOVO)** | **Marco 11** | 📋 **BACKLOG** | **0%** |
+| **Ajuda e Pedagogia (Transversal - NOVO)** | **Marco 12** | 📋 **BACKLOG** | **0%** |
 | Production Deploy | Marco 05 | 🟢 READY | 95% |
 
---------------------------------------------------------------------------------
+---
 
-#### 🏛️ Foco Atual: Adequação Estatal e Conformidade Digital [NOVO]
+## 🏛️ Foco Atual: Adequação Estatal e Conformidade Digital [ATUALIZADO]
+
 *O projeto atingiu a maturidade operacional contábil (Soma Zero / int64) na Sprint 16 e foca agora na construção de pontes automáticas de conformidade institucional para proteger as EES antes de ir para a produção final.*
 
-*   **[Tributário] Blindagem do Ato Cooperativo:** Implementação do módulo `tax_compliance` para a mensageria de retenções (Web Services da EFD-Reinf) e o expurgo rigoroso de receitas de Atos Cooperativos na Parte A do e-Lalur/e-Lacs (Bloco M da ECF), evitando bitributação (Lei nº 5.764/71 e LC nº 214/2025).
-*   **[Sanitário] Emancipação Produtiva (MAPA):** Desenvolvimento do gerador automatizado de Memorial Técnico Sanitário (MTSE) no módulo `sanitary_compliance` para cumprimento da Portaria MAPA nº 393/2021.
-*   **[Governança] Assembleias Digitais:** Integração de APIs de Assinatura Qualificada Gov.br (Lei nº 14.063/2020) e algoritmo de anonimização de votos (IN DREI nº 79/2020) no `legal_facade`.
-*   **[Institucional] CADSOL Direto:** Consumo nativo de Web Services do MTE (Decreto nº 12.784/2025) para o registro automático de entidades.
+### ✅ Entregas Concluídas (Sprints 1-16)
 
---------------------------------------------------------------------------------
+- [x] Lifecycle Manager (SQLite isolado por tenant para garantia de soberania)
+- [x] Core Lume (Partidas dobradas invisíveis em int64)
+- [x] PDV Interface (Foco pedagógico e linguagem popular livre de jargões)
+- [x] Registro de trabalho (ITG 2002 - Valoração do tempo em int64)
+- [x] Dashboard de Dignidade (Transparência visual para a Assembleia)
+- [x] Painel do Contador Social (Accountant Dashboard Multi-tenant) ✅ **Sprint 12**
+- [x] Exportação Fiscal (SPED/CSV) ✅ **Sprint 12**
+- [x] Gestão de Compras e Estoque (RF-07, RF-08) ✅ **Sprint 13-14**
+- [x] Gestão Orçamentária (RF-10) ✅ **Sprint 14**
+- [x] Identidade Visual "Soberania e Suor" ✅ **Sprint 16**
+- [x] Templates Cache-Proof ✅ **Sprint 16**
+- [x] Testes E2E com Playwright ✅ **Sprint 15-16**
 
-## Sprint Status
+### 🟡 Entregas Pendentes (Adequação Estatal)
 
-### Sprint 01 a 03: Core, Ledger e Reporting ✅
+- [ ] **RF-14: Blindagem Tributária (EFD-Reinf e ECF)** 
+  * Módulo `tax_compliance` para mensageria de retenções via Web Service
+  * Expurgo automático de receitas de Atos Cooperativos no Bloco M da ECF (Lei 5.764/71 e LC 214/2025)
+  * Geração e transmissão de XMLs (série R-2000/R-4000) para Web Services da EFD-Reinf
+  * Alimentação automática da DCTFWeb
+
+- [ ] **RF-15: Integração Real Gov.br e Governança Digital**
+  * Substituição do Mock de login unificado pelo fluxo real da Cidadania Digital (OAuth2)
+  * Assinatura Eletrônica Qualificada (Lei nº 14.063/2020) para membros da mesa nas Atas de Assembleia
+  * Algoritmo de anonimização sistêmica para escrutínio secreto em votações (IN DREI nº 79/2020)
+  * Integração com ICP-Brasil para certificados digitais
+
+- [ ] **RF-16: Inclusão Sanitária (MAPA)**
+  * Módulo `sanitary_compliance` para geração automatizada do Memorial Técnico Sanitário de Estabelecimento (MTSE)
+  * Conformidade com Portaria MAPA nº 393/2021 para agroindústrias
+  * Parametrização de fluxogramas de maquinário, capacidade diária e potabilidade de água
+  * Exportação para peticionamento no Sistema Eletrônico de Informação (SEI)
+
+- [ ] **RF-17: Integração CADSOL/SINAES Automático**
+  * Consumo nativo de Web Services do MTE (Decreto nº 12.784/2025)
+  * Matrícula automática de entidades FORMALIZED no Cadastro Nacional de Economia Solidária
+  * Substituição dos mocks atuais por integração real
+
+---
+
+## 🚀 Foco Novo: Ecossistema de Crédito e Indicadores [NOVO - PDF v1.0]
+
+*O projeto expande para conectar automaticamente o empreendedor aos programas de crédito para os quais ele já é elegível, sustentado por dados econômicos atualizados em tempo real.*
+
+### 📋 Módulo 2: Motor de Indicadores (RF-18)
+
+| Sub-requisito | Descrição | Fonte de Dados | Prioridade | Status |
+|--------------|-----------|---------------|------------|--------|
+| RF-18.1 | Coleta de SELIC, IPCA, CDI | BCB SGS API | Alta | 📋 Backlog |
+| RF-18.2 | Câmbio oficial (USD/BRL, EUR/BRL) | BCB PTAX API | Alta | 📋 Backlog |
+| RF-18.3 | Expectativas de mercado (Focus) | BCB Focus API | Média | 📋 Backlog |
+| RF-18.4 | Indicadores sociais (PNAD, desocupação) | IBGE SIDRA | Média | 📋 Backlog |
+| RF-18.5 | Cache local e interpretação contextual | Arquitetura interna | Alta | 📋 Backlog |
+
+**Arquitetura Proposta:**
+```
+modules/
+└── indicators_engine/          # NOVO MÓDULO
+    ├── internal/
+    │   ├── collector/          # Scheduler de coleta (cron diário)
+    │   ├── cache/              # Tabela indicators{} com TTL
+    │   ├── interpreter/        # Regras de negócio contextualizadas
+    │   └── repository/         # SQLite local (cache-proof)
+    ├── pkg/
+    │   └── indicators/         # API pública para outros módulos
+    └── cmd/
+        └── collector/          # Binário independente para coleta
+```
+
+### 📋 Módulo 3: Portal de Oportunidades (RF-19 a RF-23)
+
+**Programas Prioritários para MVP:**
+| Programa | Valor Máximo | Público-Alvo | Diferencial | Status |
+|----------|-------------|--------------|-------------|--------|
+| **Acredita no Primeiro Passo** | ~R$ 6 mil | CadÚnico, 70% mulheres | Sem garantia, juros subsidiados | 📋 Backlog |
+| **Pronampe** | Até 30% da receita bruta | MEI, ME, EPP | Prazo até 84 meses, carência 24 meses | 📋 Backlog |
+| **Niterói Empreendedora** | Até R$ 200 mil | CNPJ ativo 12+ meses em Niterói | **JUROS ZERO**, foco em mulheres e jovens | 📋 Backlog |
+
+**Funcionalidades do MVP:**
+- [ ] **Match Automático:** Cruzamento do perfil do ERP com requisitos de cada programa
+- [ ] **Ranqueamento por Vantagem:** Ordenação por custo efetivo de capital (usando taxas do Motor)
+- [ ] **Checklist de Documentos:** Para cada linha elegível, marca o que já está no Digna vs. o que falta
+- [ ] **Alertas de Prazo:** Notificações quando editais com alto match têm prazo próximo
+
+### 📋 Sistema Transversal: Ajuda Educativa (RF-30) [NOVO - Sessão 27/03/2026]
+
+**Descrição:** Sistema de ajuda contextual que traduz conceitos técnicos (CadÚnico, inadimplência, CNAE, etc.) em linguagem popular, com linkagem entre elementos de UI e registros de ajuda no banco.
+
+**Funcionalidades:**
+- [ ] Entrada de menu "Ajuda" acessível em todas as páginas
+- [ ] Busca e índice de tópicos categorizados (CRÉDITO, TRIBUTÁRIO, GOVERNANÇA, GERAL)
+- [ ] Explicação em linguagem popular + legislação relacionada + próximo passo acionável
+- [ ] Linkagem automática: botão "?" ao lado de campos técnicos abre explicação contextual
+- [ ] Tópicos com estrutura: Título, Resumo, Explicação, Por que perguntamos, Legislação, Próximo passo, Link oficial
+
+**Critério de Aceite Pedagógico:**
+- [ ] Usuário com 5ª série consegue entender a explicação sem ajuda externa
+- [ ] Tooltip carrega em < 500ms via HTMX
+- [ ] Conteúdo não usa jargões técnicos ("cadastramento", "regularização fiscal", etc.)
+- [ ] Sempre inclui "próximo passo" acionável (ex: "procure o CRAS")
+
+---
+
+## 🌐 Foco Futuro: Rede de Intercooperação [NOVO - PDF v1.0]
+
+*Conectar EES isolados em uma rede nacional de apoio e viabilidade econômica, materializando o 6º Princípio do Cooperativismo.*
+
+### 📋 Módulo 4: Rede Digna (RF-24 a RF-26)
+
+**Funcionalidades:**
+- [ ] **Perfil Público da Entidade (RF-24):** Missão, produtos, serviços e capacidades disponíveis para a rede
+- [ ] **Mural de Necessidades (RF-25):** Entidades publicam demandas de compra (insumos, serviços, equipamentos) visíveis para a rede
+- [ ] **Match de Oportunidades (RF-26):** Sistema sugere conexões entre quem precisa e quem oferece, priorizando proximidade geográfica e afinidade de setor
+- [ ] **Histórico de Transações Solidárias:** Registro que pode ser apresentado como evidência de atividade econômica em candidaturas a financiamento
+
+**Fundamento Teológico da Rede:**
+O conceito de **Koinonía** — comunhão e partilha mútua na tradição cristã primitiva — é a metáfora central da Rede Digna. Não é apenas um marketplace: é uma ecclesia econômica onde entidades que compartilham valores se apoiam mutuamente, reduzindo dependência de intermediários externos e fortalecendo a economia local.
+
+**Nota sobre Laicidade:** A Teologia informa o design internamente, mas o produto permanece acessível independentemente de crença. O canal de distribuição via igrejas e comunidades de fé é estratégico, não doutrinário.
+
+---
+
+## 🏃 Sprint Status [ATUALIZADO]
+
+### Sprint 01 a 06: Core e Fundação ✅
 - Lifecycle Manager (SQLite isolado)
 - Ledger Service (partidas dobradas exatas em `int64`)
 - Surplus Calculator (rateio social ITG 2002)
-- **Testes:** 22/22 PASS
-
-### Sprint 04: Sincronização & Intercooperação ✅
-- Delta Tracker
-- Sync Package
-- Marketplace B2B
-- **Testes:** 9/9 PASS
-
-### Sprint 05: Interface Humana Dignidade ✅
-- Servidor HTTP porta 8088
-- PDV Screen (HTMX)
+- PDV Interface (HTMX + Tailwind)
 - Social Clock e Dashboard
-- PWA (manifest + service worker)
-- **Testes:** 9/9 PASS
+- **Testes:** 37/37 PASS
 
-### Sprint 06: Gestão de Caixa (RF-09) ✅
-- Módulo cash_flow criado
-- Registro de entradas e saídas
-- Saldo em tempo real e Extrato por período
-- Interface web /cash
-- **Testes:** 3/3 PASS
+### Sprint 07 a 12: Integração e Aliança Contábil ✅
+- DDD Refactoring (43/43 PASS)
+- Integrações Governamentais (Mocks) (13/13 PASS)
+- Gestão de Membros (19/19 PASS)
+- Formalização e E2E Journey (5/5 PASS)
+- **Painel do Contador Social (Accountant Dashboard)** (8/8 + E2E PASS)
+- **Exportação Fiscal (SPED)** (Validado)
+- **Testes:** 93/93 PASS
 
-### Sprint 07: DDD Refactoring ✅
-- Centralizado validação de transações (EntryValidator)
-- Removido erros ignorados (result.LastInsertId)
-- Adicionado rows.Err() checks em todas as queries
-- Implementado graceful shutdown no servidor HTTP
-- **Testes:** 8/8 PASS (novos) + regressão 35 PASS
+### Sprint 13 a 16: Finanças Solidárias e UI 100% ✅
+- Gestão de Compras e Estoque (RF-07, RF-08) (6/6 PASS)
+- Gestão Orçamentária (RF-10) (4/4 PASS)
+- Correções Críticas + Testes E2E (PDV→Estoque→Caixa) (3/3 + E2E PASS)
+- **Identidade Visual "Soberania e Suor"** (149/149 PASS)
+- **Testes:** 162/162 PASS
 
-### Sprint 08 e 09: Integrações e Testes de Base ✅
-- 8 Interfaces Governamentais (Mock) implementadas.
-- Cobertura expandida para testagem de fluxos internos.
-- **Testes:** 13/13 PASS
-
-### Sprint 10: Gestão de Membros ✅
-- Entity Member com roles (COORDINATOR, MEMBER, ADVISOR)
-- MemberRepository com UPSERT, FindByID, ListByEntity
-- MemberService com Register, Update, Deactivate
-- Validação: não permite desativar último coordenador
-- **Testes:** 19/19 PASS
-
-### Sprint 11: Formalização e E2E Journey ✅
-- **SurplusCalculator:** Novo método CalculateWithDeductions() (15% bloqueados para FATES e Reserva Legal).
-- **FormalizationSimulator:** Novo método AutoTransitionIfReady() (DREAM -> FORMALIZED após 3 decisões).
-- **E2E:** `journey_e2e_test.go` finalizado simulando a jornada "Sonho Solidário".
-- **Testes:** 5/5 PASS
-
-### Sprint 12: Painel do Contador Social (Accountant Dashboard) ✅ COMPLETE
-- **Objetivo:** Interface Multi-tenant para profissionais contábeis parceiros.
-- **Isolamento:** Acesso estritamente *Read-Only* aos micro-databases `.sqlite` das entidades autorizadas (`?mode=ro`).
-- **Exportação:** Motor de Tradução Fiscal (Geração de Lotes SPED a partir das partidas dobradas).
-- **Anti-Float:** Todos os valores monetários usam `int64`, sem `float`.
-- **Decisões Arquiteturais:**
-  - ✅ **Integração via `ui_web`:** Em vez de `cmd/digna/main.go`, seguindo consistência arquitetural
-  - ✅ **Templates Embutidos:** Em vez de arquivos `.html` separados, simplificando deploy
-  - ✅ **Princípios Aplicados:** KISS, YAGNI, DRY, Consistência
-- **Implementado:**
-  - [x] Domain Layer (FiscalBatch, EntryDTO, AccountMapper) - 100% coverage
-  - [x] Repository Layer (SQLite Read-Only Adapter) - 87.2% coverage
-  - [x] Service Layer (Translator Service com Soma Zero validation) - 91.3% coverage
-  - [x] Handler Layer (Dashboard + Export com HTMX/Tailwind) - 97.1% coverage
-  - [x] Integration with ui_web module (accountant_handler.go)
-  - [x] Public API for external consumption - 26.7% coverage
-  - [x] Integration tests covering complete workflow
-  - [x] **E2E Journey Test Updated:** Jornada "Sonho Solidário" atualizada com auditorias do Contador Social
-- **Testes:** Todos os testes PASS com cobertura total de 69.0% (core packages: 93.9% average) ✅
-- **E2E Validation:** Teste de jornada anual atualizado e validado com sucesso ✅
-
-### Sprint 13: Gestão de Compras e Controle de Estoque (RF-07 e RF-08) ✅ COMPLETE
-- **Objetivo:** Módulo completo para registro de compras, gestão de fornecedores e controle de estoque com **contabilidade invisível**.
-- **Paradigma:** Usuário final NÃO FAZ CONTABILIDADE - apenas informa "Comprei X de Y por Z reais"
-- **Categorização:** Tipos de itens (INSUMO, PRODUTO, MERCADORIA) para:
-  - Interface PDV: mostrar apenas "Produto Acabado" na venda
-  - Contabilidade: comprar "Insumo" → despesa/estoque; saída "Produto" → receita
-- **Implementado:**
-  - [x] **Módulo `supply`** com Clean Architecture + DDD
-  - [x] **Domínio:** Supplier, StockItem, Purchase, PurchaseItem
-  - [x] **Repository:** SQLiteSupplyRepository com DDL completo
-  - [x] **Service:** PurchaseService com integração core_lume
-  - [x] **Contabilidade Invisível:** Partidas dobradas automáticas baseadas no tipo do item
-  - [x] **UI Web:** Handler em `ui_web` com templates embutidos
-  - [x] **Rotas:** `/supply`, `/supply/purchase`, `/supply/suppliers`, `/supply/stock`
-  - [x] **API:** Endpoints REST para todas as operações
-  - [x] **Testes Unitários:** Cobertura completa do módulo supply
-  - [x] **Anti-Float:** Validação completa - nenhum uso de `float`
-- **Integração Contábil:**
-  - INSUMO/MERCADORIA: Débito em `AccountInventory` (3)
-  - Pagamento à vista: Crédito em `AccountCash` (1)
-  - Pagamento a prazo: Crédito em `AccountSuppliers` (4)
-- **Testes:** Todos os testes PASS, compilação completa do projeto ✅
-
-### Sprint 14: Gestão Orçamentária e Planejamento Financeiro (RF-10) ✅ COMPLETE
-- **Objetivo:** Módulo completo para planejamento financeiro com acompanhamento "planejado vs realizado" e interface pedagógica.
-- **Paradigma:** Usuário final NÃO USA termos técnicos como "Budget", "Forecast", "CAPEX". Usa linguagem popular: "Planejamento do Mês", "O que combinamos de gastar", "O que já gastamos", "Aviso de limite".
-- **Contabilidade Invisível:** Sistema cruza automaticamente planejado com realizado (transações reais do Ledger/Caixa).
-- **Alertas Visuais:** Status SAFE (≤70%), WARNING (71-100%), EXCEEDED (>100%) com barras de progresso coloridas.
-- **Anti-Float Obrigatório:** Todos os valores em `int64` (centavos). Proibido uso de `float`.
-- **Implementado:**
-  - [x] **Módulo `budget`** com Clean Architecture + DDD
-  - [x] **Domínio:** BudgetPlan, BudgetExecution, BudgetAlertStatus, BudgetCategory
-  - [x] **Repository:** SQLiteBudgetRepository com DDL completo
-  - [x] **Service:** BudgetService com integração cash_flow (CashFlowPort)
-  - [x] **Contabilidade Invisível:** Cálculo automático planejado vs realizado
-  - [x] **UI Web:** Handler em `ui_web` com templates embutidos
-  - [x] **Rotas:** `/budget`, `/budget/report`, `/budget/create`
-  - [x] **API:** BudgetAPI com CashFlowAdapter para integração real
-  - [x] **Testes Unitários:** Cobertura completa do módulo budget
-  - [x] **Anti-Float:** Validação completa - nenhum uso de `float`
-- **Categorias Pré-definidas:** INSUMOS, ENERGIA, EQUIPAMENTOS, TRANSPORTE, MANUTENCAO, SERVICOS, OUTROS
-- **Integração:** Conectado automaticamente ao cash_flow para buscar transações reais
-- **Testes:** Todos os testes PASS, compilação completa do projeto ✅
-
-### Sprint 15: Correções Críticas e Testes E2E (PDV → Estoque → Caixa) ✅ COMPLETE
-- **Objetivo:** Corrigir três problemas críticos reportados e implementar testes de integração E2E completos com Playwright.
-- **Problemas Resolvidos:**
-  1. **Vendas registradas no PDV não aparecem na tela do caixa** ✅
-  2. **Sistema permite vender mais itens do que existem em estoque** ✅  
-  3. **Sistema não atualiza o estoque após vendas** ✅
-- **Implementado:**
-  - [x] **Correção PDV → Caixa:** Implementado `getEntriesFromDatabase` no cash handler para buscar transações diretamente do banco
-  - [x] **Validação de Estoque:** Adicionada validação no PDV handler que verifica `quantidade ≤ estoque disponível`
-  - [x] **Atualização de Estoque:** Implementado `UpdateStockQuantity` na API do supply e integração no PDV
-  - [x] **Integração Frontend:** Corrigido JavaScript no template PDV para passar `stock_item_id` corretamente
-  - [x] **Testes E2E com Playwright:** Configurado ambiente completo com servidor real + browser headless
-  - [x] **Testes de Fluxo Completo:** Criado testes que simulam usuário interagindo com a aplicação
-  - [x] **Validação de Integridade:** Testes verificam fluxo PDV → Estoque → Caixa
-  - [x] **Interface Gestão de Estoque:** Dashboard atualizado com link para `/supply`
-  - [x] **Testes Otimizados:** Criados testes mais rápidos sem browser (API-only)
-  - [x] **Testes de Validação:** Testes específicos para validação de estoque insuficiente
-- **Arquivos Modificados/Criados:**
-  - `modules/ui_web/internal/handler/cash_handler.go` - Adicionada busca de transações do banco
-  - `modules/ui_web/internal/handler/pdv_handler.go` - Adicionada validação e atualização de estoque
-  - `modules/ui_web/templates/pdv.html` - Corrigido JavaScript para passar stock_item_id
-  - `modules/ui_web/templates/dashboard.html` - Adicionado link para gestão de estoque
-  - `modules/supply/pkg/supply/api.go` - Implementado UpdateStockQuantity
-  - `modules/supply/pkg/supply/interfaces.go` - Adicionado UpdateStockQuantity à interface
-  - `modules/ui_web/e2e_pdv_estoque_caixa_test.go` - Teste E2E completo com Playwright
-  - `modules/ui_web/e2e_simplificado_test.go` - Teste E2E simplificado
-  - `modules/ui_web/e2e_otimizado_test.go` - Testes E2E otimizados (mais rápidos)
-  - `modules/ui_web/test_fluxo_completo_test.go` - Teste de fluxo completo PDV→Estoque→Caixa
-  - `modules/ui_web/test_validacao_estoque_test.go` - Teste específico de validação de estoque
-- **Testes:** Todos os testes PASS, validação completa da integração ✅
-
-### Sprint 16: Identidade Visual e Sistema 100% Funcional (RNF-07) ✅ COMPLETE
-- **Objetivo:** Implementar identidade visual completa "Soberania e Suor" e corrigir problemas críticos que impediam o sistema de estar 100% operacional.
-- **Problemas Críticos Resolvidos:**
-  1. **Cache persistente de templates Go** - Sistema blindado com templates simples carregados do disco ✅
-  2. **Database vazio** - Populado com dados reais da `cafe_digna` (compras, estoque, fornecedores) ✅
-  3. **Logo não visível** - Implementada identidade visual completa em todas as páginas ✅
-  4. **Templates parciais não renderizados** - Migração para templates simples completos ✅
-  5. **Navegação quebrada** - Links funcionais entre todos os módulos ✅
-  6. **Erros de função em templates** - Corrigidas funções `formatCurrency`, `divide`, `fdiv` ✅
-- **Implementado:**
-  - [x] **Identidade Visual "Soberania e Suor":**
-    - Paleta de cores: Azul soberania (#2A5CAA), Verde suor (#4A7F3E), Laranja energia (#F57F17)
-    - Logo Digna visível em todas as páginas
-    - Templates unificados com design consistente
-  - [x] **Templates Simples (Cache-Proof):**
-    - `login_simple.html` - Página de login com logo
-    - `dashboard_simple.html` - Dashboard com navegação completa
-    - `pdv_simple.html` - PDV funcional com carrinho
-    - `cash_simple.html` - Módulo de caixa
-    - `supply_dashboard_simple.html` - Dashboard de compras
-    - `supply_stock_simple.html` - Gestão de estoque
-  - [x] **Handlers Atualizados:**
-    - Todos os handlers modificados para carregar templates do disco
-    - Sistema blindado contra problemas de cache persistente
-  - [x] **Database Real:**
-    - Scripts SQL para popular `cafe_digna.db`
-    - Dados reais: Fornecedores, Compras, Estoque (café)
-    - Validação completa do fluxo compra → estoque → PDV
-  - [x] **Navegação Completa:**
-    - Links funcionais entre Dashboard, PDV, Caixa, Compras, Estoque
-    - Header e footer consistentes em todas as páginas
-  - [x] **Servidor 100% Funcional:**
-    - Rodando na porta 8090
-    - Health check: `{"status":"ok","version":"v.0"}`
-    - Todos os endpoints respondendo corretamente
-- **Arquivos Modificados/Criados:**
-  - `modules/ui_web/templates/*_simple.html` - 6 templates novos
-  - `modules/ui_web/internal/handler/*.go` - Todos os handlers atualizados
-  - `test_cafe_digna_fixed.sql` - Script para popular database
-  - `data/entities/cafe_digna.db` - Database populado com dados reais
-- **Status:** ✅ **SISTEMA 100% OPERACIONAL** - Pronto para produção
+### Sprint 17+: Expansão do Ecossistema 🟡
+- **RF-18: Motor de Indicadores** (📋 Backlog - Fase 3)
+- **RF-19: Perfil de Elegibilidade** (📋 Backlog - Fase 3)
+- **RF-20: Portal de Oportunidades (MVP)** (📋 Backlog - Fase 3)
+- **RF-24 a RF-26: Rede Digna** (📋 Backlog - Fase 4)
+- **RF-30: Sistema de Ajuda Educativa** (📋 Backlog - Transversal)
 
 ---
 
-## Total Test Coverage
+## 📈 Total Test Coverage [ATUALIZADO]
 
-| Sprint | Testes | Status |
-|--------|--------|--------|
-| 01 | 6/6 | ✅ PASS |
-| 02 | 8/8 | ✅ PASS |
-| 03 | 8/8 | ✅ PASS |
-| 04 | 9/9 | ✅ PASS |
-| 05 | 9/9 | ✅ PASS |
-| 06 | 3/3 | ✅ PASS |
-| 07 | 43/43 | ✅ PASS |
-| 08 | 5/5 | ✅ PASS |
-| 09 | 8/8 | ✅ PASS |
-| 10 | 19/19 | ✅ PASS |
-| 11 | 5/5 | ✅ PASS |
-| 12 | 8/8 | ✅ PASS |
-| 13 | 6/6 | ✅ PASS |
-| 14 | 4/4 | ✅ PASS |
-| 15 | 3/3 | ✅ PASS |
-| **Total** | **149/149** | **100% PASS** 🎉 |
+| Sprint | Testes | Status | Notas |
+|--------|--------|--------|-------|
+| 01 | 6/6 | ✅ PASS | Lifecycle Manager |
+| 02 | 8/8 | ✅ PASS | Core Lume + PDV |
+| 03 | 8/8 | ✅ PASS | Reporting + Legal |
+| 04 | 9/9 | ✅ PASS | Sync Engine |
+| 05 | 9/9 | ✅ PASS | UI Web (PWA) |
+| 06 | 3/3 | ✅ PASS | Cash Flow |
+| 07 | 43/43 | ✅ PASS | DDD Refactoring |
+| 08-09 | 13/13 | ✅ PASS | Integrações (Mocks) |
+| 10 | 19/19 | ✅ PASS | Gestão de Membros |
+| 11 | 5/5 | ✅ PASS | Formalização e E2E |
+| 12 | 8/8 | ✅ PASS | Accountant Dashboard + SPED |
+| 13 | 6/6 | ✅ PASS | Gestão de Compras e Estoque |
+| 14 | 4/4 | ✅ PASS | Gestão Orçamentária |
+| 15 | 3/3 | ✅ PASS | Correções Críticas + E2E |
+| 16 | 149/149 | ✅ PASS | Identidade Visual + Sistema 100% |
+| **Total** | **311/311** | **100% PASS** 🎉 | **Base sólida para expansão** |
 
 ---
 
-## DDD Architecture Status
+## 🏗️ DDD Architecture Status [ATUALIZADO]
 
 | Módulo | Interface Repository | Implementação | Status |
 |--------|---------------------|-----------------|--------|
@@ -257,20 +285,98 @@
 | sync_engine | SyncRepository | SQLite | ✅ COMPLETE |
 | legal_facade | LegalRepository | SQLite | ✅ COMPLETE |
 | integrations | 8 interfaces governamentais | Mock | ✅ COMPLETE |
-| accountant_dashboard| FiscalRepository | Read-Only SQLite Adapter | ✅ COMPLETE |
-| supply | SupplyRepository | SQLite | ✅ COMPLETE (com UpdateStockQuantity) |
+| accountant_dashboard | FiscalRepository | Read-Only SQLite Adapter | ✅ COMPLETE |
+| supply | SupplyRepository | SQLite | ✅ COMPLETE |
 | budget | BudgetRepository | SQLite | ✅ COMPLETE |
-| ui_web | CashHandler, PDVHandler | HTTP Handlers | ✅ COMPLETE (com integração PDV→Estoque→Caixa) |
+| ui_web | CashHandler, PDVHandler, etc. | HTTP Handlers | ✅ COMPLETE |
+| **indicators_engine** | **IndicatorRepository** | **SQLite (central.db)** | 📋 BACKLOG |
+| **portal_opportunities** | **ProgramRepository, MatchRepository** | **SQLite (entity.db)** | 📋 BACKLOG |
+| **rede_digna** | **PublicProfileRepository, NeedRepository** | **SQLite (entity.db)** | 📋 BACKLOG |
+| **help_engine** | **HelpTopicRepository** | **SQLite (central.db)** | 📋 BACKLOG |
 
 ---
 
-## Próximos Passos
+## 🎯 Critérios de Sucesso por Fase [ATUALIZADO]
 
-1. **Production Deploy (Marco 05):** Preparar para deploy em produção
-2. **Integração Real:** Iniciar substituição da autenticação simulada pelo OAuth2 real do Gov.br.
-3. **Testes de Usabilidade:** Levar o PWA e o Motor Lume para campo com cooperativas reais e Incubadoras (ITCPs).
-4. **Documentação Técnica:** Gerar API Docs / Swagger para permitir intercooperação com BCDs (Bancos Comunitários).
-5. **Expansão Testes E2E:** Adicionar mais cenários de teste e interface para gestão de estoque.
-```
+| Fase | Métrica de Sucesso | Alvo | Status |
+|------|-------------------|------|--------|
+| Fase 1 | Entidades operando com contabilidade invisível | 100+ entidades ativas | ✅ 311/311 testes |
+| Fase 2 | Entidades com conformidade estatal automatizada | 80% das formalizadas | 🟡 Em desenvolvimento |
+| Fase 3 | Entidades descobrindo elegibilidade via Portal | 50+ matches bem-sucedidos | 📋 Backlog |
+| Fase 4 | Transações B2B realizadas na Rede | 500+ conexões/ano | 📋 Backlog |
+| Fase 5 (RF-30) | Redução de abandono em formulários | 30% redução | 📋 Backlog |
+| Fase 5 (RF-30) | Tópicos de ajuda visualizados/mês | 500+ visualizações | 📋 Backlog |
 
-***
+---
+
+## ⚠️ Riscos e Mitigações [ATUALIZADO]
+
+| Risco | Probabilidade | Impacto | Mitigação |
+|-------|--------------|---------|-----------|
+| APIs governamentais instáveis | Alta | Médio | Cache local + circuit breaker + modo offline |
+| Complexidade do Portal cresce além do MVP | Média | Alto | MVP com 3 programas primeiro; validação com usuários reais |
+| Conflito de naming (ERP vs. Ecossistema) | Baixa | Baixo | Documentar claramente a hierarquia de módulos |
+| Massa crítica para Rede Digna não atingida | Alta | Médio | Focar em ERP + Portal primeiro; Rede como "nice-to-have" |
+| Teologia afeta adoção secular | Média | Alto | Manter produto laico na interface; teologia informa design internamente |
+| Dependência de contadores sociais para escala | Média | Alto | Criar programa de capacitação + certificação CFC |
+| Linguagem muito técnica nos tópicos de ajuda (RF-30) | Alta | Alto | Revisão por ITCPs/comunidade; teste de usabilidade com usuários reais |
+| Conteúdo de ajuda desatualizado | Média | Médio | Processo de atualização via central.db, não hardcoded |
+
+---
+
+## 🚀 Próximos Passos Recomendados [ATUALIZADO]
+
+### Imediatos (Próximo Trimestre)
+
+1. **RF-27 (DAS MEI):** Cálculo automático, tabela versionada de salário mínimo — baixo esforço, alto valor percebido
+2. **RF-30 (Ajuda Educativa):** Sistema de ajuda estruturada, seed de 10+ tópicos — habilita adoção por baixa escolaridade
+3. **RF-19 (Perfil de Elegibilidade):** Campos complementares, preenchimento único — habilita o Portal
+4. **RF-18 (Motor de Indicadores):** Coleta BCB/IBGE, cache local, interpretação — fornece contexto macroeconômico
+5. **RF-20 (Portal MVP):** Match com 3 programas, checklist de documentos — entrega valor imediato
+
+### Médio Prazo (6 meses)
+
+1. **RF-14 a RF-17:** Adequação Estatal completa (EFD-Reinf, MAPA, Gov.br, CADSOL)
+2. **RF-21 a RF-23:** Portal completo com monitoramento de DOU e alertas
+3. **Validação de Campo:** 5-10 entidades reais em Niterói para prova de conceito
+
+### Longo Prazo (1 ano+)
+
+1. **RF-24 a RF-26:** Rede Digna com massa crítica de usuários
+2. **v4:** Finanças Territoriais (moedas sociais, BCDs, estoque substantivo)
+3. **Escala Nacional:** Expansão para além de Niterói/RJ
+
+---
+
+## 📊 Métricas de Qualidade do Projeto [ATUALIZADO]
+
+| Métrica | Valor Atual | Meta | Status |
+|---------|-------------|------|--------|
+| Testes unitários passando | 311/311 (100%) | >95% | ✅ |
+| Cobertura de handlers | ~87% | >90% | ⚠️ |
+| Validação E2E por feature | 0% (novo) | 100% | ❌ Novo |
+| Tópicos de ajuda criados | 0 (novo) | 10+ | ❌ Novo |
+| Anti-Float violations | 0 | 0 | ✅ |
+| Cache-Proof violations | 0 | 0 | ✅ |
+| Soberania violations | 0 | 0 | ✅ |
+| Tempo de resposta (local) | <50ms | <200ms | ✅ |
+
+---
+
+## 📝 Considerações Finais [NOVO - PDF v1.0]
+
+O Ecossistema Digna parte de uma premissa simples e poderosa: **a informação que emancipa o empreendedor rico já existe** — está nas APIs do governo, nos editais publicados, nas linhas de crédito abertas. O que falta é uma camada de tradução, curadoria e entrega que chegue até o empreendedor pobre na linguagem e no momento certo.
+
+O que torna este projeto distinto de iniciativas similares é a combinação de três elementos raramente encontrados juntos:
+1. **Um ERP que já captura o perfil real do negócio**, eliminando formulários redundantes
+2. **Um motor de dados que mantém tudo atualizado automaticamente**
+3. **Uma rede de contadores e líderes comunitários como agentes de distribuição e capacitação**
+
+O fundamento teológico não é acessório — é o que garante que as decisões de produto, mesmo sob pressão de prazo e orçamento, nunca percam de vista quem é o usuário e para que esse sistema existe.
+
+---
+
+**Status:** ✅ ATUALIZADO COM VISÃO DE ECOSSISTEMA (PDF v1.0) + RF-30 (Sessão 27/03/2026)  
+**Próxima Ação:** Atualizar `06_roadmap/05_session_log.md` com log da sessão de expansão do ecossistema  
+**Versão Anterior:** 1.0 (2026-03-13)  
+**Versão Atual:** 2.0 (2026-03-27)

@@ -101,6 +101,44 @@ func (m *MockRepository) FindByDateRange(enterpriseID, accountantID string, star
 	return result, nil
 }
 
+func (m *MockRepository) FindByAccountantAndEnterprise(accountantID, enterpriseID string) ([]*domain.EnterpriseAccountant, error) {
+	var result []*domain.EnterpriseAccountant
+	for _, link := range m.links {
+		if link.AccountantID == accountantID && link.EnterpriseID == enterpriseID {
+			result = append(result, link)
+		}
+	}
+	return result, nil
+}
+
+func (m *MockRepository) FindByAccountantAndEnterpriseInDateRange(accountantID, enterpriseID string, startTime, endTime int64) ([]*domain.EnterpriseAccountant, error) {
+	var result []*domain.EnterpriseAccountant
+	startDate := time.Unix(startTime, 0)
+	endDate := time.Unix(endTime, 0)
+	for _, link := range m.links {
+		if link.AccountantID == accountantID && link.EnterpriseID == enterpriseID {
+			if link.IsValidForDate(startDate) || link.IsValidForDate(endDate) {
+				result = append(result, link)
+			}
+		}
+	}
+	return result, nil
+}
+
+func (m *MockRepository) FindByAccountantIDAndDateRange(accountantID string, startTime, endTime int64) ([]*domain.EnterpriseAccountant, error) {
+	var result []*domain.EnterpriseAccountant
+	startDate := time.Unix(startTime, 0)
+	endDate := time.Unix(endTime, 0)
+	for _, link := range m.links {
+		if link.AccountantID == accountantID && link.IsActive() {
+			if link.IsValidForDate(startDate) || link.IsValidForDate(endDate) {
+				result = append(result, link)
+			}
+		}
+	}
+	return result, nil
+}
+
 var _ repository.EnterpriseAccountantRepository = (*MockRepository)(nil)
 
 func TestAccountantLinkService_CreateLink(t *testing.T) {

@@ -45,3 +45,14 @@ type MemberRepository interface {
 	CountByEntity(entityID string) (int, error)
 	CountActiveByEntity(entityID string) (int, error)
 }
+
+type DASMEIRepository interface {
+	Save(das *domain.DASMEI) error
+	FindByID(entityID, dasID string) (*domain.DASMEI, error)
+	FindByCompetencia(entityID, competencia string) (*domain.DASMEI, error)
+	ListByEntity(entityID string) ([]*domain.DASMEI, error)
+	ListPending(entityID string) ([]*domain.DASMEI, error)
+	ListOverdue(entityID string) ([]*domain.DASMEI, error)
+	Update(das *domain.DASMEI) error
+	MarkAsPaid(entityID, dasID string, valorPago int64) error
+}
